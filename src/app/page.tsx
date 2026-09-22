@@ -12,11 +12,11 @@ const faqs = [
   ],
   [
     "Can I use it offline?",
-    "You can create, edit, and complete tasks stored on your phone while offline. Account sync and AI voice capture need a connection. Local attachments stay on the device where you added them.",
+    "You can create, edit, and complete tasks stored on your phone while offline. Account sync, AI processing, and attachment transfers need a connection. Files you have saved or downloaded remain available on that device.",
   ],
   [
     "Do I need an account?",
-    "You can create tasks and try a limited daily voice allowance without an account. Sign in to sync your tasks and get a larger AI allowance. Account recovery is available if you forget your password. Local attachments stay on the phone where you added them.",
+    "You can create tasks and try a limited daily voice allowance without an account. Sign in to sync tasks, upload attachments, and get a larger AI allowance. Account recovery is available if you forget your password. Older device-only files need an explicit upload from task details.",
   ],
   [
     "Will TaskFlow be free?",
@@ -245,7 +245,8 @@ export default function HomePage() {
             <h3>The little details matter.</h3>
             <p>
               Notes, priorities, and attachments. Keep what you need beside what
-              you need to do. Attachments currently stay on the phone where you add them.
+              you need to do. Sign in to upload files and download them on another device;
+              task details show which files are backed up. Up to 6 MiB per file.
             </p>
             <div className="detail-chips" aria-hidden="true">
               <span>

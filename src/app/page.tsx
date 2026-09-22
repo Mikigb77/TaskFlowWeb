@@ -8,7 +8,7 @@ const faqs = [
   ],
   [
     "How does voice-to-task work?",
-    "In the app, record what you need to do in your own words. TaskFlow transcribes your recording and uses AI to suggest a title, date, time, priority, and notes. You can check and change the draft before saving. Voice capture needs an internet connection and a signed-in account.",
+    "In the app, record what you need to do in your own words. TaskFlow transcribes your recording and uses AI to suggest tasks with titles, dates, times, priorities, and notes. Check and change the drafts before saving. AI processing needs an internet connection. A limited voice trial is available without an account.",
   ],
   [
     "Can I use it offline?",
@@ -16,7 +16,7 @@ const faqs = [
   ],
   [
     "Do I need an account?",
-    "You can start planning locally without an account. Sign in to sync your tasks with the backend and use voice capture. Account recovery is available if you forget your password.",
+    "You can create tasks and try a limited daily voice allowance without an account. Sign in to sync your tasks and get a larger AI allowance. Account recovery is available if you forget your password. Local attachments stay on the phone where you added them.",
   ],
   [
     "Will TaskFlow be free?",
@@ -162,7 +162,7 @@ export default function HomePage() {
               </span>
               <h3>See the shape of your day.</h3>
               <p>
-                Start with your calendar. Zoom out to the month or settle into
+                Start with your task calendar. Zoom out to the month or settle into
                 the week, with your tasks right where they belong.
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function HomePage() {
             <h3>The little details matter.</h3>
             <p>
               Notes, priorities, and attachments. Keep what you need beside what
-              you need to do.
+              you need to do. Attachments currently stay on the phone where you add them.
             </p>
             <div className="detail-chips" aria-hidden="true">
               <span>

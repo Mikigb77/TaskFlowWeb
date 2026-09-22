@@ -23,6 +23,10 @@ const faqs = [
     "The Android development app supports shared lists. A list owner invites an account and shares a code separately; recipients choose to accept. Editors can change tasks and files, while viewers can read them. This feature is still being tested before public release.",
   ],
   [
+    "Can I keep notes as well as tasks?",
+    "Yes. The development app has a separate Notes view for ideas and reference material, with optional checklists and links. Choose Task or Note when capturing. Typed notes work locally; recorded notes need online transcription and keep your wording without turning it into scheduled tasks.",
+  ],
+  [
     "Will TaskFlow be free?",
     "Launch pricing has not been announced. We are still testing the app and its AI features, so there are no paid plans or subscriptions to sign up for on this website.",
   ],

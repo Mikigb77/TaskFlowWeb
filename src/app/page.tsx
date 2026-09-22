@@ -12,11 +12,15 @@ const faqs = [
   ],
   [
     "Can I use it offline?",
-    "You can create, edit, and complete tasks stored on your phone while offline. Account sync, AI processing, and attachment transfers need a connection. Files you have saved or downloaded remain available on that device.",
+    "You can create, edit, and complete your own tasks stored on your phone while offline. Account sync, AI processing, and attachment transfers need a connection. Downloaded files work offline; shared-list content is removed when your device next learns that access has ended.",
   ],
   [
     "Do I need an account?",
     "You can create tasks and try a limited daily voice allowance without an account. Sign in to sync tasks, upload attachments, and get a larger AI allowance. Account recovery is available if you forget your password. Older device-only files need an explicit upload from task details.",
+  ],
+  [
+    "Can I share a list?",
+    "The Android development app supports shared lists. A list owner invites an account and shares a code separately; recipients choose to accept. Editors can change tasks and files, while viewers can read them. This feature is still being tested before public release.",
   ],
   [
     "Will TaskFlow be free?",

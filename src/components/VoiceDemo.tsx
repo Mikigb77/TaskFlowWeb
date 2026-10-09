@@ -5,6 +5,17 @@ import type { Draft } from "../lib/voice/policy";
 import { audioBase64, startRecorder } from "../lib/voice/recorder";
 
 type Status = { remaining: number; resetAt: number | null; siteKey: string };
+
+function scheduleLabel(task: Draft) {
+  const date = task.date
+    ? new Date(`${task.date}T12:00:00`).toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+    : "Whenever you’re ready";
+  return `${date}${task.time ? ` · ${task.time}` : ""}`;
+}
 type Turnstile = {
   render(element: HTMLElement, options: Record<string, unknown>): string;
   reset(id: string): void;
@@ -110,6 +121,23 @@ export default function VoiceDemo() {
   const requestId = useRef("");
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const mounted = useRef(true);
+  const panel = useRef<HTMLDivElement>(null);
+  const stageHeading = useRef<HTMLHeadingElement>(null);
+  const errorMessage = useRef<HTMLParagraphElement>(null);
+  const openButton = useRef<HTMLButtonElement>(null);
+  const stage = !opened
+    ? "intro"
+    : busy
+      ? "processing"
+      : answered
+        ? saved
+          ? "preview"
+          : "review"
+        : !status
+          ? "connecting"
+          : mode === "voice" && audio
+            ? "recorded"
+            : "capture";
   const receiveToken = useCallback((value: string) => setToken(value), []);
   const receiveError = useCallback((value: string) => setError(value), []);
   const refresh = useCallback(async () => {
@@ -138,6 +166,16 @@ export default function VoiceDemo() {
     setAudioUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [audio]);
+  useEffect(() => {
+    if (stage === "intro") return;
+    // A stage replaces the previous view; keep both keyboard focus and the
+    // result at the same visible card, including after the mobile keyboard closes.
+    const target = error ? errorMessage.current : stageHeading.current;
+    target?.focus({ preventScroll: true });
+    const top = panel.current?.getBoundingClientRect().top;
+    if (top !== undefined && (top < 88 || top > 160))
+      panel.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [stage, error]);
   const stop = useCallback(async () => {
     if (timer.current) clearInterval(timer.current);
     const active = recorder.current;
@@ -189,7 +227,7 @@ export default function VoiceDemo() {
     } catch (reason) {
       setError(
         (reason as Error).name === "NotAllowedError"
-          ? "Microphone access was not allowed. You can still type your plans below."
+          ? "Microphone access was not allowed. You can still use “Type it instead”."
           : (reason as Error).message,
       );
     } finally {
@@ -270,6 +308,21 @@ export default function VoiceDemo() {
       ),
     );
   }
+  function startAgain() {
+    setAnswered(false);
+    setSaved(false);
+    setTasks([]);
+    setTranscript("");
+    setComplete([]);
+    setText("");
+    setAudio(null);
+    setSeconds(0);
+    setMode("voice");
+    setError("");
+    setRetryPending(false);
+    setToken("");
+    requestId.current = "";
+  }
   const unavailable =
     busy || loading || recording || (status?.remaining === 0 && !retryPending);
   return (
@@ -290,7 +343,7 @@ export default function VoiceDemo() {
           </div>
           <span className="voice-trial-badge">3 free tries · no account</span>
         </div>
-        <div className="voice-panel">
+        <div className="voice-panel" ref={panel} data-stage={stage}>
           {!opened ? (
             <div className="voice-intro">
               <span className="voice-mic-orb">
@@ -301,7 +354,7 @@ export default function VoiceDemo() {
                 Speak in English, Spanish, or Catalan. Review the transcript,
                 then make the drafts your own.
               </p>
-              <button className="button" onClick={open}>
+              <button className="button" onClick={open} ref={openButton}>
                 Try the live demo <Icon name="arrow" />
               </button>
               <p className="voice-fine">
@@ -320,23 +373,76 @@ export default function VoiceDemo() {
                   className="text-link"
                   disabled={busy || recording || loading}
                   onClick={() => {
+                    startAgain();
                     setOpened(false);
-                    setToken("");
-                    setAudio(null);
+                    requestAnimationFrame(() => openButton.current?.focus());
                   }}
                 >
                   Close demo
                 </button>
               </div>
-              {loading && (
-                <p role="status">
-                  {status
-                    ? "Getting your microphone ready…"
-                    : "Checking your allowance…"}
+              {error && (
+                <p
+                  role="alert"
+                  className="voice-error"
+                  tabIndex={-1}
+                  ref={errorMessage}
+                >
+                  {error}
                 </p>
               )}
-              {status && (
-                <>
+              {!status && (
+                <div className="voice-connecting">
+                  <h3 ref={stageHeading} tabIndex={-1}>
+                    {loading
+                      ? "Getting your demo ready…"
+                      : "Let’s try that again."}
+                  </h3>
+                  {loading ? (
+                    <p role="status">Checking your allowance…</p>
+                  ) : (
+                    <button className="text-link" onClick={open}>
+                      Try connecting again
+                    </button>
+                  )}
+                </div>
+              )}
+              {busy && (
+                <div className="voice-processing voice-stage">
+                  <span className="voice-processing-orb" aria-hidden="true">
+                    <Icon name="spark" size={30} />
+                  </span>
+                  <h3 ref={stageHeading} tabIndex={-1}>
+                    Making a little clarity…
+                  </h3>
+                  <p role="status">
+                    Finding the tasks, dates, and details in your words.
+                  </p>
+                  <div className="voice-processing-preview" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p className="voice-fine">
+                    Your drafts will appear right here. You’ll have the final
+                    say.
+                  </p>
+                </div>
+              )}
+              {status && !busy && !answered && (
+                <div className="voice-stage">
+                  <div className="voice-stage-heading voice-capture-heading">
+                    <h3 ref={stageHeading} tabIndex={-1}>
+                      {audio && mode === "voice"
+                        ? "Ready when you are."
+                        : "What’s on your mind?"}
+                    </h3>
+                    <p>
+                      {audio && mode === "voice"
+                        ? "Listen back, or turn your words into tasks."
+                        : "Say a little. We’ll help you make a plan."}
+                    </p>
+                  </div>
                   <div className="voice-modes" aria-label="Choose input">
                     <button
                       aria-pressed={mode === "voice"}
@@ -364,33 +470,52 @@ export default function VoiceDemo() {
                   </div>
                   {mode === "voice" ? (
                     <div className="voice-recorder">
-                      <p className="voice-prompt">
-                        “On Friday at 5 p.m., I have a doctor’s appointment.
-                        Remind me to bring my test results.”
-                      </p>
-                      <button
-                        className={`voice-record-button ${recording ? "is-recording" : ""}`}
-                        aria-label={
-                          recording ? "Stop recording" : "Start recording"
-                        }
-                        disabled={!recording && unavailable}
-                        onClick={recording ? stop : record}
-                      >
-                        <Icon name="mic" size={28} />
-                      </button>
+                      {!audio && (
+                        <>
+                          <p className="voice-prompt">
+                            “On Friday at 5 p.m., I have a doctor’s appointment.
+                            Remind me to bring my test results.”
+                          </p>
+                          <button
+                            className={`voice-record-button ${recording ? "is-recording" : ""}`}
+                            aria-label={
+                              recording ? "Stop recording" : "Start recording"
+                            }
+                            disabled={!recording && unavailable}
+                            onClick={recording ? stop : record}
+                          >
+                            {recording ? (
+                              <span className="voice-stop-icon" />
+                            ) : (
+                              <Icon name="mic" size={28} />
+                            )}
+                          </button>
+                        </>
+                      )}
                       <p aria-live="polite">
-                        {recording
-                          ? `Recording · ${seconds}s / 60s`
-                          : audio
-                            ? "Recording ready. Listen before sending."
-                            : "Tap to record · up to 60 seconds"}
+                        {loading
+                          ? "Getting your microphone ready…"
+                          : recording
+                            ? `Recording · ${seconds}s / 60s`
+                            : audio
+                              ? "Recording ready. Listen before sending."
+                              : "Tap to record · up to 60 seconds"}
                       </p>
                       {audioUrl && (
-                        <audio
-                          controls
-                          src={audioUrl}
-                          aria-label="Your recording"
-                        />
+                        <>
+                          <audio
+                            controls
+                            src={audioUrl}
+                            aria-label="Your recording"
+                          />
+                          <button
+                            className="text-link"
+                            onClick={record}
+                            disabled={unavailable}
+                          >
+                            Record again
+                          </button>
+                        </>
                       )}
                     </div>
                   ) : (
@@ -429,7 +554,7 @@ export default function VoiceDemo() {
                     }
                     onClick={submit}
                   >
-                    {busy ? "Making a little clarity…" : "Create drafts"}
+                    Create drafts
                     <Icon name="arrow" />
                   </button>
                   <p className="voice-fine">
@@ -437,45 +562,32 @@ export default function VoiceDemo() {
                     also apply. AI can make mistakes; check every draft. These
                     preview tasks stay on this page and do not sync to the app.
                   </p>
-                  {status.remaining === 0 && (
-                    <p role="status">
-                      Your allowance returns{" "}
-                      {status.resetAt
-                        ? new Date(status.resetAt).toLocaleString(undefined, {
-                            weekday: "short",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })
-                        : "tomorrow"}
-                      . The sample walkthrough below is always available.
+                </div>
+              )}
+              {answered && !busy && (
+                <div className="voice-results voice-stage">
+                  <div className="voice-stage-heading">
+                    <p className="voice-result-label">
+                      <Icon name="check" size={16} />
+                      {saved
+                        ? "A LITTLE LIGHTER"
+                        : tasks.length
+                          ? "READY TO REVIEW"
+                          : "NO TASKS YET"}
                     </p>
-                  )}
-                </>
-              )}
-              {error && (
-                <p role="alert" className="voice-error">
-                  {error}
-                </p>
-              )}
-              {!status && !loading && (
-                <button className="text-link" onClick={open}>
-                  Try connecting again
-                </button>
-              )}
-              {answered && (
-                <div className="voice-results" aria-live="polite">
-                  <div className="voice-results-heading">
-                    <h3>
+                    <h3 ref={stageHeading} tabIndex={-1}>
                       {saved
                         ? "Your preview list"
-                        : `${tasks.length} ${tasks.length === 1 ? "draft" : "drafts"}, ready for your eye.`}
+                        : tasks.length
+                          ? `${tasks.length} ${tasks.length === 1 ? "draft" : "drafts"}, ready for you.`
+                          : "Let’s give that another go."}
                     </h3>
-                    <span>AI suggestion · you decide</span>
+                    <p>
+                      {saved
+                        ? "Try checking one off. That’s one less thing on your mind."
+                        : "A little structure for your thoughts. Check the details or edit anything."}
+                    </p>
                   </div>
-                  <details>
-                    <summary>Your transcript</summary>
-                    <p>{transcript}</p>
-                  </details>
                   {!tasks.length && (
                     <p>
                       No tasks were found. Try describing something you want to
@@ -503,10 +615,7 @@ export default function VoiceDemo() {
                         </span>
                         <span>
                           <strong>{task.title}</strong>
-                          <small>
-                            {task.date || "Whenever you’re ready"}
-                            {task.time ? ` · ${task.time}` : ""}
-                          </small>
+                          <small>{scheduleLabel(task)}</small>
                           {task.notes && <small>{task.notes}</small>}
                         </span>
                       </button>
@@ -520,90 +629,165 @@ export default function VoiceDemo() {
                     >
                       <div className="voice-drafts">
                         {tasks.map((task, index) => (
-                          <fieldset className="voice-draft" key={index}>
-                            <legend>Task {index + 1}</legend>
-                            <label>
-                              Title
-                              <input
-                                required
-                                maxLength={120}
-                                value={task.title}
-                                onChange={(event) =>
-                                  edit(index, "title", event.target.value)
-                                }
-                              />
-                            </label>
-                            <div className="voice-draft-row">
-                              <label>
-                                Date <small>optional</small>
-                                <input
-                                  type="date"
-                                  value={task.date || ""}
-                                  onChange={(event) =>
-                                    edit(index, "date", event.target.value)
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Time <small>optional</small>
-                                <input
-                                  type="time"
-                                  disabled={!task.date}
-                                  value={task.time || ""}
-                                  onChange={(event) =>
-                                    edit(index, "time", event.target.value)
-                                  }
-                                />
-                              </label>
-                            </div>
-                            <label>
-                              Priority
-                              <select
-                                value={task.priority}
-                                onChange={(event) =>
-                                  edit(index, "priority", event.target.value)
-                                }
+                          <div className="voice-task-card" key={index}>
+                            <div className="voice-task-card-topline">
+                              <span>Task {index + 1}</span>
+                              <span
+                                className={`voice-priority voice-priority-${task.priority}`}
                               >
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                              </select>
-                            </label>
-                            <label>
-                              Notes
-                              <textarea
-                                rows={2}
-                                maxLength={1500}
-                                value={task.notes}
-                                onChange={(event) =>
-                                  edit(index, "notes", event.target.value)
-                                }
+                                {task.priority} priority
+                              </span>
+                            </div>
+                            <h4>{task.title || "Untitled task"}</h4>
+                            <p className="voice-task-schedule">
+                              <Icon
+                                name={task.date ? "calendar" : "leaf"}
+                                size={16}
                               />
-                            </label>
+                              {scheduleLabel(task)}
+                            </p>
+                            {task.notes && (
+                              <p className="voice-task-notes">{task.notes}</p>
+                            )}
                             {task.question && (
                               <p className="voice-question">
                                 Check this: {task.question}
                               </p>
                             )}
-                          </fieldset>
+                            <details className="voice-task-edit">
+                              <summary>Edit task {index + 1}</summary>
+                              <fieldset className="voice-draft">
+                                <legend>Task {index + 1} details</legend>
+                                <label>
+                                  Title
+                                  <input
+                                    required
+                                    onInvalid={(event) => {
+                                      const details =
+                                        event.currentTarget.closest("details");
+                                      if (details) details.open = true;
+                                    }}
+                                    maxLength={120}
+                                    value={task.title}
+                                    onChange={(event) =>
+                                      edit(index, "title", event.target.value)
+                                    }
+                                  />
+                                </label>
+                                <div className="voice-draft-row">
+                                  <label>
+                                    Date <small>optional</small>
+                                    <input
+                                      type="date"
+                                      value={task.date || ""}
+                                      onChange={(event) =>
+                                        edit(index, "date", event.target.value)
+                                      }
+                                    />
+                                  </label>
+                                  <label>
+                                    Time <small>optional</small>
+                                    <input
+                                      type="time"
+                                      disabled={!task.date}
+                                      value={task.time || ""}
+                                      onChange={(event) =>
+                                        edit(index, "time", event.target.value)
+                                      }
+                                    />
+                                  </label>
+                                </div>
+                                <label>
+                                  Priority
+                                  <select
+                                    value={task.priority}
+                                    onChange={(event) =>
+                                      edit(
+                                        index,
+                                        "priority",
+                                        event.target.value,
+                                      )
+                                    }
+                                  >
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                  </select>
+                                </label>
+                                <label>
+                                  Notes
+                                  <textarea
+                                    rows={2}
+                                    maxLength={1500}
+                                    value={task.notes}
+                                    onChange={(event) =>
+                                      edit(index, "notes", event.target.value)
+                                    }
+                                  />
+                                </label>
+                              </fieldset>
+                            </details>
+                          </div>
                         ))}
                       </div>
                       {!!tasks.length && (
-                        <button className="button" type="submit">
+                        <button className="button voice-submit" type="submit">
                           Add to preview list <Icon name="check" />
                         </button>
                       )}
                     </form>
                   )}
-                  {saved && (
+                  <div className="voice-result-actions">
+                    {saved ? (
+                      <button
+                        className="text-link"
+                        onClick={() => setSaved(false)}
+                      >
+                        Edit drafts
+                      </button>
+                    ) : (
+                      <button
+                        className="text-link"
+                        disabled={status?.remaining === 0}
+                        onClick={() => {
+                          setAnswered(false);
+                          setError("");
+                          setRetryPending(false);
+                        }}
+                      >
+                        Edit original thought
+                      </button>
+                    )}
                     <button
                       className="text-link"
-                      onClick={() => setSaved(false)}
+                      disabled={status?.remaining === 0}
+                      onClick={startAgain}
                     >
-                      Edit drafts
+                      Try a new thought <Icon name="arrow" size={16} />
                     </button>
-                  )}
+                  </div>
+                  <details className="voice-transcript">
+                    <summary>Your transcript</summary>
+                    <p>{transcript}</p>
+                  </details>
+                  <p className="voice-fine">
+                    AI can make mistakes. These preview tasks stay on this page
+                    and do not sync to the app.
+                  </p>
                 </div>
+              )}
+              {status?.remaining === 0 && !busy && (
+                <p className="voice-fine" role="status">
+                  Your allowance returns{" "}
+                  {status.resetAt
+                    ? new Date(status.resetAt).toLocaleString(undefined, {
+                        weekday: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "tomorrow"}
+                  . The sample walkthrough below is always available.
+                </p>
               )}
             </>
           )}

@@ -12,9 +12,14 @@ test.use({
 
 test("live text capture produces editable multiple tasks and shows the remaining allowance", async ({
   page,
-}) => {
+}, testInfo) => {
   let remaining = 3,
     requests = 0;
+  const requestIds: string[] = [];
+  let finishProcessing!: () => void;
+  const responseReady = new Promise<void>((resolve) => {
+    finishProcessing = resolve;
+  });
   await page.route("**/api/voice/status/", (route) =>
     route.fulfill({
       json: {
@@ -41,6 +46,8 @@ test("live text capture produces editable multiple tasks and shows the remaining
     expect(route.request().headers()["x-request-id"]).toMatch(
       /^[a-f0-9-]{36}$/,
     );
+    requestIds.push(route.request().headers()["x-request-id"]);
+    await responseReady;
     await route.fulfill({
       json: {
         transcript: body.text,
@@ -76,9 +83,49 @@ test("live text capture produces editable multiple tasks and shows the remaining
     .getByLabel("What is on your mind?")
     .fill("Doctor Friday at 5 p.m. Bring results. Also buy coffee sometime.");
   await demo.getByRole("button", { name: "Create drafts" }).click();
+  const processing = demo.getByRole("heading", {
+    name: "Making a little clarity…",
+  });
+  await expect(processing).toBeFocused();
+  await expect(processing).toBeInViewport();
+  await expect(demo.getByRole("button", { name: "Create drafts" })).toHaveCount(
+    0,
+  );
+  await expect(demo.getByLabel("What is on your mind?")).toHaveCount(0);
+  await page.screenshot({
+    path: `artifacts/voice-processing-${testInfo.project.name}.png`,
+  });
+  finishProcessing();
   await expect(demo.getByText("2 of 3 tries left")).toBeVisible();
+  const review = demo.getByRole("heading", {
+    name: "2 drafts, ready for you.",
+  });
+  await expect(review).toBeFocused();
+  await expect(review).toBeInViewport();
+  const firstCard = demo.locator(".voice-task-card").first();
+  // Detect the original regression: results must be visible without scrolling
+  // back past the recording controls, including on a phone-sized viewport.
+  await expect(firstCard).toBeInViewport({ ratio: 1 });
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toHaveCount(0);
+  await expect(demo.locator(".voice-modes")).toHaveCount(0);
+  await expect(demo.locator(".voice-verification")).toHaveCount(0);
+  await page.screenshot({
+    path: `artifacts/voice-review-${testInfo.project.name}.png`,
+  });
   const drafts = demo.locator("fieldset");
   await expect(drafts).toHaveCount(2);
+  await demo.getByText("Edit task 2", { exact: true }).click();
+  await drafts.nth(1).getByLabel("Title", { exact: true }).fill("");
+  await demo.getByText("Edit task 2", { exact: true }).click();
+  await demo.getByRole("button", { name: "Add to preview list" }).click();
+  await expect(
+    drafts.nth(1).getByLabel("Title", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    demo.getByRole("heading", { name: "Your preview list" }),
+  ).toHaveCount(0);
   await expect(drafts.nth(1).getByLabel("Date optional")).toHaveValue("");
   await expect(drafts.nth(1).getByLabel("Time optional")).toBeDisabled();
   await drafts
@@ -86,6 +133,7 @@ test("live text capture produces editable multiple tasks and shows the remaining
     .getByLabel("Title", { exact: true })
     .fill("Buy decaf coffee");
   await expect(drafts.nth(0).getByLabel("Time optional")).toHaveValue("17:00");
+  await demo.getByText("Edit task 2", { exact: true }).click();
   const violations = (
     await new AxeBuilder({ page })
       .include("#voice")
@@ -93,12 +141,57 @@ test("live text capture produces editable multiple tasks and shows the remaining
       .analyze()
   ).violations;
   expect(violations).toEqual([]);
+  await page
+    .getByRole("button", { name: "Switch to dark mode", exact: true })
+    .click();
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .include("#voice")
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
   await demo.getByRole("button", { name: "Add to preview list" }).click();
+  await expect(
+    demo.getByRole("heading", { name: "Your preview list" }),
+  ).toBeFocused();
+  await expect(
+    demo.getByRole("button", { name: /Doctor appointment/ }),
+  ).toBeInViewport();
   await demo.getByRole("button", { name: /Buy decaf coffee/ }).click();
   await expect(
     demo.getByRole("button", { name: /Buy decaf coffee/ }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(requests).toBe(1);
+  await demo.getByRole("button", { name: "Edit drafts", exact: true }).click();
+  await expect(
+    demo.getByRole("heading", { name: "Buy decaf coffee", exact: true }),
+  ).toBeVisible();
+  await demo.getByRole("button", { name: "Edit original thought" }).click();
+  await expect(demo.getByLabel("What is on your mind?")).toHaveValue(
+    "Doctor Friday at 5 p.m. Bring results. Also buy coffee sometime.",
+  );
+  await demo
+    .getByLabel("What is on your mind?")
+    .fill(
+      "Doctor Friday at 5 p.m. Bring results. Also buy decaf coffee sometime.",
+    );
+  await demo.getByRole("button", { name: "Create drafts" }).click();
+  await expect(review).toBeFocused();
+  expect(requests).toBe(2);
+  expect(new Set(requestIds).size).toBe(2);
+  await demo.getByRole("button", { name: "Try a new thought" }).click();
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toBeEnabled();
+  await expect(demo.locator(".voice-task-card")).toHaveCount(0);
+  await demo.getByRole("button", { name: "Type it instead" }).click();
+  await expect(demo.getByLabel("What is on your mind?")).toHaveValue("");
+  await demo.getByRole("button", { name: "Close demo" }).click();
+  await expect(
+    demo.getByRole("button", { name: "Try the live demo" }),
+  ).toBeFocused();
 });
 
 test("a used allowance blocks recording and submission while keeping the sample usable", async ({
@@ -183,10 +276,27 @@ test.describe("microphone capture", () => {
     await expect(
       page.getByText("Recording ready. Listen before sending."),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start recording" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Record again" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Ready when you are." }),
+    ).toBeFocused();
     await page.getByRole("button", { name: "Create drafts" }).click();
     await expect(
       page.getByText("No tasks were found.", { exact: false }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Let’s give that another go." }),
+    ).toBeFocused();
+    await expect(page.locator("#voice audio")).toHaveCount(0);
+    await page.getByRole("button", { name: "Try a new thought" }).click();
+    await expect(
+      page.getByRole("button", { name: "Start recording" }),
+    ).toBeEnabled();
     expect(received).toBe(true);
   });
 });
@@ -237,10 +347,18 @@ test("the last allowed request can be retrieved after an interrupted response", 
   await expect(page.locator("#voice").getByRole("alert")).toContainText(
     "Please retry.",
   );
+  await expect(page.locator("#voice").getByRole("alert")).toBeFocused();
+  await expect(page.locator("#voice").getByRole("alert")).toBeInViewport();
+  await expect(page.getByLabel("What is on your mind?")).toHaveValue(
+    "Buy coffee",
+  );
   await expect(page.getByText("0 of 3 tries left")).toBeVisible();
   await page.getByRole("button", { name: "Create drafts" }).click();
   await expect(
     page.getByText("No tasks were found.", { exact: false }),
   ).toBeVisible();
   expect(attempts).toBe(2);
+  await expect(
+    page.getByRole("button", { name: "Try a new thought" }),
+  ).toBeDisabled();
 });

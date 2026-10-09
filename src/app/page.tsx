@@ -232,7 +232,7 @@ export default function HomePage() {
                 Turn a passing thought into a task. Speak naturally, then review
                 the details before you save.
               </p>
-              <a href="#demo" className="inline-link">
+              <a href="#voice" className="inline-link">
                 Give it a try <Icon name="arrow" size={17} />
               </a>
             </div>

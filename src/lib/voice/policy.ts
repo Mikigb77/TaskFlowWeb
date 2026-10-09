@@ -3,6 +3,7 @@ import { z } from "zod";
 export const DAY = 86_400_000;
 export const VISITOR_LIMIT = 3;
 export const NETWORK_LIMIT = 12;
+export const MAX_DEVELOPER_WINDOW_MS = 60 * 60_000;
 export const MAX_AUDIO_SECONDS = 60;
 export const MAX_BODY_BYTES = 2_600_000;
 // EUR millionths. Reserve before calling the model, including failed/unknown calls.
@@ -19,6 +20,25 @@ export class DemoError extends Error {
   ) {
     super(message);
   }
+}
+
+// Only the owner CLI writes these fields. A URL flag, client timestamp, or
+// browser testing code cannot grant access on its own.
+export function developerWindowUntil(
+  startedAt: unknown,
+  until: unknown,
+  now: number,
+) {
+  return typeof startedAt === "number" &&
+    typeof until === "number" &&
+    Number.isSafeInteger(startedAt) &&
+    Number.isSafeInteger(until) &&
+    startedAt <= now &&
+    until > now &&
+    until > startedAt &&
+    until - startedAt <= MAX_DEVELOPER_WINDOW_MS
+    ? until
+    : null;
 }
 
 export function allowance(
@@ -42,17 +62,18 @@ export function checkAdmission(
   charged: number,
   budget: number,
   now: number,
+  developerTesting = false,
 ) {
   const user = allowance(visitor, now);
   const ip = allowance(network, now, NETWORK_LIMIT);
-  if (!user.remaining)
+  if (!developerTesting && !user.remaining)
     throw new DemoError(
       429,
       "visitor_limit",
       "Your three tries are used. Your allowance returns tomorrow.",
       user.resetAt!,
     );
-  if (!ip.remaining)
+  if (!developerTesting && !ip.remaining)
     throw new DemoError(
       429,
       "network_limit",
@@ -66,8 +87,8 @@ export function checkAdmission(
       "The live demo is taking a break. You can still explore the sample walkthrough below.",
     );
   return {
-    visitor: [...user.active, now],
-    network: [...ip.active, now],
+    visitor: developerTesting ? user.active : [...user.active, now],
+    network: developerTesting ? ip.active : [...ip.active, now],
     charged: charged + RESERVATION_MICROS,
   };
 }

@@ -77,24 +77,109 @@ test("changing visitor cookies does not reset a network allowance", async () => 
   );
 });
 
-test("concurrent visitors stop at the remaining monthly reservation", async () => {
-  const month = new Date().toISOString().slice(0, 7);
+test("developer access is browser-specific, preserves public allowance and expires or revokes", async () => {
+  const visitor = randomUUID(),
+    network = randomUUID(),
+    now = Date.now();
+  const until = now + 30 * 60_000;
   await db
-    .collection("voiceMonths")
-    .doc(month)
+    .collection("voiceVisitors")
+    .doc(visitor)
     .set({
-      chargedMicros: 25_000_000 - RESERVATION_MICROS,
-      reservedMicros: 0,
-      requests: 0,
+      attempts: Array(3).fill(now - 1000),
+      developerStartedAt: now,
+      developerUntil: until,
     });
-  const result = await Promise.allSettled(
+  await db
+    .collection("voiceNetworks")
+    .doc(network)
+    .set({ attempts: Array(12).fill(now - 1000) });
+  assert.equal((await usage(visitor)).testingUntil, until);
+  const month = new Date().toISOString().slice(0, 7);
+  const before = (await db.collection("voiceMonths").doc(month).get()).data()!;
+  await Promise.all(
     Array.from({ length: 4 }, () =>
-      admit(randomUUID(), randomUUID(), randomUUID(), "text", 0),
+      admit(visitor, network, randomUUID(), "audio", 5),
     ),
   );
-  assert.equal(result.filter((item) => item.status === "fulfilled").length, 1);
+  const after = (await db.collection("voiceMonths").doc(month).get()).data()!;
   assert.equal(
-    (await db.collection("voiceMonths").doc(month).get()).data()?.chargedMicros,
-    25_000_000,
+    after.chargedMicros - before.chargedMicros,
+    4 * RESERVATION_MICROS,
   );
+  assert.equal(after.developerRequests - (before.developerRequests || 0), 4);
+  assert.equal((await usage(visitor)).remaining, 0);
+  assert.equal((await usage(visitor)).testingUntil, until);
+  assert.equal(
+    (await db.collection("voiceVisitors").doc(visitor).get()).data()?.attempts
+      .length,
+    3,
+  );
+  assert.equal(
+    (await db.collection("voiceNetworks").doc(network).get()).data()?.attempts
+      .length,
+    12,
+  );
+  await assert.rejects(
+    admit(randomUUID(), network, randomUUID(), "text", 0),
+    (e) => e instanceof DemoError && e.code === "network_limit",
+  );
+  await db
+    .collection("voiceVisitors")
+    .doc(visitor)
+    .update({ developerUntil: Date.now() - 1 });
+  assert.equal((await usage(visitor)).testingUntil, null);
+  await assert.rejects(
+    admit(visitor, network, randomUUID(), "text", 0),
+    (e) => e instanceof DemoError && e.code === "visitor_limit",
+  );
+  await db
+    .collection("voiceVisitors")
+    .doc(visitor)
+    .update({ developerStartedAt: 0, developerUntil: 0 });
+  await assert.rejects(
+    admit(visitor, network, randomUUID(), "text", 0),
+    (e) => e instanceof DemoError && e.code === "visitor_limit",
+  );
+});
+
+test("concurrent public and developer requests stop at the remaining monthly reservation", async () => {
+  const month = new Date().toISOString().slice(0, 7);
+  for (const testing of [false, true]) {
+    await db
+      .collection("voiceMonths")
+      .doc(month)
+      .set({
+        chargedMicros: 25_000_000 - RESERVATION_MICROS,
+        reservedMicros: 0,
+        requests: 0,
+      });
+    const visitors = Array.from({ length: 4 }, () => randomUUID());
+    if (testing) {
+      const now = Date.now();
+      await Promise.all(
+        visitors.map((id) =>
+          db
+            .collection("voiceVisitors")
+            .doc(id)
+            .set({
+              developerStartedAt: now,
+              developerUntil: now + 30 * 60_000,
+            }),
+        ),
+      );
+    }
+    const result = await Promise.allSettled(
+      visitors.map((id) => admit(id, randomUUID(), randomUUID(), "text", 0)),
+    );
+    assert.equal(
+      result.filter((item) => item.status === "fulfilled").length,
+      1,
+    );
+    assert.equal(
+      (await db.collection("voiceMonths").doc(month).get()).data()
+        ?.chargedMicros,
+      25_000_000,
+    );
+  }
 });

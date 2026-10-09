@@ -1,0 +1,19 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "taskflow-web-edge",
+  "main": "worker.ts",
+  "account_id": "406695dde171ecf826e9f6b089cf2dc0",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "taskflow.garbar.tech", "custom_domain": true }],
+  "vars": {
+    "ORIGIN": "https://taskflow-web-177649734578.europe-southwest1.run.app",
+    "PUBLIC_HOST": "taskflow.garbar.tech"
+  },
+  "ratelimits": [
+    { "name": "API_LIMIT", "namespace_id": "1776497345781", "simple": { "limit": 30, "period": 60 } },
+    { "name": "SUBMIT_LIMIT", "namespace_id": "1776497345782", "simple": { "limit": 6, "period": 60 } }
+  ],
+  "observability": { "enabled": false }
+}

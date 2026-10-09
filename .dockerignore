@@ -11,6 +11,8 @@ playwright-report
 *.tsbuildinfo
 .env
 .env.*
+.dev.vars*
+.wrangler
 !.env.example
 scripts
 tests

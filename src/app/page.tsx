@@ -1,6 +1,7 @@
 import Icon from "../components/Icon";
 import Phone from "../components/Phone";
 import TaskDemo from "../components/TaskDemo";
+import VoiceDemo from "../components/VoiceDemo";
 const faqs = [
   [
     "Can I download TaskFlow yet?",
@@ -170,8 +171,8 @@ export default function HomePage() {
               </span>
               <h3>See the shape of your day.</h3>
               <p>
-                Start with your task calendar. Zoom out to the month or settle into
-                the week, with your tasks right where they belong.
+                Start with your task calendar. Zoom out to the month or settle
+                into the week, with your tasks right where they belong.
               </p>
             </div>
             <div className="calendar-illustration" aria-hidden="true">
@@ -253,8 +254,9 @@ export default function HomePage() {
             <h3>The little details matter.</h3>
             <p>
               Notes, priorities, and attachments. Keep what you need beside what
-              you need to do. Sign in to upload files and download them on another device;
-              task details show which files are backed up. Up to 6 MiB per file.
+              you need to do. Sign in to upload files and download them on
+              another device; task details show which files are backed up. Up to
+              6 MiB per file.
             </p>
             <div className="detail-chips" aria-hidden="true">
               <span>
@@ -281,6 +283,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <VoiceDemo />
       <section
         id="demo"
         className="demo-section section-space"

@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { ThemeProvider } from "../components/ThemeProvider";
 import "../styles/global.css";
+import "../styles/voice.css";
 
 const site = process.env.SITE_URL ? new URL(process.env.SITE_URL) : undefined;
 const title = "TaskFlow — Make room for a clearer day";

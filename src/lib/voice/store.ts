@@ -5,6 +5,7 @@ import {
   DAY,
   DEFAULT_BUDGET_MICROS,
   DemoError,
+  developerWindowUntil,
   DraftResult,
   RESERVATION_MICROS,
 } from "./policy";
@@ -38,7 +39,18 @@ function jobRef(id: string, requestId: string) {
 }
 export async function usage(id: string) {
   const doc = await visitorRef(id).get();
-  return allowance(doc.data()?.attempts || [], Date.now());
+  const data = doc.data() || {},
+    now = Date.now();
+  const { remaining, resetAt } = allowance(data.attempts || [], now);
+  return {
+    remaining,
+    resetAt,
+    testingUntil: developerWindowUntil(
+      data.developerStartedAt,
+      data.developerUntil,
+      now,
+    ),
+  };
 }
 export async function cachedJob(id: string, requestId: string) {
   const job = await jobRef(id, requestId).get();
@@ -71,8 +83,7 @@ export async function admit(
   kind: "text" | "audio",
   seconds: number,
 ) {
-  const now = Date.now(),
-    month = new Date(now).toISOString().slice(0, 7);
+  const month = new Date().toISOString().slice(0, 7);
   const user = visitorRef(id),
     ip = db().collection("voiceNetworks").doc(network),
     job = jobRef(id, requestId),
@@ -86,15 +97,23 @@ export async function admit(
         "This request already exists. Retry to retrieve the result without using another try.",
       );
     const stats = m.data() || {};
+    const now = Date.now();
+    const testing =
+      developerWindowUntil(
+        u.data()?.developerStartedAt,
+        u.data()?.developerUntil,
+        now,
+      ) !== null;
     const next = checkAdmission(
       u.data()?.attempts || [],
       n.data()?.attempts || [],
       stats.chargedMicros || 0,
       budgetMicros(),
       now,
+      testing,
     );
     const expiresAt = Timestamp.fromMillis(now + 2 * DAY);
-    tx.set(user, { attempts: next.visitor, expiresAt });
+    tx.set(user, { attempts: next.visitor, expiresAt }, { merge: true });
     tx.set(ip, { attempts: next.network, expiresAt });
     tx.create(job, {
       state: "processing",
@@ -107,6 +126,7 @@ export async function admit(
       chargedMicros: next.charged,
       reservedMicros: (stats.reservedMicros || 0) + RESERVATION_MICROS,
       requests: (stats.requests || 0) + 1,
+      developerRequests: (stats.developerRequests || 0) + Number(testing),
       [kind + "Requests"]: (stats[kind + "Requests"] || 0) + 1,
       audioSeconds: (stats.audioSeconds || 0) + seconds,
       budgetMicros: budgetMicros(),

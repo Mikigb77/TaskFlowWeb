@@ -12,11 +12,11 @@ export async function GET(request: Request) {
   try {
     checkRequest(request);
     const identity = getIdentity(request, true);
-    const { remaining, resetAt } = await usage(identity.id);
+    const access = await usage(identity.id);
     return json(
       {
-        remaining,
-        resetAt,
+        ...access,
+        developerCode: identity.id,
         siteKey: required("TURNSTILE_SITE_KEY"),
         maxSeconds: 60,
       },

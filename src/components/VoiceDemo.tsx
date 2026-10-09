@@ -4,7 +4,13 @@ import Icon from "./Icon";
 import type { Draft } from "../lib/voice/policy";
 import { audioBase64, startRecorder } from "../lib/voice/recorder";
 
-type Status = { remaining: number; resetAt: number | null; siteKey: string };
+type Status = {
+  remaining: number;
+  resetAt: number | null;
+  siteKey: string;
+  testingUntil?: number | null;
+  developerCode?: string;
+};
 
 function scheduleLabel(task: Draft) {
   const date = task.date
@@ -96,6 +102,8 @@ function Verification({
 }
 
 export default function VoiceDemo() {
+  const [developerTools, setDeveloperTools] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const [retryPending, setRetryPending] = useState(false);
   const [opened, setOpened] = useState(false),
     [status, setStatus] = useState<Status | null>(null);
@@ -149,6 +157,24 @@ export default function VoiceDemo() {
       );
     setStatus(data as Status);
   }, []);
+  useEffect(() => {
+    setDeveloperTools(
+      new URLSearchParams(window.location.search).get("developer") === "1",
+    );
+  }, []);
+  useEffect(() => {
+    const until = status?.testingUntil;
+    if (!until) return;
+    setNow(Date.now());
+    const interval = setInterval(() => {
+      setNow(Date.now());
+      if (Date.now() >= until) {
+        clearInterval(interval);
+        void refresh().catch(() => {});
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [status?.testingUntil, refresh]);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -276,6 +302,7 @@ export default function VoiceDemo() {
             ...value,
             remaining: data.remaining,
             resetAt: data.resetAt,
+            testingUntil: data.testingUntil,
           },
       );
     } catch (reason) {
@@ -323,8 +350,14 @@ export default function VoiceDemo() {
     setToken("");
     requestId.current = "";
   }
+  const developerActive = (status?.testingUntil || 0) > now;
+  const allowanceUsed = status?.remaining === 0 && !developerActive;
+  const testingSeconds = Math.max(
+    0,
+    Math.ceil(((status?.testingUntil || 0) - now) / 1000),
+  );
   const unavailable =
-    busy || loading || recording || (status?.remaining === 0 && !retryPending);
+    busy || loading || recording || (allowanceUsed && !retryPending);
   return (
     <section
       id="voice"
@@ -367,7 +400,11 @@ export default function VoiceDemo() {
             <>
               <div className="voice-topline">
                 <span className="voice-trial-badge">
-                  {status ? `${status.remaining} of 3 tries left` : "Live demo"}
+                  {developerActive
+                    ? `Developer testing · ${Math.floor(testingSeconds / 60)}:${String(testingSeconds % 60).padStart(2, "0")} left`
+                    : status
+                      ? `${status.remaining} of 3 tries left`
+                      : "Live demo"}
                 </span>
                 <button
                   className="text-link"
@@ -537,7 +574,7 @@ export default function VoiceDemo() {
                       <span>{text.length} / 1,500 characters</span>
                     </label>
                   )}
-                  {(status.remaining > 0 || retryPending) && (
+                  {(!allowanceUsed || retryPending) && (
                     <Verification
                       siteKey={status.siteKey}
                       onToken={receiveToken}
@@ -558,9 +595,11 @@ export default function VoiceDemo() {
                     <Icon name="arrow" />
                   </button>
                   <p className="voice-fine">
-                    Three attempts in a rolling 24 hours. Shared-network limits
-                    also apply. AI can make mistakes; check every draft. These
-                    preview tasks stay on this page and do not sync to the app.
+                    {developerActive
+                      ? "Temporary developer access for this browser. Daily allowances resume when the timer ends. "
+                      : "Three submissions in a rolling 24 hours. Recording and editing do not use a try. Shared-network limits also apply. "}
+                    AI can make mistakes; check every draft. These preview tasks
+                    stay on this page and do not sync to the app.
                   </p>
                 </div>
               )}
@@ -748,7 +787,7 @@ export default function VoiceDemo() {
                     ) : (
                       <button
                         className="text-link"
-                        disabled={status?.remaining === 0}
+                        disabled={allowanceUsed}
                         onClick={() => {
                           setAnswered(false);
                           setError("");
@@ -760,7 +799,7 @@ export default function VoiceDemo() {
                     )}
                     <button
                       className="text-link"
-                      disabled={status?.remaining === 0}
+                      disabled={allowanceUsed}
                       onClick={startAgain}
                     >
                       Try a new thought <Icon name="arrow" size={16} />
@@ -776,7 +815,7 @@ export default function VoiceDemo() {
                   </p>
                 </div>
               )}
-              {status?.remaining === 0 && !busy && (
+              {allowanceUsed && !busy && (
                 <p className="voice-fine" role="status">
                   Your allowance returns{" "}
                   {status.resetAt
@@ -788,6 +827,29 @@ export default function VoiceDemo() {
                     : "tomorrow"}
                   . The sample walkthrough below is always available.
                 </p>
+              )}
+              {developerTools && status?.developerCode && (
+                <details className="voice-developer-tools">
+                  <summary>Developer testing</summary>
+                  <p>Browser testing code</p>
+                  <code>{status.developerCode}</code>
+                  <p>
+                    An authorized project owner can enable a temporary window
+                    for this browser. This code and URL do not unlock it on
+                    their own.
+                  </p>
+                  <button
+                    className="text-link"
+                    disabled={busy || recording || loading}
+                    onClick={() =>
+                      void refresh().catch((reason) =>
+                        setError((reason as Error).message),
+                      )
+                    }
+                  >
+                    Check developer access
+                  </button>
+                </details>
               )}
             </>
           )}

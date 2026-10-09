@@ -133,6 +133,22 @@ gcloud run services update taskflow-web --region=europe-southwest1 `
   --update-env-vars=VOICE_DEMO_ENABLED=false
 ```
 
+### Temporary developer testing
+
+The public demo stays at **three AI submissions per signed browser per rolling 24 hours**. Each submission can generate several task drafts. Starting, stopping, listening to, rerecording, or editing a recording uses no allowance; pressing **Create drafts** submits it. Replaying an existing request does not call the model or consume another attempt. Failed provider calls can still consume an attempt and retain their budget reservation.
+
+To test beyond those daily limits, open **https://taskflow.garbar.tech/?developer=1#voice**, open the live demo, and expand **Developer testing** to get that browser's testing code. From an account with Firestore write access in this project:
+
+```powershell
+pwsh -File scripts/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Minutes 30
+# End a window early:
+pwsh -File scripts/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Revoke
+```
+
+Click **Check developer access** in that browser. Its countdown shows the active window. The grant is bound to the signed browser cookie and expires on the server automatically (maximum one hour); changing the URL or knowing the code does not grant access. An owner can grant another browser separately, including a friend's, if needed. The public link requires no developer parameter.
+
+Only the daily browser/network allowances are waived during the window. Turnstile, same-origin verification, per-minute burst limits, upload/recording limits and the €25 AI budget remain enforced. Developer calls are included in spending reports and counted separately as `developerAttempts`; they do not use the public browser/network allowance. When the window ends, the browser resumes its previous rolling allowance rather than receiving a reset. Grants share the existing quota-record TTL; expiry does not depend on TTL deletion or a scheduled agent action.
+
 ### Security and concurrency verification
 
 ```bash
@@ -142,7 +158,7 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8686 npm run test:quota
 npm run build && npm test
 ```
 
-Quota tests refuse to use a real database and create an isolated emulator project. They test simultaneous admissions, shared-network limits, idempotent settlement and replay, encrypted storage, and concurrent monthly reservations. UI tests mock only the external widget/API at the browser boundary; production contains no test bypass. Live text/audio smoke tests still need to be checked against the deployed service.
+Quota tests refuse to use a real database and create an isolated emulator project. They test simultaneous admissions, shared-network limits, idempotent settlement and replay, encrypted storage, expiring developer grants, and concurrent monthly reservations. UI tests mock only the external widget/API at the browser boundary; production contains no fake-model or challenge bypass. Live text/audio smoke tests still need to be checked against the deployed service.
 
 References: [Google service identity](https://docs.cloud.google.com/run/docs/securing/service-identity), [model pricing](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing), [Google spend caps and latency](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps), [Turnstile server validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Cloudflare custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 

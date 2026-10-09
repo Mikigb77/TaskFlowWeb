@@ -7,6 +7,7 @@ import {
   DAY,
   DEFAULT_BUDGET_MICROS,
   DemoError,
+  developerWindowUntil,
   estimatedMicros,
   RESERVATION_MICROS,
   resultSchema,
@@ -22,6 +23,50 @@ import {
   unseal,
 } from "../src/lib/voice/security";
 import edge from "../edge/worker";
+
+test("developer access expires exactly on time and rejects invalid or excessive grants", () => {
+  const now = Date.now(),
+    until = now + 30 * 60_000;
+  assert.equal(developerWindowUntil(now, until, now), until);
+  assert.equal(developerWindowUntil(now, until, until - 1), until);
+  assert.equal(developerWindowUntil(now, until, until), null);
+  assert.equal(developerWindowUntil(now, until, until + 1), null);
+  for (const [start, end] of [
+    [undefined, until],
+    [now, Infinity],
+    [now + 1, until],
+    [now, now + 61 * 60_000],
+    [0, 0],
+    [String(now), until],
+  ]) {
+    assert.equal(developerWindowUntil(start, end, now), null);
+  }
+  const visitor = Array(3).fill(now - 1),
+    network = Array(12).fill(now - 1);
+  const admitted = checkAdmission(
+    visitor,
+    network,
+    0,
+    DEFAULT_BUDGET_MICROS,
+    now,
+    true,
+  );
+  assert.deepEqual(admitted.visitor, visitor);
+  assert.deepEqual(admitted.network, network);
+  assert.equal(admitted.charged, RESERVATION_MICROS);
+  assert.throws(
+    () =>
+      checkAdmission(
+        visitor,
+        network,
+        DEFAULT_BUDGET_MICROS,
+        DEFAULT_BUDGET_MICROS,
+        now,
+        true,
+      ),
+    (e) => e instanceof DemoError && e.code === "budget_pause",
+  );
+});
 
 test("rolling 24-hour limits survive calendar boundaries and expire individually", () => {
   const now = Date.UTC(2026, 9, 10, 0, 1);

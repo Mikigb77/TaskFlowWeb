@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       throw new DemoError(400, "request_id", "Please start a new draft.");
     const cached = await cachedJob(identity.id, requestId);
     if (cached) {
-      const { remaining, resetAt } = await usage(identity.id);
-      return json({ ...cached, remaining, resetAt });
+      const access = await usage(identity.id);
+      return json({ ...cached, ...access });
     }
     await verifyChallenge(request);
     const bytes = await readLimitedBody(request);
@@ -87,8 +87,8 @@ export async function POST(request: Request) {
     const result = await generateDraft({ text, audio: wav, timezone });
     await finish(identity.id, requestId, month, result);
     admitted = undefined;
-    const { remaining, resetAt } = await usage(identity.id);
-    return json({ ...result.result, remaining, resetAt });
+    const access = await usage(identity.id);
+    return json({ ...result.result, ...access });
   } catch (error) {
     if (admitted) {
       try {

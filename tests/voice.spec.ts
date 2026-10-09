@@ -252,8 +252,10 @@ test.describe("microphone capture", () => {
         body: `window.turnstile={render(el,o){queueMicrotask(()=>o.callback('fixture'));return 'id'},remove(){}}`,
       }),
     );
-    let received = false;
+    let received = false,
+      requests = 0;
     await page.route("**/api/voice/draft/", async (route) => {
+      requests++;
       const body = route.request().postDataJSON();
       const seconds = validateWav(Buffer.from(body.audio, "base64"));
       expect(seconds).toBeGreaterThan(0.3);
@@ -285,6 +287,16 @@ test.describe("microphone capture", () => {
     await expect(
       page.getByRole("heading", { name: "Ready when you are." }),
     ).toBeFocused();
+    expect(requests).toBe(0);
+    await page
+      .getByRole("button", { name: "Record again", exact: true })
+      .click();
+    await expect(page.getByText(/Recording · 1s/)).toBeVisible();
+    await page.getByRole("button", { name: "Stop recording" }).click();
+    await expect(
+      page.getByText("Recording ready. Listen before sending."),
+    ).toBeVisible();
+    expect(requests).toBe(0);
     await page.getByRole("button", { name: "Create drafts" }).click();
     await expect(
       page.getByText("No tasks were found.", { exact: false }),
@@ -298,7 +310,87 @@ test.describe("microphone capture", () => {
       page.getByRole("button", { name: "Start recording" }),
     ).toBeEnabled();
     expect(received).toBe(true);
+    expect(requests).toBe(1);
   });
+});
+
+test("only a server-granted developer window unlocks a used allowance and it expires in place", async ({
+  page,
+}) => {
+  const now = Date.now();
+  await page.clock.install({ time: now });
+  let testingUntil: number | null = null;
+  const developerCode = "9ad027d1-5678-4abc-8def-1234567890ab";
+  await page.route("**/api/voice/status/", (route) =>
+    route.fulfill({
+      json: {
+        remaining: 0,
+        resetAt: now + 86400000,
+        siteKey: "fixture",
+        testingUntil,
+        developerCode,
+      },
+    }),
+  );
+  await page.route("https://challenges.cloudflare.com/**", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `window.turnstile={render(el,o){queueMicrotask(()=>o.callback('fixture'));return 'id'},remove(){}}`,
+    }),
+  );
+  await page.route("**/api/voice/draft/", (route) =>
+    route.fulfill({
+      json: {
+        transcript: "Buy coffee",
+        tasks: [
+          {
+            title: "Buy coffee",
+            date: null,
+            time: null,
+            priority: "low",
+            notes: "",
+            question: null,
+          },
+        ],
+        remaining: 0,
+        resetAt: now + 86400000,
+        testingUntil,
+      },
+    }),
+  );
+  await page.goto("/?developer=1#voice");
+  await page.getByRole("button", { name: "Try the live demo" }).click();
+  const demo = page.locator("#voice");
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toBeDisabled();
+  await demo.getByText("Developer testing", { exact: true }).click();
+  await expect(demo.locator("code")).toHaveText(developerCode);
+  testingUntil = now + 30 * 60_000;
+  await demo.getByRole("button", { name: "Check developer access" }).click();
+  await expect(demo.getByText(/Developer testing ·/)).toBeVisible();
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toBeEnabled();
+  await demo.getByRole("button", { name: "Type it instead" }).click();
+  await demo.getByLabel("What is on your mind?").fill("Buy coffee");
+  await demo.getByRole("button", { name: "Create drafts" }).click();
+  await expect(
+    demo.getByRole("heading", { name: "1 draft, ready for you." }),
+  ).toBeVisible();
+  await demo.getByRole("button", { name: "Try a new thought" }).click();
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toBeEnabled();
+  testingUntil = null;
+  await page.clock.fastForward(30 * 60_000 + 1000);
+  await expect(demo.getByText("0 of 3 tries left")).toBeVisible();
+  await expect(
+    demo.getByRole("button", { name: "Start recording" }),
+  ).toBeDisabled();
+  await expect(
+    demo.getByRole("button", { name: "Create drafts" }),
+  ).toBeDisabled();
 });
 
 test("the last allowed request can be retrieved after an interrupted response", async ({

@@ -8,15 +8,23 @@ const faqs = [
   ],
   [
     "How does voice-to-task work?",
-    "In the app, record what you need to do in your own words. TaskFlow transcribes your recording and uses AI to suggest a title, date, time, priority, and notes. You can check and change the draft before saving. Voice capture needs an internet connection and a signed-in account.",
+    "In the app, record what you need to do in your own words. TaskFlow transcribes your recording and uses AI to suggest tasks with titles, dates, times, priorities, and notes. Check and change the drafts before saving. AI processing needs an internet connection. A limited voice trial is available without an account.",
   ],
   [
     "Can I use it offline?",
-    "You can create, edit, and complete tasks stored on your phone while offline. Account sync and AI voice capture need a connection. Local attachments stay on the device where you added them.",
+    "You can create, edit, and complete your own tasks stored on your phone while offline. Account sync, AI processing, and attachment transfers need a connection. Downloaded files work offline; shared-list content is removed when your device next learns that access has ended.",
   ],
   [
     "Do I need an account?",
-    "You can start planning locally without an account. Sign in to sync your tasks with the backend and use voice capture. Account recovery is available if you forget your password.",
+    "You can create tasks and try a limited daily voice allowance without an account. Sign in to sync tasks, upload attachments, and get a larger AI allowance. Account recovery is available if you forget your password. Older device-only files need an explicit upload from task details.",
+  ],
+  [
+    "Can I share a list?",
+    "The Android development app supports shared lists. A list owner invites an account and shares a code separately; recipients choose to accept. Editors can change tasks and files, while viewers can read them. This feature is still being tested before public release.",
+  ],
+  [
+    "Can I keep notes as well as tasks?",
+    "Yes. The development app has a separate Notes view for ideas and reference material, with optional checklists and links. Choose Task or Note when capturing. Typed notes work locally; recorded notes need online transcription and keep your wording without turning it into scheduled tasks.",
   ],
   [
     "Will TaskFlow be free?",
@@ -162,7 +170,7 @@ export default function HomePage() {
               </span>
               <h3>See the shape of your day.</h3>
               <p>
-                Start with your calendar. Zoom out to the month or settle into
+                Start with your task calendar. Zoom out to the month or settle into
                 the week, with your tasks right where they belong.
               </p>
             </div>
@@ -245,7 +253,8 @@ export default function HomePage() {
             <h3>The little details matter.</h3>
             <p>
               Notes, priorities, and attachments. Keep what you need beside what
-              you need to do.
+              you need to do. Sign in to upload files and download them on another device;
+              task details show which files are backed up. Up to 6 MiB per file.
             </p>
             <div className="detail-chips" aria-hidden="true">
               <span>

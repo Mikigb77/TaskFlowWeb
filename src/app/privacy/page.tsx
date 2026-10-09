@@ -38,8 +38,9 @@ export default function PrivacyPage() {
       <p>
         This version has no analytics, advertising trackers, email collection,
         or sign-up form. Fonts and app screenshots are served with the website.
-        A hosting service may process standard connection information, such as
-        IP addresses and request logs, when serving pages.
+        This preview is hosted on Google Cloud Run, which processes standard
+        connection information, such as IP addresses and request logs, when
+        serving pages.
       </p>
       <h2>The mobile app is separate</h2>
       <p>
@@ -48,7 +49,7 @@ export default function PrivacyPage() {
         App-specific privacy information and support contact details will be
         provided before a public app launch.
       </p>
-      <p className="prose-updated">Last updated: 21 September 2026</p>
+      <p className="prose-updated">Last updated: 9 October 2026</p>
     </article>
   );
 }

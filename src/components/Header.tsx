@@ -7,6 +7,7 @@ import { ThemeToggle } from "./ThemeProvider";
 const links = [
   ["Features", "/#features"],
   ["How it works", "/#demo"],
+  ["Try voice", "/#voice"],
   ["Questions", "/#questions"],
 ];
 export default function Header() {

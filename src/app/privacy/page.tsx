@@ -36,11 +36,38 @@ export default function PrivacyPage() {
       </p>
       <h2>Website services</h2>
       <p>
-        This version has no analytics, advertising trackers, email collection,
-        or sign-up form. Fonts and app screenshots are served with the website.
-        This preview is hosted on Google Cloud Run, which processes standard
-        connection information, such as IP addresses and request logs, when
-        serving pages.
+        There are no advertising trackers, email collection, or sign-up forms.
+        Fonts and app screenshots are served with the website. Cloudflare and
+        Google Cloud Run process connection information, including IP addresses
+        and request logs, to deliver and protect the site.
+      </p>
+      <h2>The optional live voice demo</h2>
+      <p>
+        Opening the live demo loads Cloudflare Turnstile to check for automated
+        abuse and sets a secure, essential visitor cookie for the three-try
+        allowance. It lasts up to 30 days. Cloudflare receives browser and
+        connection signals for this security check. Recording starts only after
+        you press the microphone button and allow access. Recordings stay in
+        your browser until you press “Create drafts”.
+      </p>
+      <p>
+        Creating drafts sends your recording or typed text and timezone to our
+        server and Google’s managed Gemini service. Processing uses a global
+        endpoint and may occur outside your country. Avoid confidential or
+        sensitive information in this public demonstration. We do not store
+        recordings. An encrypted copy of the transcript and generated drafts is
+        kept temporarily so retrying the same request does not cause another AI
+        call. It becomes inaccessible after 24 hours and is then queued for
+        automatic deletion; the database may take additional time to remove it.
+      </p>
+      <p>
+        We store a keyed hash of your network address and short-lived attempt
+        timestamps to enforce limits. Those records expire after 48 hours and
+        are queued for deletion. Aggregate monthly counts, audio duration, token
+        usage, and estimated costs are retained to manage the demo’s budget.
+        They contain no recordings or task text. Drafts you edit in the preview
+        list remain in this page’s memory and disappear on reload. Nothing is
+        added to an app account or calendar.
       </p>
       <h2>The mobile app is separate</h2>
       <p>

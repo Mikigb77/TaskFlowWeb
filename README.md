@@ -34,7 +34,7 @@ Dependencies are local to this repository. If you switch between Windows and WSL
 - Page metadata, generated social preview image, privacy notice for this website, robots.txt, and sitemap.
 - Locally bundled Manrope font; its SIL Open Font License is in `public/fonts/OFL.txt`.
 
-The demo is explicitly a simulation. It makes no AI or backend requests, records no audio, and stores no tasks or personal data. Edits exist only in page memory and reset on reload. Dates intentionally use the sample week of 21 September 2026. The primary buttons point to this demo. There is no public app download, pricing, waitlist, or email service configured, and the page says so.
+The sample walkthrough remains a simulation with a fixed example week. A separate, optional live demo accepts up to 60 seconds of recorded audio or 1,500 characters of text and returns editable task drafts. It supports English, Spanish, and Catalan, multiple tasks, and optional dates/times. Preview edits stay in page memory; nothing syncs to an app account. There is no public app download or paid website plan.
 
 ## Browser verification
 
@@ -71,11 +71,11 @@ Defaults (override with `-ProjectId`, `-Account`, `-Region`, `-Service`):
 | Region         | `europe-southwest1` (Madrid)                                  |
 | Service        | `taskflow-web`                                                |
 | Public preview | `https://taskflow-web-177649734578.europe-southwest1.run.app` |
-| Capacity       | 1 CPU, 512 MiB, concurrency 40                                |
+| Capacity       | 1 CPU, 512 MiB, concurrency 8                                |
 | Scaling        | 0–1 instances, request-based CPU billing                      |
 | Indexing       | Disabled for this provisional deployment                      |
 
-The first run enables Cloud Run, Cloud Build, Artifact Registry and IAM APIs and creates the website's image repository, private build-source bucket and two keyless service accounts. The runtime account has no project roles. The builder can read only this source bucket, write this image repository and emit logs. The project must already have billing enabled, and the deploying user needs permission to create these resources and assign those roles (the project owner can). The script never changes account defaults, payment configuration, custom domains or DNS.
+The first run enables Cloud Run, Cloud Build, Artifact Registry and IAM APIs and creates the website's image repository, private build-source bucket and two keyless service accounts. Voice setup adds AI prediction, Firestore, and access to three named secrets to the runtime account. The builder can read only this source bucket, write this image repository and emit logs. The project must already have billing enabled. Scripts preserve account defaults and payment configuration; only the separate edge deployment connects the requested TaskFlow subdomain.
 
 Scale-to-zero avoids keeping an idle instance running, but builds, image/source storage, logs and traffic can still incur usage charges. The instance limit controls scaling; it is not a hard spending cap. The first request after idle may take longer. Images remain available for rollback; review old build artifacts as usage grows.
 
@@ -87,14 +87,69 @@ PLAYWRIGHT_BASE_URL=https://taskflow-web-177649734578.europe-southwest1.run.app 
 
 The temporary URL above is the configured target; a successful script run confirms it is online and also prints Google's alternate service URL. The health response identifies the actual deployed commit. Google Cloud's console provides revision history and traffic controls for rollback to a previous healthy revision.
 
-## Before launching on a custom domain
+## Live voice demo and custom domain
 
-Set the build-time `SITE_URL` to the final HTTPS origin (see `.env.example`) and explicitly set `SITE_INDEXABLE=true` when you want search indexing, then rebuild. The deployment script intentionally keeps the provisional Cloud Run origin and `SITE_INDEXABLE=false`; update that configuration as part of a future domain launch. Until indexing is enabled, metadata and robots.txt ask crawlers not to index the preview and the sitemap is empty. Connect a verified download or waitlist URL only when it actually exists.
+The custom origin is **https://taskflow.garbar.tech**. A Cloudflare Worker creates the subdomain/certificate and proxies the Madrid Cloud Run service while keeping that hostname in the address bar. It does not redirect the parent domain or modify other app subdomains. Cloudflare stays on the Free plan; its platform limits still apply. Indexing remains disabled pending a deliberate public launch.
 
-The public routes are prerendered and do not require the Django backend to display. React client components handle only interaction and appearance. The screenshots are copied assets, so deploying this repository does not require access to the app repository.
+```powershell
+# One-time infrastructure and free Turnstile widget. Run Wrangler login in WSL first.
+pwsh -File scripts/setup-voice.ps1
+pwsh -File scripts/setup-ai-spend-cap.ps1
+
+# Merge dev into main first. This builds only origin/main.
+pwsh -File scripts/deploy-cloud-run.ps1 -EnableVoice `
+  -SiteUrl https://taskflow.garbar.tech `
+  -TurnstileSiteKey 0x4AAAAAAFSOD8PvA-Wh35pV
+
+# Clean checkout at the same main commit; publishes edge and syncs its secret.
+pwsh -File scripts/deploy-edge.ps1
+
+# Owner-only usage report using your existing Google Cloud sign-in.
+pwsh -File scripts/voice-stats.ps1
+```
+
+The site key is public by design. **There is no Gemini API key**: the Node server uses its Cloud Run service identity with Google Application Default Credentials. The three private values (`VOICE_APP_SECRET`, `VOICE_EDGE_SECRET`, and `TURNSTILE_SECRET_KEY`) live in Google Secret Manager; only the origin secret is also stored as a Cloudflare Worker secret. Never put them in `NEXT_PUBLIC_*`, browser code, build arguments, Git, or deployment output.
+
+The live demo is intentionally isolated from the account-bearing Django app. Next server routes provide only this bounded demonstration and reuse the task concepts (title, optional date/time, priority, notes, clarification). They do not create another account system or task database. One `gemini-3.5-flash-lite` request transcribes and extracts JSON, with no tools, search, paid fallback, or automatic retry. Keep the Android/Django API as the future signed-in web app's source of truth.
+
+### Protections and their limits
+
+- Three attempts per signed visitor cookie in a rolling 24 hours; twelve per network in that window. IPv6 addresses are grouped by /64. Shared networks can hit the network limit; clearing a cookie does not reset it.
+- Turnstile server verification checks success, hostname, and action before parsing an upload. The edge allows six submissions and thirty API requests per IP per minute. These edge burst counters are approximate; the durable Firestore allowances and spending transactions are authoritative.
+- Only same-origin submissions with the trusted edge secret can invoke AI. The generated Cloud Run URL rejects direct AI calls; forged forwarding headers cannot set the trusted IP. The Cloud Run service remains public for marketing, so direct traffic can still incur small request/hosting charges. This is not a promise of zero DDoS costs.
+- Uploads are capped at 2.6 MB. The server checks actual mono 16 kHz PCM bytes, headers, and duration (maximum 60 seconds), never a claimed duration. Text is capped at 1,500 characters. The model output is capped at 2,048 tokens and validated before display. Dates, questions, and priorities remain suggestions.
+- Each admitted attempt atomically reserves **€0.02** against a **€25 UTC-calendar-month** AI allowance before calling Google. Successful calls settle to a conservative token estimate; failed/unknown calls keep the reservation charged. Crashed/unsettled jobs also remain charged, favoring an early pause over overspending. There is no 50-submission sitewide daily cutoff. Neither cookies, concurrent requests, nor server restarts reset this counter.
+- Cost estimates use the 9 October 2026 global rate of $0.30/million input tokens and $2.50/million output tokens, multiplied by €1.25/USD as a deliberate currency cushion. Rates are fixed alongside the model and need review when changing it. These estimates are **not invoices** and exclude hosting, Firestore, taxes, other project usage, and provider price changes.
+- A separate Google Billing spend-cap budget pauses the TaskFlow AI service at €25/month and alerts project owners/billing administrators at 50%, 80%, and 100%. Google enforcement can lag; overages and infrastructure remain billable. The ordinary website/sample demo is outside that AI cap.
+- A request UUID bound to the signed session prevents duplicate model charges. Encrypted retry results expire after 24 hours; quota records after 48 hours. Firestore TTL deletion is asynchronous. Audio is not persisted. Monthly aggregates contain no task content.
+
+The owner report shows attempts, success/failure, task count, audio minutes, estimated costs, pending reservations, and remaining budget. It is deliberately not a public cost/admin endpoint. Use Google Billing for actual invoices and Cloudflare analytics for traffic. For future paid plans, compare the report's mean AI cost per attempt with net subscription revenue and hosting costs; the demo does not currently collect revenue.
+
+To pause only the live demo immediately:
+
+```powershell
+gcloud run services update taskflow-web --region=europe-southwest1 `
+  --project=taskflow-511107 --account=tech.garbar@gmail.com `
+  --update-env-vars=VOICE_DEMO_ENABLED=false
+```
+
+### Security and concurrency verification
+
+```bash
+npm run test:unit
+# Start the official Firestore emulator locally on port 8686, then:
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8686 npm run test:quota
+npm run build && npm test
+```
+
+Quota tests refuse to use a real database and create an isolated emulator project. They test simultaneous admissions, shared-network limits, idempotent settlement and replay, encrypted storage, and concurrent monthly reservations. UI tests mock only the external widget/API at the browser boundary; production contains no test bypass. Live text/audio smoke tests still need to be checked against the deployed service.
+
+References: [Google service identity](https://docs.cloud.google.com/run/docs/securing/service-identity), [model pricing](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing), [Google spend caps and latency](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps), [Turnstile server validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Cloudflare custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+
+The marketing pages are prerendered; only the live-demo API routes run dynamically. The screenshots are copied assets, so deploying this repository does not require access to the app repository.
 
 ## Adding the web app later
 
-Keep marketing routes public and introduce signed-in pages in a separate route group. Use the existing Django API for accounts, tasks, sync, and AI; do not create a second user database or put the Google API key in browser code. Authentication, microphone permissions, and API integration will be implemented when we build those app features. The website’s current Permissions-Policy disables microphone access because the marketing walkthrough never records audio; scope that policy appropriately when a real capture route is added.
+Keep marketing routes public and introduce signed-in pages in a separate route group. Use the existing Django API for accounts, tasks, sync, and authenticated AI; do not create a second user database or put private credentials in browser code. Permissions-Policy allows only this site's microphone use, and capture requires an explicit visitor action and browser permission.
 
 Useful references: [Next.js setup](https://nextjs.org/docs/app/getting-started/installation), [server and client components](https://nextjs.org/docs/app/getting-started/server-and-client-components), and [Tailwind CSS](https://tailwindcss.com/docs/installation/using-postcss).

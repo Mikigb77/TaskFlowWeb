@@ -17,6 +17,11 @@ param(
     [string]$Region = 'europe-southwest1',
     [ValidatePattern('^[a-z][a-z0-9-]{0,19}[a-z0-9]$')]
     [string]$Service = 'taskflow-web',
+    [ValidatePattern('^https://[a-z0-9.-]+$')]
+    [string]$SiteUrl,
+    [switch]$EnableVoice,
+    [ValidatePattern('^[A-Za-z0-9_-]+$')]
+    [string]$TurnstileSiteKey,
     [switch]$Plan
 )
 
@@ -65,6 +70,10 @@ if (-not $billing.billingEnabled) {
     throw "Billing is not enabled for $ProjectId. Enable it in Google Cloud before deploying."
 }
 $origin = "https://$Service-$($project.projectNumber).$Region.run.app"
+if (-not $SiteUrl) { $SiteUrl = $origin }
+if ($EnableVoice -and (-not $TurnstileSiteKey -or $SiteUrl -ne 'https://taskflow.garbar.tech')) {
+    throw 'Voice requires the protected TaskFlow hostname and a public Turnstile site key.'
+}
 $image = "$Region-docker.pkg.dev/$ProjectId/$Service/website:$commit"
 $runtimeId = "$Service-runtime"
 $builderId = "$Service-builder"
@@ -79,7 +88,9 @@ $bucket = "$ProjectId-$Service-builds"
     branch = 'origin/main'
     commit = $commit
     image = $image
-    url = $origin
+    url = $SiteUrl
+    voiceEnabled = [bool]$EnableVoice
+    aiMonthlyPauseEUR = 25
     scaling = '0–1 instances; 1 CPU; 512 MiB; request-based billing'
     indexable = $false
 } | ConvertTo-Json | Write-Host
@@ -110,7 +121,7 @@ if ($bucket -notin $buckets) {
     Invoke-Cloud @('storage', 'buckets', 'create', "gs://$bucket",
         "--location=$Region", '--uniform-bucket-level-access', '--public-access-prevention')
 }
-# Runtime has no project roles. Builder can only read this source bucket, write
+# Voice runtime roles are provisioned separately. Builder can only read this source bucket, write
 # this image repository and emit logs; it cannot deploy or administer the app.
 Invoke-Cloud @('artifacts', 'repositories', 'add-iam-policy-binding', $Service,
     "--location=$Region", "--member=serviceAccount:$builderEmail", '--role=roles/artifactregistry.writer')
@@ -127,7 +138,7 @@ try {
     $archive = Join-Path $stageRoot 'main.tar'
     Invoke-Checked 'git' @('-C', $repo, 'archive', '--format=tar', "--output=$archive", $commit)
     Invoke-Checked 'tar' @('-xf', $archive, '-C', $source)
-    $substitutions = "_IMAGE=$image,_SITE_URL=$origin,_SITE_INDEXABLE=false,COMMIT_SHA=$commit"
+    $substitutions = "_IMAGE=$image,_SITE_URL=$SiteUrl,_SITE_INDEXABLE=false,COMMIT_SHA=$commit"
     Invoke-Cloud @('builds', 'submit', $source, "--region=$Region",
         "--config=$(Join-Path $source 'cloudbuild.yaml')",
         "--service-account=projects/$ProjectId/serviceAccounts/$builderEmail",
@@ -137,12 +148,17 @@ try {
         '--format=json')) | ConvertFrom-Json
     $digestImage = $imageDetails.image_summary.fully_qualified_digest
     if (-not $digestImage) { throw 'Artifact Registry did not return an image digest.' }
-    Invoke-Cloud @('run', 'deploy', $Service, "--region=$Region", "--image=$digestImage",
+    $voiceFlags = @('--update-env-vars=VOICE_DEMO_ENABLED=false')
+    if ($EnableVoice) {
+        $voiceFlags = @("--update-env-vars=GOOGLE_CLOUD_PROJECT=$ProjectId,VOICE_DEMO_ENABLED=true,VOICE_PUBLIC_ORIGIN=$SiteUrl,VOICE_MONTHLY_BUDGET_EUR=25,TURNSTILE_SITE_KEY=$TurnstileSiteKey",
+            '--update-secrets=VOICE_APP_SECRET=taskflow-voice-app:latest,VOICE_EDGE_SECRET=taskflow-voice-edge:latest,TURNSTILE_SECRET_KEY=taskflow-turnstile:latest')
+    }
+    Invoke-Cloud (@('run', 'deploy', $Service, "--region=$Region", "--image=$digestImage",
         "--service-account=$runtimeEmail", '--allow-unauthenticated', '--ingress=all',
         '--default-url', '--execution-environment=gen2', '--port=8080', '--cpu=1',
-        '--memory=512Mi', '--min=0', '--max=1', '--concurrency=40', '--timeout=60',
+        '--memory=512Mi', '--min=0', '--max=1', '--concurrency=8', '--timeout=60',
         '--cpu-throttling', '--no-cpu-boost',
-        "--labels=app=taskflow-web,git-sha=$commit", '--description=TaskFlow marketing preview from main')
+        "--labels=app=taskflow-web,git-sha=$commit", '--description=TaskFlow marketing preview from main') + $voiceFlags)
     Invoke-Cloud @('run', 'services', 'update-traffic', $Service, "--region=$Region", '--to-latest')
     $url = (Invoke-Cloud @('run', 'services', 'describe', $Service,
         "--region=$Region", '--format=value(status.url)')).Trim()
@@ -151,7 +167,7 @@ try {
         throw 'The public health check did not match the deployed main commit.'
     }
     Write-Host "Deployed origin/main ($commit): $url"
-    Write-Host "Shareable preview: $origin"
+    Write-Host "Shareable preview: $SiteUrl"
 } finally {
     # Delete only the unique temporary directory this invocation created.
     $resolvedStage = [System.IO.Path]::GetFullPath($stageRoot)

@@ -14,7 +14,7 @@ test("the public preview is healthy and excluded from search indexing", async ({
   const home = await request.get("/");
   expect(home.status()).toBe(200);
   expect(home.headers()["x-content-type-options"]).toBe("nosniff");
-  expect(home.headers()["permissions-policy"]).toContain("microphone=()");
+  expect(home.headers()["permissions-policy"]).toContain("microphone=(self)");
   expect(await home.text()).toContain(
     'name="robots" content="noindex, nofollow"',
   );

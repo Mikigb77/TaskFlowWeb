@@ -97,9 +97,9 @@ if ($builderEmail -notin $accounts) {
     Invoke-Cloud @('iam', 'service-accounts', 'create', $builderId,
         '--display-name=TaskFlow website builds')
 }
-$repositories = @(Invoke-Cloud @('artifacts', 'repositories', 'list', "--location=$Region", '--format=value(name)'))
+$repositories = @((Invoke-Cloud @('artifacts', 'repositories', 'list', "--location=$Region", '--format=json')) | ConvertFrom-Json)
 $repositoryName = "projects/$ProjectId/locations/$Region/repositories/$Service"
-if ($repositoryName -notin $repositories) {
+if ($repositoryName -notin @($repositories | ForEach-Object { $_.name })) {
     Invoke-Cloud @('artifacts', 'repositories', 'create', $Service,
         "--location=$Region", '--repository-format=docker',
         '--description=TaskFlow website release images')

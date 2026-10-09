@@ -22,7 +22,7 @@ $cap = (Number-Field 'budgetMicros') / 1000000
     drafts = Number-Field 'taskCount'; audioMinutes = [Math]::Round((Number-Field 'audioSeconds') / 60, 2)
     textAttempts = Number-Field 'textRequests'; audioAttempts = Number-Field 'audioRequests'
     conservativeChargeEUR = [Math]::Round($charged, 5); pendingOrUnsettledEUR = [Math]::Round($reserved, 5)
-    monthlyPauseEUR = $cap; remainingEUR = [Math]::Round([Math]::Max(0, $cap - $charged), 5)
+    monthlyPauseEUR = $cap; remainingEUR = [Math]::Round([Math]::Max([double]0, [double]($cap - $charged)), 5)
     meanCostPerAttemptEUR = if ($requests) { [Math]::Round($charged / $requests, 5) } else { 0 }
     note = 'Conservative estimate, not a Google invoice. Failed/unknown calls reserve EUR 0.02. Hosting, Firestore, tax, and any other Google usage are separate.'
 } | ConvertTo-Json

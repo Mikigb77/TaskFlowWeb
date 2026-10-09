@@ -12,6 +12,10 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
+  robots:
+    site && process.env.SITE_INDEXABLE === "true"
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
   metadataBase: site || new URL("http://localhost:3000"),
   alternates: site ? { canonical: "/" } : undefined,
   icons: { icon: "/favicon.svg" },

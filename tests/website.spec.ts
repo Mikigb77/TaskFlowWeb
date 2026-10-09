@@ -3,13 +3,14 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("visitors can edit, save, complete, and reset a sample task", async ({
   page,
+  baseURL,
 }) => {
   const errors: string[] = [];
   const externalRequests: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("request", (request) => {
     if (
-      !request.url().startsWith("http://127.0.0.1:3000") &&
+      new URL(request.url()).origin !== new URL(baseURL!).origin &&
       !request.url().startsWith("data:")
     )
       externalRequests.push(request.url());
@@ -136,9 +137,7 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
     page.getByText(/A public download is coming later/),
   ).toBeVisible();
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(
-    page.getByText(/Local attachments stay on the device/),
-  ).toBeVisible();
+  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
   const response = await page.goto("/a-page-that-does-not-exist/");
   expect(response?.status()).toBe(404);
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();
@@ -223,10 +222,11 @@ test("system appearance is followed until a choice is made", async ({
 
 test("the marketing content and FAQ remain usable without JavaScript", async ({
   browser,
+  baseURL,
 }) => {
   const context = await browser.newContext({
     javaScriptEnabled: false,
-    baseURL: "http://127.0.0.1:3000",
+    baseURL,
   });
   const page = await context.newPage();
   await page.goto("/");
@@ -234,9 +234,7 @@ test("the marketing content and FAQ remain usable without JavaScript", async ({
     "Make room",
   );
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(
-    page.getByText(/Local attachments stay on the device/),
-  ).toBeVisible();
+  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
   await expect(
     page.getByText(/Enable JavaScript to try the interactive demo/),
   ).toBeVisible();

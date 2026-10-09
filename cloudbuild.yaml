@@ -1,0 +1,19 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --pull
+      - --tag
+      - ${_IMAGE}
+      - --build-arg
+      - SITE_URL=${_SITE_URL}
+      - --build-arg
+      - SITE_INDEXABLE=${_SITE_INDEXABLE}
+      - --build-arg
+      - COMMIT_SHA=${COMMIT_SHA}
+      - .
+images:
+  - ${_IMAGE}
+options:
+  logging: CLOUD_LOGGING_ONLY
+timeout: 1200s

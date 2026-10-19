@@ -488,3 +488,20 @@ test("WEB-709: on a phone the offline card stacks its icon, heading and paragrap
     expect(paragraph.maxWidth, `${where}: paragraph's max-width is 26rem`).toBe("416px");
   }
 });
+
+test("WEB-710: on desktop the offline card's paragraph starts level with its heading, in every language", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "The two-column layout is desktop only.");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  for (const path of ["/", "/es/", "/ca/"]) {
+    await page.goto(path);
+    const card = page.locator(".feature-offline");
+    await card.scrollIntoViewIfNeeded();
+    const heading = await card.locator("h3").boundingBox();
+    const paragraph = await card.locator("p").first().boundingBox();
+    expect(heading, `${path}: heading`).not.toBeNull();
+    expect(paragraph, `${path}: paragraph`).not.toBeNull();
+    expect(Math.abs(paragraph!.y - heading!.y), `${path}: tops within 2 px`).toBeLessThanOrEqual(2);
+  }
+});

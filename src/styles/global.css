@@ -685,9 +685,10 @@ h1 {
   grid-row: 2;
 }
 .feature-offline p {
+  /* Beside its heading, with the heading's 18px top margin, so their tops line up (WEB-710). */
   grid-column: 2;
-  grid-row: 1 / span 2;
-  margin-top: 0;
+  grid-row: 2;
+  margin-top: 18px;
   max-width: 32rem;
 }
 

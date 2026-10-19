@@ -6,7 +6,6 @@ import { ThemeToggle } from "./ThemeProvider";
 
 const links = [
   ["Features", "/#features"],
-  ["How it works", "/#demo"],
   ["Try voice", "/#voice"],
   ["Questions", "/#questions"],
 ];
@@ -45,7 +44,7 @@ export default function Header() {
         </nav>
         <div className="header-actions">
           <ThemeToggle />
-          <a className="button button-small header-cta" href="/#demo">
+          <a className="button button-small header-cta" href="/#voice">
             Explore the app <Icon name="arrowUp" size={17} />
           </a>
           <details className="header-menu" ref={menu}>

@@ -1,42 +1,32 @@
 import Image from "next/image";
-const descriptions = {
-  agenda:
-    "TaskFlow Android app showing a weekly calendar and today’s tasks with times, priorities, and notes.",
-  calendar:
-    "TaskFlow Android app showing its monthly calendar and daily agenda.",
-  tasks: "TaskFlow Android app showing searchable tasks and priority filters.",
-};
+import { copy, type SiteLanguage } from "../content/site";
+
+// The app's own Calendar in the page's language. Both themes load lazily with a high
+// priority, so only the visible one downloads (Next's guidance for a light and dark pair).
 export default function Phone({
-  screen = "agenda",
+  language,
   className = "",
-  eager = false,
 }: {
-  screen?: "agenda" | "calendar" | "tasks";
+  language: SiteLanguage;
   className?: string;
-  eager?: boolean;
 }) {
+  const alt = copy[language].hero.imageAlt;
   return (
     <div className={`phone ${className}`}>
       <div className="phone-camera" aria-hidden="true"></div>
       <div className="phone-screen">
-        <Image
-          className="light-only"
-          src={`/images/${screen}-light.png`}
-          width={1080}
-          height={2400}
-          sizes="(max-width: 580px) 210px, 252px"
-          alt={descriptions[screen]}
-          preload={eager}
-        />
-        <Image
-          className="dark-only"
-          src={`/images/${screen}-dark.png`}
-          width={1080}
-          height={2400}
-          sizes="(max-width: 580px) 210px, 252px"
-          alt={descriptions[screen]}
-          loading={eager ? "eager" : "lazy"}
-        />
+        {(["light", "dark"] as const).map((theme) => (
+          <Image
+            key={theme}
+            className={`${theme}-only`}
+            src={`/images/hero-calendar-${language}-${theme}.png`}
+            width={780}
+            height={1688}
+            sizes="(max-width: 580px) 272px, 300px"
+            alt={alt}
+            fetchPriority="high"
+          />
+        ))}
       </div>
     </div>
   );

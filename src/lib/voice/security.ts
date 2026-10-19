@@ -15,7 +15,7 @@ export function required(name: string) {
     throw new DemoError(
       503,
       "not_ready",
-      "The live demo is not available yet. Try the sample walkthrough below.",
+      "The live demo isn’t available yet.",
     );
   return value;
 }
@@ -98,7 +98,7 @@ export function checkRequest(request: Request, mutation = false) {
     throw new DemoError(
       503,
       "paused",
-      "The live demo is taking a break. The sample walkthrough is still available.",
+      "The live demo is off for now. Please try again later.",
     );
   if (
     !equal(

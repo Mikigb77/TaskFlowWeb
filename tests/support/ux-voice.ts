@@ -343,7 +343,6 @@ async function expireTimeouts(page: Page) {
 }
 
 export const VOICE_PANEL = "#voice .voice-panel";
-export const SAMPLE_PANEL = "#demo .task-demo";
 
 const stage = (page: Page, name: string) =>
   page.locator(`${VOICE_PANEL}[data-stage="${name}"]`).waitFor();
@@ -382,7 +381,6 @@ export type DemoKit = {
 
 export type Scenario = {
   key: string;
-  region: "voice" | "sample";
   themes: Theme[];
   projects: Project[];
   states: { key: string; what: string }[];
@@ -405,7 +403,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
   const list: Scenario[] = [
     {
       key: "voice-intro",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-intro", what: "The closed demo card, as a first visit finds it" }],
       did: "Arrived at `/#voice`",
@@ -418,7 +415,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-connecting",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-connecting", what: "Opening: the allowance check still running" }],
       did: "Tapped “Try the live demo”",
@@ -445,7 +441,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
             : `voice-connect-${answer.code.replace(/_/g, "-")}`;
       return {
         key,
-        region: "voice",
         ...(answer === "offline" || (typeof answer === "object" && answer.code === "paused")
           ? LIGHT
           : PHONE),
@@ -469,7 +464,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     }),
     {
       key: "voice-capture",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-capture", what: "Ready to record: 3 tries left, the security check passed" }],
       did: "Opened the demo",
@@ -483,7 +477,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-typing",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-typing", what: "“Type it instead”, with a thought typed" }],
       did: "Opened the demo, chose “Type it instead” and typed a thought",
@@ -496,7 +489,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-check-pending",
-      region: "voice",
       ...LIGHT,
       states: [{ key: "voice-check-pending", what: "The security check asks for a tap; “Create drafts” waits" }],
       did: "Opened the demo and typed a thought",
@@ -512,7 +504,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-check-unreachable",
-      region: "voice",
       ...LIGHT,
       states: [{ key: "voice-check-unreachable", what: "Cloudflare's script couldn't load" }],
       did: "Opened the demo",
@@ -528,7 +519,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-check-error",
-      region: "voice",
       ...PHONE,
       states: [{ key: "voice-check-error", what: "The security check reported an error" }],
       did: "Opened the demo",
@@ -553,7 +543,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     ).map(
       ([mode, key, where, what]): Scenario => ({
         key,
-        region: "voice",
         ...where,
         states: [{ key, what }],
         did: "Opened the demo and tapped the microphone",
@@ -572,7 +561,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     ),
     {
       key: "voice-recording",
-      region: "voice",
       ...MAIN,
       states: [
         { key: "voice-recording", what: "Recording, 5 s in" },
@@ -603,7 +591,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-recorded",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-recorded", what: "Recorded: listen back, record again or create drafts" }],
       did: "Recorded about 2.5 s with the fake microphone and stopped",
@@ -616,7 +603,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-waiting",
-      region: "voice",
       ...MAIN,
       states: [
         { key: "voice-waiting-01s", what: "Waiting for the drafts, 1 s in" },
@@ -661,7 +647,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-offline",
-      region: "voice",
       ...LIGHT,
       states: [{ key: "voice-offline", what: "The connection dropped while sending" }],
       did: "Typed a thought and tapped “Create drafts”",
@@ -679,7 +664,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-gateway",
-      region: "voice",
       ...PHONE,
       states: [{ key: "voice-gateway", what: "An HTML error page instead of the API's answer" }],
       did: "Typed a thought and tapped “Create drafts”",
@@ -697,7 +681,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-result",
-      region: "voice",
       ...MAIN,
       states: [
         { key: "voice-result", what: "Three drafts to review: one dated, one with a question, one undated" },
@@ -731,7 +714,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     ).map(
       ([key, tasks, where, what]): Scenario => ({
         key,
-        region: "voice",
         ...where,
         states: [{ key, what }],
         did: "Typed a thought and tapped “Create drafts”",
@@ -750,7 +732,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     ),
     {
       key: "voice-tries-used",
-      region: "voice",
       ...MAIN,
       states: [{ key: "voice-tries-used", what: "All three tries used: recording and sending are off" }],
       did: "Opened the demo",
@@ -767,7 +748,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     },
     {
       key: "voice-last-try",
-      region: "voice",
       ...LIGHT,
       states: [{ key: "voice-last-try", what: "Drafts from the last try: “Try a new thought” is off" }],
       did: "Opened the demo with 1 try left, typed a thought and tapped “Create drafts”",
@@ -792,7 +772,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       const main = MAIN_CODES.includes(error.code) && sameCode.indexOf(error) === 0;
       return {
         key,
-        region: "voice",
         themes: error.code === "budget_pause" ? ["light", "dark"] : ["light"],
         projects: main ? BOTH : ["mobile"],
         states: [{ key, what: `The API refused: \`${error.code}\`` }],
@@ -817,35 +796,6 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         },
       };
     }),
-    {
-      key: "sample",
-      region: "sample",
-      ...MAIN,
-      states: [
-        { key: "sample-start", what: "The sample walkthrough as it loads: the first example" },
-        { key: "sample-no-title", what: "“Add to my preview” with a title of only spaces (an empty title gets the browser's own bubble instead, outside the page)" },
-        { key: "sample-added", what: "Added to the preview" },
-        { key: "sample-done", what: "The preview task checked off" },
-      ],
-      did: "Arrived at `/#demo`; replaced the title with spaces and tapped “Add to my preview”; typed a title and added it; checked it off",
-      answered: "Nothing: the walkthrough never calls the API",
-      run: async ({ page, capture }) => {
-        await page.goto("/#demo");
-        await expect(page.locator("#demo-title-input")).toBeEnabled();
-        await capture("sample-start");
-        await page.locator("#demo-title-input").fill("   ");
-        await page.locator("#demo .demo-save").click();
-        await page.locator("#demo .demo-error").waitFor();
-        await capture("sample-no-title");
-        await page.locator("#demo-title-input").fill("Doctor appointment");
-        await page.locator("#demo .demo-save").click();
-        await page.locator("#demo .demo-success").waitFor();
-        await capture("sample-added");
-        await page.locator("#demo .complete-task").click();
-        await expect(page.locator("#demo .saved-task.is-complete")).toBeVisible();
-        await capture("sample-done");
-      },
-    },
   ];
   return { list, unread };
 }

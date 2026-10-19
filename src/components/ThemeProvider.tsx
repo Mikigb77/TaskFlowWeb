@@ -72,36 +72,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function ThemeToggle({
-  variant = "icon",
-}: {
-  variant?: "icon" | "mood";
-}) {
+export function ThemeToggle() {
   const { theme, toggle, ready } = useContext(ThemeContext);
   const next = theme === "dark" ? "light" : "dark";
-  const label =
-    variant === "mood"
-      ? `Try a different mood: switch to ${next} mode`
-      : `Switch to ${next} mode`;
+  const label = `Switch to ${next} mode`;
   return (
     <button
       type="button"
-      className={variant === "mood" ? "button button-outline" : "theme-toggle"}
+      className="theme-toggle"
       onClick={toggle}
       aria-label={label}
       title={label}
       disabled={!ready}
     >
-      {variant === "mood" ? (
-        <>
-          Try a different mood <Icon name="spark" size={18} />
-        </>
-      ) : (
-        <>
-          <Icon name="moon" className="light-only" />
-          <Icon name="sun" className="dark-only" />
-        </>
-      )}
+      <Icon name="moon" className="light-only" />
+      <Icon name="sun" className="dark-only" />
     </button>
   );
 }

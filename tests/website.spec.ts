@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test("visitors can edit, save, complete, and reset a sample task", async ({
+test("the home loads without errors or outside requests, and its main button leads to the live demo", async ({
   page,
   baseURL,
 }) => {
@@ -16,64 +16,21 @@ test("visitors can edit, save, complete, and reset a sample task", async ({
       externalRequests.push(request.url());
   });
   await page.goto("/");
-  await page.getByRole("link", { name: "See it in action" }).click();
-  await expect(page).toHaveURL(/#demo$/);
   await page
-    .getByRole("button", { name: "A little me-time", exact: true })
+    .locator(".hero")
+    .getByRole("link", { name: "Try it with your voice" })
     .click();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Evening walk",
-  );
-  await expect(page.getByLabel("Priority", { exact: true })).toHaveValue("Low");
-  await page.getByLabel("Task title", { exact: true }).fill("A walk with Luna");
-  await page.getByLabel("Date", { exact: true }).fill("2026-09-26");
-  await page.getByLabel("Time", { exact: true }).fill("19:30");
-  await page
-    .getByLabel("A note for later", { exact: true })
-    .fill("Bring her favorite ball.");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(
-    page.getByRole("heading", { name: "There. A little lighter." }),
-  ).toBeVisible();
-  await expect(page.locator(".saved-task")).toContainText("A walk with Luna");
-  await expect(page.locator(".saved-task")).toContainText("19:30");
-  await expect(page.locator(".saved-task")).toContainText("Sep 26");
-  await expect(page.locator(".saved-task")).toContainText(
-    "Bring her favorite ball.",
-  );
-  await page
-    .getByRole("button", { name: "Complete preview task", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "That’s a good feeling." }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Mark preview task incomplete" })
-    .click();
-  await page.getByRole("button", { name: "Try another thought" }).click();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Doctor appointment",
-  );
-  await page.reload();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Doctor appointment",
-  );
+  await expect(page).toHaveURL(/#voice$/);
   expect(errors).toEqual([]);
   expect(externalRequests).toEqual([]);
 });
 
-test("theme persists across reloads and pages without losing demo edits", async ({
-  page,
-}) => {
+test("theme persists across reloads and pages", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("Task title", { exact: true }).fill("My edited draft");
   await page
     .getByRole("button", { name: "Switch to dark mode", exact: true })
     .click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "My edited draft",
-  );
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Privacy", exact: true }).click();
@@ -83,29 +40,9 @@ test("theme persists across reloads and pages without losing demo edits", async 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();
   await page
-    .getByRole("button", { name: "Try a different mood: switch to light mode" })
+    .getByRole("button", { name: "Switch to light mode", exact: true })
     .click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-});
-
-test("a draft needs a title and a valid date before it can be added", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.getByLabel("Task title", { exact: true }).fill("   ");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(page.locator("#demo").getByRole("alert")).toContainText(
-    "Give your task a title",
-  );
-  await page.getByLabel("Task title", { exact: true }).fill("A valid task");
-  await page.getByLabel("Date", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(
-    page.getByRole("heading", { name: "A thought, all sorted." }),
-  ).toBeVisible();
-  await page.getByLabel("Date", { exact: true }).fill("2026-09-27");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(page.locator(".saved-task")).toContainText("Sep 27");
 });
 
 test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
@@ -134,7 +71,7 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
   await expect(page).toHaveURL(/#questions$/);
   await page.getByText("Can I download TaskFlow yet?", { exact: true }).click();
   await expect(
-    page.getByText(/A public download is coming later/),
+    page.getByText(/coming soon to Google Play\. Until then/),
   ).toBeVisible();
   await page.getByText("Can I use it offline?", { exact: true }).click();
   await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
@@ -142,7 +79,7 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
   expect(response?.status()).toBe(404);
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Make room",
+    "on your calendar.",
   );
 });
 
@@ -173,10 +110,15 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    await page.locator(".appearance-section").scrollIntoViewIfNeeded();
-    await expect(
-      page.locator(`.appearance-phone .${theme}-only`),
-    ).toBeVisible();
+    const heroImage = page.locator(`.hero img.${theme}-only`);
+    await expect(heroImage).toBeVisible();
+    await expect
+      .poll(() =>
+        heroImage.evaluate(
+          (image: HTMLImageElement) => image.complete && image.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
     await page.waitForFunction(() =>
       Array.from(document.images)
         .filter((image) => getComputedStyle(image).display !== "none")
@@ -190,10 +132,6 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
     });
     await page.locator(".hero").screenshot({
       path: `artifacts/${testInfo.project.name}-hero-${theme}.png`,
-    });
-    await page.locator("#demo").screenshot({
-      path: `artifacts/${testInfo.project.name}-demo-${theme}.png`,
-      style: ".site-header, .skip-link { visibility: hidden; }",
     });
   }
   for (const width of [320, 768, 1024]) {
@@ -231,12 +169,9 @@ test("the marketing content and FAQ remain usable without JavaScript", async ({
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Make room",
+    "on your calendar.",
   );
   await page.getByText("Can I use it offline?", { exact: true }).click();
   await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
-  await expect(
-    page.getByText(/Enable JavaScript to try the interactive demo/),
-  ).toBeVisible();
   await context.close();
 });

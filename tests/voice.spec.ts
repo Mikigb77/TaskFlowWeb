@@ -194,7 +194,7 @@ test("live text capture produces editable multiple tasks and shows the remaining
   ).toBeFocused();
 });
 
-test("a used allowance blocks recording and submission while keeping the sample usable", async ({
+test("a used allowance blocks recording and submission", async ({
   page,
 }) => {
   await page.route("**/api/voice/status/", (route) =>
@@ -210,9 +210,6 @@ test("a used allowance blocks recording and submission while keeping the sample 
   await expect(
     page.getByRole("button", { name: "Create drafts" }),
   ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "Add to my preview" }),
-  ).toBeEnabled();
 });
 
 test("live-demo outages remain understandable without affecting the marketing page", async ({
@@ -222,19 +219,15 @@ test("live-demo outages remain understandable without affecting the marketing pa
     route.fulfill({
       status: 503,
       json: {
-        error:
-          "The live demo is taking a break. The sample walkthrough is still available.",
+        error: "The live demo is off for now. Please try again later.",
       },
     }),
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Try the live demo" }).click();
   await expect(page.locator("#voice").getByRole("alert")).toContainText(
-    "taking a break",
+    "off for now",
   );
-  await expect(
-    page.getByRole("button", { name: "Add to my preview" }),
-  ).toBeEnabled();
 });
 
 test.describe("microphone capture", () => {

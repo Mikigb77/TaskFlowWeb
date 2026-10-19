@@ -45,7 +45,6 @@ import {
 } from "./support/ux-audit";
 import { measurePerformance, THROTTLING } from "./support/ux-perf";
 import {
-  SAMPLE_PANEL,
   scenarios,
   VOICE_PANEL,
   VoiceStub,
@@ -79,7 +78,21 @@ const LEGAL = ["privacy", "terms", "legal", "delete-account"];
 const PAGES: PageSpec[] = [
   {
     key: "home",
-    versions: { en: { url: "/", source: ["src/app/page.tsx"] } },
+    versions: Object.fromEntries(
+      LANGUAGES.map((language) => [
+        language,
+        {
+          url: language === "en" ? "/" : `/${language}/`,
+          source: [
+            language === "en"
+              ? "src/app/page.tsx"
+              : "src/app/[language]/page.tsx",
+            "src/components/HomePage.tsx",
+            `src/content/site/${language}.ts`,
+          ],
+        },
+      ]),
+    ) as PageSpec["versions"],
   },
   ...LEGAL.map((document) => ({
     key: document,
@@ -231,7 +244,7 @@ function writeIndex() {
     "",
     "## Demo states",
     "",
-    "The live voice demo (`src/components/VoiceDemo.tsx`) and the sample walkthrough (`src/components/TaskDemo.tsx`), on `/` in English, the only language the home page has.",
+    "The live voice demo (`src/components/VoiceDemo.tsx`), on `/` in English.",
     "",
     "- **The real voice API is never called.** Every request to `/api/voice/*` is answered by the test, in the shapes the site's server code returns (`src/app/api/voice/`, `src/lib/voice/`): error bodies come from its own `failure()`, and the error list is read from its `new DemoError(…)` calls, so a new or reworded error is rendered on the next run. Requests to any other origin are blocked.",
     "- **Files:** `<state>.en.<desktop|mobile>.<light|dark>.view.png`, the viewport as the visitor sees it at that moment, at device scale; and `….panel.png`, the whole demo card at 1 px per CSS px with the sticky header hidden, including any part taller than the screen.",
@@ -604,7 +617,6 @@ if (!enabled) {
           const voice = new VoiceStub();
           await voice.install(page, baseURL!);
           await scenario.setup?.(page, voice);
-          const selector = scenario.region === "voice" ? VOICE_PANEL : SAMPLE_PANEL;
           const capture = async (state: string) => {
             await page.evaluate(() => document.fonts.ready);
             // The demo moves focus and scroll on every stage; let both settle. Not with the
@@ -616,7 +628,7 @@ if (!enabled) {
               animations: "disabled",
             });
             const scroll = await page.evaluate(() => window.scrollY);
-            await page.locator(selector).screenshot({
+            await page.locator(VOICE_PANEL).screenshot({
               path: path.join(OUT, `${name}.panel.png`),
               animations: "disabled",
               scale: "css",
@@ -641,7 +653,7 @@ if (!enabled) {
                   stateIndex: STATE_ORDER.indexOf(state),
                 },
                 {
-                  scope: selector,
+                  scope: VOICE_PANEL,
                   keyboard: false,
                   aria: theme === "light" ? `${state}.en` : null,
                 },

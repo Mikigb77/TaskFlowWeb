@@ -33,6 +33,8 @@
   scroll-behavior: smooth;
   scroll-padding-top: 105px;
   -webkit-font-smoothing: antialiased;
+  /* Tailwind's preflight turns the tap highlight off; a tap should show at once. */
+  -webkit-tap-highlight-color: initial;
 }
 :root[data-theme="dark"] {
   --paper: #121c18;
@@ -50,24 +52,39 @@
   --shadow: 0 15px 40px #0002;
   color-scheme: dark;
 }
+/* Without JavaScript nothing sets data-theme, so a dark system gets the same dark page. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121c18;
+    --surface: #1d2a23;
+    --ink: #ecf0e5;
+    --muted: #b0bcb2;
+    --green: #9ed5b3;
+    --green-hover: #b5e8c8;
+    --mint: #243a2e;
+    --mint-strong: #2d4433;
+    --line: #34483c;
+    --soft: #1a2820;
+    --lavender: #302e3d;
+    --peach: #362f24;
+    --shadow: 0 15px 40px #0002;
+    color-scheme: dark;
+  }
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
   min-width: 320px;
-  font-size: 15px;
+  font-size: 1rem;
+  overflow-wrap: break-word;
 }
 button,
 input,
 select,
 textarea {
   font: inherit;
-}
-button,
-summary,
-a {
-  -webkit-tap-highlight-color: transparent;
 }
 button:not(:disabled),
 summary {
@@ -119,17 +136,18 @@ h3 {
   padding-block: 106px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1.5;
   letter-spacing: 1.75px;
+  text-transform: uppercase;
 }
 .section-eyebrow {
   color: var(--green);
   margin-bottom: 20px;
 }
 h2 {
-  font-size: clamp(32px, 3.6vw, 45px);
+  font-size: clamp(2rem, 3.6vw, 2.8125rem);
   line-height: 1.22;
   letter-spacing: -1.9px;
 }
@@ -144,7 +162,7 @@ h2 {
   border-radius: 9px;
   background: var(--green);
   color: var(--paper);
-  font-size: 13px;
+  font-size: 1rem;
   font-weight: 750;
   line-height: 1.5;
   transition:
@@ -152,29 +170,36 @@ h2 {
     background 0.2s,
     box-shadow 0.2s;
 }
-.button:hover {
-  background: var(--green-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+/* Hover effects only where there is a pointer that hovers; on touch they would stick after a tap. */
+@media (hover: hover) {
+  .button:hover {
+    background: var(--green-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
 }
 .button-lime {
   background: var(--lime);
   color: #193c2a;
 }
-.button-lime:hover {
-  background: #e1f4bc;
+@media (hover: hover) {
+  .button-lime:hover {
+    background: #e1f4bc;
+  }
 }
 .text-link {
   display: inline-flex;
   align-items: center;
   gap: 15px;
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 750;
   min-height: 44px;
 }
-.text-link:hover,
-.inline-link:hover {
-  color: var(--green);
+@media (hover: hover) {
+  .text-link:hover,
+  .inline-link:hover {
+    color: var(--green);
+  }
 }
 .link-circle {
   border: 1px solid var(--line);
@@ -185,14 +210,16 @@ h2 {
   border-radius: 50%;
   transition: transform 0.2s;
 }
-.text-link:hover .link-circle {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .text-link:hover .link-circle {
+    transform: translateX(3px);
+  }
 }
 .inline-link {
   display: inline-flex;
   align-items: center;
   gap: 15px;
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 750;
   min-height: 44px;
 }
@@ -219,6 +246,14 @@ h2 {
 [data-theme="dark"] .dark-only {
   display: block !important;
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .light-only {
+    display: none !important;
+  }
+  :root:not([data-theme="light"]) .dark-only {
+    display: block !important;
+  }
+}
 
 /* A quiet, persistent frame around the product. */
 .site-header {
@@ -241,7 +276,9 @@ h2 {
   display: inline-flex;
   gap: 10px;
   align-items: center;
-  font-size: 23px;
+  min-height: 48px;
+  /* The wordmark is a logotype, capped so the sticky header stays one row at large text sizes (WCAG 1.4.4 exempts logotypes). */
+  font-size: min(1.4375rem, 28px);
   font-weight: 800;
   letter-spacing: -1.15px;
 }
@@ -270,8 +307,10 @@ h2 {
   padding-block: 13px;
   transition: color 0.2s;
 }
-.desktop-nav a:hover {
-  color: var(--green);
+@media (hover: hover) {
+  .desktop-nav a:hover {
+    color: var(--green);
+  }
 }
 .header-actions {
   display: flex;
@@ -294,9 +333,11 @@ h2 {
   font-weight: 650;
   color: var(--muted);
 }
-.language-switch a:hover {
-  color: var(--ink);
-  background: var(--mint);
+@media (hover: hover) {
+  .language-switch a:hover {
+    color: var(--ink);
+    background: var(--mint);
+  }
 }
 .language-switch a[aria-current="page"] {
   color: var(--ink);
@@ -312,8 +353,16 @@ h2 {
   border-radius: 50%;
   background: transparent;
 }
-.theme-toggle:hover {
-  background: var(--mint);
+@media (hover: hover) {
+  .theme-toggle:hover {
+    background: var(--mint);
+  }
+}
+/* The theme controls stay disabled until ThemeProvider runs; until then (and without
+   JavaScript) they keep their place but aren't shown. */
+.theme-toggle:disabled,
+.appearance-choice:has(button:disabled) {
+  visibility: hidden;
 }
 .header-menu {
   display: none;
@@ -355,13 +404,10 @@ h1 {
 }
 .hero-buttons {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 25px;
   margin-top: 29px;
-}
-.hero-buttons .button,
-.hero-buttons .text-link {
-  font-size: 1rem;
 }
 .hero-status {
   margin-top: 20px;
@@ -406,7 +452,7 @@ h1 {
   top: 112px;
   right: 35px;
   color: var(--green);
-  font-size: 27px;
+  font-size: 1.6875rem;
   font-weight: 300;
   transform: rotate(15deg);
 }
@@ -448,6 +494,11 @@ h1 {
 }
 [data-theme="dark"] .phone-screen {
   background: #121816;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .phone-screen {
+    background: #121816;
+  }
 }
 .phone-screen img {
   width: 100%;
@@ -670,7 +721,6 @@ h1 {
 }
 .feature-voice .inline-link {
   margin-top: 9px;
-  font-size: 1rem;
 }
 .feature-details {
   grid-column: span 5;
@@ -752,8 +802,10 @@ summary::-webkit-details-marker {
   padding-bottom: 24px;
   padding-right: 30px;
 }
-.faq-item summary:hover {
-  color: var(--green);
+@media (hover: hover) {
+  .faq-item summary:hover {
+    color: var(--green);
+  }
 }
 
 .closing-section {
@@ -772,13 +824,13 @@ summary::-webkit-details-marker {
 .closing-spark {
   display: flex;
   justify-content: center;
-  font-size: 45px;
+  font-size: 2.8125rem;
   color: #d4eca3;
   line-height: 1;
   margin-bottom: 22px;
 }
 .closing-card h2 {
-  font-size: clamp(36px, 4.5vw, 57px);
+  font-size: clamp(2.25rem, 4.5vw, 3.5625rem);
   line-height: 1.17;
   letter-spacing: -2px;
 }
@@ -795,7 +847,6 @@ summary::-webkit-details-marker {
 }
 .closing-card .button {
   min-height: 48px;
-  font-size: 1rem;
   padding-inline: 25px;
 }
 .closing-card :focus-visible {
@@ -836,7 +887,6 @@ summary::-webkit-details-marker {
   padding-bottom: 35px;
 }
 .footer-top .brand {
-  min-height: 48px;
   font-size: 1.375rem;
 }
 .footer-top .brand-mark {
@@ -860,8 +910,10 @@ summary::-webkit-details-marker {
   color: var(--muted);
   transition: color 0.2s;
 }
-.footer-top nav a:hover {
-  color: var(--green);
+@media (hover: hover) {
+  .footer-top nav a:hover {
+    color: var(--green);
+  }
 }
 .footer-bottom {
   padding-block: 16px 28px;
@@ -884,36 +936,6 @@ summary::-webkit-details-marker {
   display: block;
   width: 1.15em;
   height: 1.15em;
-}
-.prose-page {
-  max-width: 800px;
-  padding-block: 65px 90px;
-}
-.prose-page > .eyebrow {
-  margin-top: 45px;
-}
-.prose-page h1 {
-  font-size: clamp(40px, 6vw, 65px);
-  letter-spacing: -2.5px;
-}
-.prose-page p {
-  font-size: 15px;
-  color: var(--muted);
-  line-height: 1.9;
-  margin-top: 16px;
-}
-.prose-page h2 {
-  font-size: 23px;
-  letter-spacing: -0.7px;
-  margin-top: 40px;
-}
-.prose-page .prose-lead {
-  font-size: 19px;
-  margin-top: 25px;
-}
-.prose-page .prose-updated {
-  font-size: 11px;
-  margin-top: 45px;
 }
 /* The 404's three blocks. The address's language comes first (<html data-not-found>,
    set before the first paint), whatever the order in the page. */
@@ -968,7 +990,6 @@ summary::-webkit-details-marker {
 .not-found .text-link {
   display: block;
   padding-block: 10px;
-  font-size: 1rem;
 }
 .not-found .text-link svg {
   display: inline;
@@ -1202,9 +1223,6 @@ summary::-webkit-details-marker {
   .header-inner {
     min-height: 73px;
   }
-  .brand {
-    font-size: 23px;
-  }
   .brand-mark {
     width: 33px;
     height: 33px;
@@ -1266,12 +1284,8 @@ summary::-webkit-details-marker {
     padding-block: 65px;
   }
   h2 {
-    font-size: 31px;
+    font-size: 1.9375rem;
     letter-spacing: -1.3px;
-  }
-  .eyebrow {
-    font-size: 8px;
-    letter-spacing: 1.3px;
   }
   .section-eyebrow {
     margin-bottom: 17px;
@@ -1323,11 +1337,11 @@ summary::-webkit-details-marker {
     border-radius: 19px;
   }
   .closing-card h2 {
-    font-size: 37px;
+    font-size: 2.3125rem;
     letter-spacing: -1.7px;
   }
   .closing-spark {
-    font-size: 37px;
+    font-size: 2.3125rem;
   }
   .footer-top {
     flex-direction: column;
@@ -1341,15 +1355,6 @@ summary::-webkit-details-marker {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-  .prose-page {
-    padding-block: 40px 70px;
-  }
-  .prose-page h1 {
-    font-size: 42px;
-  }
-  .prose-page .prose-lead {
-    font-size: 17px;
   }
   .not-found {
     padding-block: 32px 80px;
@@ -1367,7 +1372,7 @@ summary::-webkit-details-marker {
     gap: 9px;
   }
   .closing-card h2 {
-    font-size: 32px;
+    font-size: 2rem;
   }
   .feature-card {
     padding-inline: 22px;

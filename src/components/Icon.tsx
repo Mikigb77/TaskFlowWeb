@@ -1,6 +1,7 @@
 const paths: Record<string, string[]> = {
   asterisk: ["M12 2v20M2 12h20M5 5l14 14M5 19 19 5"],
   arrow: ["M4 12h16", "m14 6 6 6-6 6"],
+  back: ["M20 12H4", "m10 6-6 6 6 6"],
   arrowUp: ["M6 18 18 6", "M6 6h12v12"],
   up: ["M12 20V4", "m6 10 6-6 6 6"],
   chevron: ["m9 5 7 7-7 7"],

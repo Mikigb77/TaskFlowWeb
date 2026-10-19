@@ -99,6 +99,40 @@ export async function smallestText(page: Page, selector: string) {
   }, selector);
 }
 
+// Visible text under `px` CSS px on the page, outside the elements `skip` matches. Text
+// inside aria-hidden counts: people still see it (as AUDIT §6 counts it).
+export async function textUnder(page: Page, px: number, skip: string[] = []) {
+  return page.evaluate(
+    ({ px, skip }) => {
+      const found: { text: string; size: number; element: string }[] = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent?.trim();
+        const parent = node.parentElement;
+        if (!text || !parent || !parent.checkVisibility()) continue;
+        if (parent.closest("script, style, noscript, template")) continue;
+        if (skip.some((selector) => parent.closest(selector))) continue;
+        const { width, height } = parent.getBoundingClientRect();
+        if (width <= 1 || height <= 1) continue; // Visually hidden (screen-reader only).
+        const size = parseFloat(getComputedStyle(parent).fontSize);
+        if (size < px)
+          found.push({ text: text.slice(0, 60), size, element: `${parent.tagName.toLowerCase()}.${[...parent.classList].join(".")}` });
+      }
+      return found;
+    },
+    { px, skip },
+  );
+}
+
+// text200: the browser's default font size from 16 to 32 px (Chrome's Settings › Appearance
+// › Font size), as the renders set it. Text sized in rem doubles; text in px doesn't.
+export async function doubleTextSize(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } });
+}
+export const rootFontSize = (page: Page) =>
+  page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+
 type RGBA = [number, number, number, number];
 export function parseColor(value: string): RGBA {
   const match = /rgba?\(([^)]+)\)/.exec(value);

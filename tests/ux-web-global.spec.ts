@@ -4,9 +4,14 @@
 // marked English), WP20 (the header, the language switch and the worded phone menu) and
 // WP21 (titles, link previews and the 404 in each language), and round 2's WP37 (the
 // language links 8 px apart, the phone menu for large-text desktops, the footer nav's
-// 44 px targets). See tests/support/ux-web.ts.
+// 44 px targets), and run 2026-10-18-site round 1's WP25 (type in rem, tap feedback, 48 px
+// logos, dark without JavaScript; its legal-page checks are in ux-web-legal.spec.ts), and
+// round 2's WP40 (the phone header stays one row at 200% text).
+// See tests/support/ux-web.ts.
 import AxeBuilder from "@axe-core/playwright";
 import { test as plain, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import {
   axeViolations,
   expect,
@@ -14,8 +19,13 @@ import {
   hydrated,
   type Language,
   LANGUAGES,
+  doubleTextSize,
+  parseColor,
+  rootFontSize,
+  ROOT,
   scrollsSideways,
   test,
+  textUnder,
   THEMES,
   watchHydration,
 } from "./support/ux-web";
@@ -928,6 +938,357 @@ for (const theme of THEMES) {
         if (!(await menuButton(page).isVisible())) continue;
         await openMenu(page);
         expect(await axeViolations(page), `${url}, menu open`).toEqual([]);
+      }
+    });
+  });
+}
+
+// Run 2026-10-18-site, round 1, WP25: readable type in rem, tap feedback, 48 px logos and
+// dark mode without JavaScript, on the homes and the 404. Its legal-page checks are in
+// tests/ux-web-legal.spec.ts, with the legal pages they need.
+const WP25_PAGES = [
+  ...LANGUAGES.map(homeUrl),
+  ...LANGUAGES.map((language) => `${homeUrl(language)}no-such-page/`),
+];
+const visibleParagraphSizes = (page: Page, skip: string) =>
+  page.locator("main p").evaluateAll(
+    (paragraphs, skip) =>
+      paragraphs
+        .filter((p) => p.checkVisibility() && !p.closest(skip) && (p.textContent ?? "").trim())
+        .map((p) => ({
+          text: (p.textContent ?? "").trim().slice(0, 50),
+          size: parseFloat(getComputedStyle(p).fontSize),
+        })),
+    skip,
+  );
+
+test("WEB-8: no visible text under 12 px outside the demo, and main paragraphs of 16 px or more, on the homes and the 404", async ({
+  page,
+}, testInfo) => {
+  for (const url of WP25_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await textUnder(page, 12, ["#voice"]), `${url} (${testInfo.project.name}): text under 12 px`).toEqual([]);
+    const small = (await visibleParagraphSizes(page, "#voice")).filter(({ size }) => size < 16);
+    expect(small, `${url} (${testInfo.project.name}): main paragraphs under 16 px`).toEqual([]);
+  }
+});
+
+test("WEB-8: at 390 px the hero's subheadline computes 18 px or more on each home", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "390 × 664 is the mobile project.");
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const size = await page
+      .locator(".hero-description")
+      .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    expect(size, homeUrl(language)).toBeGreaterThanOrEqual(18);
+  }
+});
+
+test("WEB-309: with the browser's text at 200%, the homes' and the 404's text grows", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Once is enough: the CSS is the same on both projects.");
+  const sizes = async () =>
+    page.evaluate(() => ({
+      body: parseFloat(getComputedStyle(document.body).fontSize),
+      paragraph: parseFloat(getComputedStyle(document.querySelector("main p")!).fontSize),
+      heading: parseFloat(getComputedStyle(document.querySelector("h1")!).fontSize),
+    }));
+  const before: Record<string, Awaited<ReturnType<typeof sizes>>> = {};
+  for (const url of WP25_PAGES) {
+    await page.goto(url);
+    before[url] = await sizes();
+  }
+  await doubleTextSize(page);
+  for (const url of WP25_PAGES) {
+    await page.goto(url);
+    await expect.poll(() => rootFontSize(page), { message: `${url}: the root follows the setting` }).toBe(32);
+    const after = await sizes();
+    expect(after.body, `${url}: body text at 200%`).toBeCloseTo(before[url].body * 2, 0);
+    expect(after.paragraph, `${url}: the first paragraph at 200%`).toBeGreaterThan(before[url].paragraph * 1.5);
+    expect(after.heading, `${url}: the h1 at 200%`).toBeGreaterThan(before[url].heading);
+  }
+});
+
+// Visible elements that reach past the viewport's left or right edge.
+async function overflowing(page: Page, selector: string) {
+  return page.locator(selector).evaluateAll((elements) =>
+    elements
+      .filter((element) => element.checkVisibility())
+      .map((element) => ({
+        what: `${element.tagName.toLowerCase()}.${[...element.classList].join(".")} “${(element.textContent ?? "").trim().slice(0, 30)}”`,
+        left: element.getBoundingClientRect().left,
+        right: element.getBoundingClientRect().right,
+      }))
+      .filter(({ left, right }) => left < -0.5 || right > window.innerWidth + 0.5),
+  );
+}
+const FRAME_PARTS =
+  "header.site-header, header .header-inner > *, header .language-switch a, header .header-menu-panel, footer .language-switch a";
+
+for (const [name, setup] of [
+  ["on a 390 px phone with the browser's text at 200%", async (page: Page) => doubleTextSize(page)],
+  ["at 320 px wide", async (page: Page) => page.setViewportSize({ width: 320, height: 800 })],
+] as const) {
+  test(`WEB-309: ${name}, nothing scrolls sideways on the homes and the 404, the header fits, and the language switches wrap`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "Phone sizes.");
+    await setup(page);
+    for (const url of WP25_PAGES) {
+      await page.goto(url);
+      await hydrated(page);
+      await page.evaluate(() => document.fonts.ready);
+      expect(await scrollsSideways(page), `${url}: sideways scroll`).toBe(false);
+      expect(await overflowing(page, FRAME_PARTS), `${url}: past the edge`).toEqual([]);
+      await openMenu(page);
+      expect(await scrollsSideways(page), `${url}, menu open: sideways scroll`).toBe(false);
+      expect(await overflowing(page, FRAME_PARTS), `${url}, menu open: past the edge`).toEqual([]);
+      for (const selector of ["header .menu-languages", "footer .footer-languages"])
+        await expect(page.locator(selector), `${url}: ${selector}`).toHaveCSS("flex-wrap", "wrap");
+    }
+  });
+}
+
+test("WEB-313: without JavaScript, a dark-mode visitor gets the dark page and no theme control", async ({
+  browser,
+  baseURL,
+}, testInfo) => {
+  const mobile = testInfo.project.name === "mobile";
+  const context = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    colorScheme: "dark",
+    ...(mobile ? { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true } : {}),
+  });
+  const page = await context.newPage();
+  const external: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).origin !== new URL(baseURL!).origin) external.push(request.url());
+  });
+  for (const url of [...LANGUAGES.map(homeUrl), "/no-such-page/"]) {
+    await page.goto(url);
+    const background = await page.evaluate(() => {
+      const html = getComputedStyle(document.documentElement).backgroundColor;
+      return html === "rgba(0, 0, 0, 0)" ? getComputedStyle(document.body).backgroundColor : html;
+    });
+    expect(background, `${url}: the page's background`).toBe("rgb(18, 28, 24)");
+    await expect(page.locator("button.theme-toggle").first(), `${url}: the header's theme button`).toBeHidden();
+    if (mobile) {
+      await page.locator("header .header-menu summary").click();
+      await expect(page.locator("header .header-menu")).toHaveAttribute("open", "");
+      await expect(page.locator("header .appearance-choice"), `${url}: the menu's Appearance row`).toBeHidden();
+    }
+  }
+  expect(external).toEqual([]);
+  await context.close();
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} theme controls`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-313: with JavaScript, the theme controls show at full strength, not faded (${theme})`, async ({
+      page,
+      isMobile,
+    }) => {
+      for (const language of LANGUAGES) {
+        const url = homeUrl(language);
+        await page.goto(url);
+        await hydrated(page);
+        if (isMobile) await openMenu(page);
+        const controls = page.locator("button.theme-toggle, header .appearance-choice button");
+        const shown = await controls.evaluateAll((buttons) =>
+          buttons
+            .filter((button) => button.checkVisibility({ visibilityProperty: true }))
+            .map((button) => {
+              let opacity = 1;
+              for (let e: Element | null = button; e; e = e.parentElement)
+                opacity *= parseFloat(getComputedStyle(e).opacity);
+              return { name: button.getAttribute("aria-label") ?? button.textContent?.trim(), opacity };
+            }),
+        );
+        expect(shown.length, `${url}: theme controls shown`).toBeGreaterThan(0);
+        for (const control of shown) expect(control.opacity, `${url}: “${control.name}”`).toBe(1);
+      }
+    });
+  });
+}
+
+test("WEB-702: on a phone, header and footer links keep the browser's tap highlight", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Tap highlight is a touch behaviour.");
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    const colours = await page
+      .locator("header.site-header a, header.site-header summary, footer a")
+      .evaluateAll((elements) =>
+        elements.map((element) => ({
+          what: `${element.tagName.toLowerCase()} “${(element.textContent ?? "").trim().slice(0, 30)}”`,
+          colour: getComputedStyle(element).getPropertyValue("-webkit-tap-highlight-color"),
+        })),
+      );
+    expect(colours.length).toBeGreaterThan(5);
+    for (const { what, colour } of colours)
+      expect(parseColor(colour)[3], `${homeUrl(language)}: ${what} (${colour})`).toBeGreaterThan(0);
+  }
+});
+
+// The style rules of a stylesheet's source, each with the at-rules around it.
+function styleRules(css: string) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules: { selector: string; body: string; within: string[] }[] = [];
+  const stack: string[] = [];
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === ";") start = i + 1;
+    else if (ch === "}") {
+      stack.pop();
+      start = i + 1;
+    } else if (ch === "{") {
+      const prelude = text.slice(start, i).trim();
+      start = i + 1;
+      if (prelude.startsWith("@")) {
+        stack.push(prelude);
+        continue;
+      }
+      const end = text.indexOf("}", i);
+      rules.push({ selector: prelude, body: text.slice(i + 1, end), within: [...stack] });
+      i = end;
+      start = end + 1;
+    }
+  }
+  return rules;
+}
+
+plain("WEB-702: every :hover rule in global.css that changes transform, background or colour sits inside @media (hover: hover)", () => {
+  const rules = styleRules(readFileSync(path.join(ROOT, "src", "styles", "global.css"), "utf8"));
+  const hover = rules.filter((rule) => rule.selector.includes(":hover"));
+  expect(hover.length, "the :hover rules found").toBeGreaterThan(5);
+  const changing = hover.filter((rule) => /(^|;|\s)(transform|background(-color)?|color)\s*:/.test(rule.body));
+  const outside = changing
+    .filter((rule) => !rule.within.some((at) => /^@media\b.*\(\s*hover\s*:\s*hover\s*\)/.test(at)))
+    .map((rule) => rule.selector);
+  expect(outside).toEqual([]);
+});
+
+test("WEB-703: the header and footer logos are 48 px tall or more on the homes and the 404", async ({ page }) => {
+  for (const url of WP25_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    for (const where of ["header.site-header", "footer"]) {
+      const box = await page.locator(`${where} a.brand`).boundingBox();
+      expect(box, `${url}: ${where}'s logo`).not.toBeNull();
+      expect(box!.height, `${url}: ${where}'s logo height`).toBeGreaterThanOrEqual(48);
+    }
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP25 axe`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-8, WEB-309, WEB-313, WEB-702, WEB-703: axe reports no violations on the homes and the 404 (${theme})`, async ({
+      page,
+    }) => {
+      for (const url of WP25_PAGES) {
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await axeViolations(page), url).toEqual([]);
+      }
+    });
+  });
+}
+
+// ---- Round 2, WP40: at 200% text on phones, the sticky header stays one row ----
+
+const WP40_PAGES = ["/", "/es/", "/ca/", "/es/privacy/"];
+// The computed font size of the header wordmark's text and of the Menu label.
+const headerType = (page: Page) =>
+  page.locator("header.site-header").evaluate((header) => {
+    const brand = header.querySelector("a.brand")!;
+    const walker = document.createTreeWalker(brand, NodeFilter.SHOW_TEXT);
+    let wordmark = Number.NaN;
+    for (let node = walker.nextNode(); node; node = walker.nextNode())
+      if (node.textContent?.includes("taskflow")) {
+        wordmark = parseFloat(getComputedStyle(node.parentElement!).fontSize);
+        break;
+      }
+    const menu = header.querySelector(".header-menu summary span");
+    return { wordmark, menu: menu ? parseFloat(getComputedStyle(menu).fontSize) : Number.NaN };
+  });
+const centreY = (box: { y: number; height: number }) => box.y + box.height / 2;
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP40 header at 200%`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-715: on a phone with the browser's text at 200%, the header is one row of logo and Menu, at most 90 px, and #questions lands below it (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "390 × 664 is the mobile project.");
+      await doubleTextSize(page);
+      for (const url of WP40_PAGES) {
+        await page.goto(url);
+        await hydrated(page);
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page.locator("html"), url).toHaveAttribute("data-theme", theme);
+        // The setting is live: the root follows the browser's text size.
+        await expect.poll(() => rootFontSize(page), { message: `${url}: the root's font size` }).toBe(32);
+        const header = page.locator("header.site-header");
+        const brand = header.locator("a.brand");
+        const menu = menuButton(page);
+        await expect(menu, url).toBeVisible();
+        const type = await headerType(page);
+        expect(type.wordmark, `${url}: the wordmark's font size`).toBeCloseTo(28, 1);
+        expect(type.menu, `${url}: the Menu label's font size`).toBeCloseTo(32, 1);
+        const height = (await header.boundingBox())!.height;
+        expect(height, `${url}: header height`).toBeLessThanOrEqual(90);
+        const [brandBox, menuBox] = [(await brand.boundingBox())!, (await menu.boundingBox())!];
+        expect(
+          Math.abs(centreY(brandBox) - centreY(menuBox)),
+          `${url}: the logo's and Menu's vertical centres (${centreY(brandBox)}, ${centreY(menuBox)})`,
+        ).toBeLessThanOrEqual(4);
+        expect(await scrollsSideways(page), `${url}: sideways scroll`).toBe(false);
+
+        if (url.endsWith("privacy/")) continue;
+        await page.goto(`${url}#questions`);
+        const title = page.locator("#questions-title");
+        let last = Number.NaN;
+        await expect
+          .poll(
+            async () => {
+              const y = await page.evaluate(() => window.scrollY);
+              const still = y === last && y > 0;
+              last = y;
+              return still;
+            },
+            { message: `${url}#questions: the scroll settles`, intervals: [300] },
+          )
+          .toBe(true);
+        await expect(title, `${url}#questions`).toBeInViewport();
+        const headerBottom = await header.evaluate((element) => element.getBoundingClientRect().bottom);
+        const titleTop = await title.evaluate((element) => element.getBoundingClientRect().top);
+        expect(titleTop, `${url}#questions: the title's top, against the header's bottom (${headerBottom})`).toBeGreaterThanOrEqual(
+          headerBottom - 0.5,
+        );
+      }
+    });
+  });
+
+  test.describe(`${theme} WP40 header at default text`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-715: with default text the header's wordmark stays 23 px, and axe reports no violations on the homes (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        const url = homeUrl(language);
+        await page.goto(url);
+        await hydrated(page);
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page.locator("html"), url).toHaveAttribute("data-theme", theme);
+        expect((await headerType(page)).wordmark, `${url}: the wordmark's font size`).toBeCloseTo(23, 1);
+        expect(await axeViolations(page), url).toEqual([]);
       }
     });
   });

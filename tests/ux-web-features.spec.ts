@@ -1,8 +1,10 @@
 // Acceptance tests for the features, the FAQ and the closing card (area F) from the UX web
 // loop, run 2026-10-18-site: WP17 (plain headings and true cards), WP18 (the closing card
-// and the first FAQ answers) WP35 (round 2) and WP36 (round 3). See tests/support/ux-web.ts.
+// and the first FAQ answers) WP35 (round 2), WP36 (round 3) and WP19 (the FAQ in the app's
+// words). See tests/support/ux-web.ts.
 import type { Page } from "@playwright/test";
 import {
+  axeViolations,
   contrast,
   expect,
   hexColor,
@@ -13,7 +15,14 @@ import {
   test,
   THEMES,
 } from "./support/ux-web";
-import { CLOSING, FAQ_FIRST, FEATURES, TRY_VOICE } from "./support/ux-web-copy";
+import {
+  CLOSING,
+  FAQ_FIRST,
+  FAQ_REST,
+  FAQ_TITLE,
+  FEATURES,
+  TRY_VOICE,
+} from "./support/ux-web-copy";
 
 const DICTATIONS = { en: /\b10 dictations\b/, es: /\b10 dictados\b/, ca: /\b10 dictats\b/ };
 
@@ -426,7 +435,8 @@ for (const theme of THEMES) {
         expect(paragraph.top, `${where}: paragraph's top is above the heading's bottom`).toBeLessThan(heading.bottom);
         expect(Math.abs(icon.left - (card.left + paddingLeft)), `${where}: icon starts at the left padding`).toBeLessThan(1);
         expect(Math.abs(heading.left - (card.left + paddingLeft)), `${where}: heading starts at the left padding`).toBeLessThan(1);
-        expect(Math.abs(paragraph.top - icon.top), `${where}: paragraph's top lines up with the icon's`).toBeLessThan(2);
+        // WEB-710 (9c1eaf8) moved the paragraph from the icon's top to the heading's.
+        expect(Math.abs(paragraph.top - heading.top), `${where}: paragraph's top lines up with the heading's`).toBeLessThan(2);
       }
     });
 
@@ -505,3 +515,116 @@ test("WEB-710: on desktop the offline card's paragraph starts level with its hea
     expect(Math.abs(paragraph!.y - heading!.y), `${path}: tops within 2 px`).toBeLessThanOrEqual(2);
   }
 });
+
+// WP19: the FAQ in the app's words.
+const FAQ_ALL = [...FAQ_FIRST, ...FAQ_REST];
+
+test("WEB-111: the FAQ's heading is ‘Questions’ in the page's language, with no eyebrow, intro or doodle", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const questions = page.locator("#questions");
+    const h2 = questions.getByRole("heading", { level: 2 });
+    await expect(h2, homeUrl(language)).toHaveCount(1);
+    await expect(h2, homeUrl(language)).toHaveText(FAQ_TITLE[language]);
+    await expect(questions.locator(".eyebrow, .faq-doodle"), homeUrl(language)).toHaveCount(0);
+    // Every paragraph is an answer: none sits outside the items.
+    const loose = await questions
+      .locator("p")
+      .evaluateAll((paragraphs) => paragraphs.filter((p) => !p.closest("details")).length);
+    expect(loose, `${homeUrl(language)}: paragraphs outside the answers`).toBe(0);
+    const text = (await questions.textContent()) ?? "";
+    expect(text, homeUrl(language)).not.toMatch(/04 \/|a few good questions|glad you asked|less guesswork/i);
+  }
+});
+
+test("WEB-105, WEB-107, WEB-109, WEB-110: the seven questions come in order, and the voice, offline, sharing and notes answers are the app's words", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const items = page.locator("#questions details");
+    await expect(items.locator("summary"), homeUrl(language)).toHaveText(
+      FAQ_ALL.map((item) => item.question[language]),
+    );
+    for (const [offset, { question, answer }] of FAQ_REST.entries()) {
+      const item = items.nth(FAQ_FIRST.length + offset);
+      await item.locator("summary").click();
+      await expect(item.locator("p"), `${homeUrl(language)}: ${question[language]}`).toHaveText(
+        answer[language],
+      );
+    }
+  }
+});
+
+test("WEB-105, WEB-107, WEB-109, WEB-110: outside the live demo, no home's text, alt text or labels use words the app doesn't", async ({
+  page,
+}) => {
+  const banned = [
+    "voice-to-task",
+    "draft",
+    "allowance",
+    "shared list",
+    "share a list",
+    "MiB",
+    "transcribe",
+    "sync",
+    "Task or Note",
+  ];
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    // Every answer open, so their text counts as visible.
+    await page
+      .locator("#questions details")
+      .evaluateAll((items) => items.forEach((item) => item.setAttribute("open", "")));
+    const words = await page.locator("main").evaluate((main) => {
+      const voice = main.querySelector("#voice");
+      const outside = (node: Node) => !voice || !voice.contains(node);
+      const found: string[] = [];
+      const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode())
+        if (outside(node) && node.textContent?.trim()) found.push(node.textContent);
+      for (const element of Array.from(main.querySelectorAll("[alt], [aria-label], [title]")))
+        if (outside(element))
+          for (const name of ["alt", "aria-label", "title"]) {
+            const value = element.getAttribute(name);
+            if (value) found.push(value);
+          }
+      return found.join(" \n ");
+    });
+    for (const word of banned)
+      expect(words.toLowerCase(), `${homeUrl(language)}: “${word}”`).not.toContain(word.toLowerCase());
+  }
+});
+
+test("WEB-105: opened answers' text is 16 px or more", async ({ page }) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const items = page.locator("#questions details");
+    for (let index = 0; index < FAQ_ALL.length; index++) await items.nth(index).locator("summary").click();
+    await expect(page.locator("#questions details[open]")).toHaveCount(FAQ_ALL.length);
+    const smallest = await smallestText(page, "#questions .faq-list");
+    expect(smallest, homeUrl(language)).not.toBeNull();
+    expect(smallest!.size, `${homeUrl(language)}: “${smallest!.text}”`).toBeGreaterThanOrEqual(16);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} FAQ`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-105, WEB-111: axe reports no violations on the three homes with two answers open (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const items = page.locator("#questions details");
+        await items.nth(3).locator("summary").click();
+        await items.nth(5).locator("summary").click();
+        await expect(page.locator("#questions details[open]")).toHaveCount(2);
+        expect(await axeViolations(page), homeUrl(language)).toEqual([]);
+      }
+    });
+  });
+}

@@ -1,10 +1,25 @@
 // Acceptance tests for the site as a whole (area G) from the UX web loop, run
 // 2026-10-18-site: WP15 (Spanish and Catalan homes, and the bare address picks the
-// visitor's language) and WP34 (the bare address's headers as meant; the English demo
-// marked English). See tests/support/ux-web.ts.
-import { test as plain, type APIRequestContext } from "@playwright/test";
-import { expect, homeUrl, LANGUAGES, test } from "./support/ux-web";
-import { HERO } from "./support/ux-web-copy";
+// visitor's language), WP34 (the bare address's headers as meant; the English demo
+// marked English), WP20 (the header, the language switch and the worded phone menu) and
+// WP21 (titles, link previews and the 404 in each language), and round 2's WP37 (the
+// language links 8 px apart, the phone menu for large-text desktops, the footer nav's
+// 44 px targets). See tests/support/ux-web.ts.
+import AxeBuilder from "@axe-core/playwright";
+import { test as plain, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import {
+  axeViolations,
+  expect,
+  homeUrl,
+  hydrated,
+  type Language,
+  LANGUAGES,
+  scrollsSideways,
+  test,
+  THEMES,
+  watchHydration,
+} from "./support/ux-web";
+import { FOOTER, FRAME, HERO, LANGUAGE_NAMES, META, NOT_FOUND } from "./support/ux-web-copy";
 
 const bare = (request: APIRequestContext, headers: Record<string, string>) =>
   request.get("/", { headers, maxRedirects: 0 });
@@ -176,3 +191,744 @@ plain("WEB-2: only the bare address redirects, and an unknown language is a miss
   }
   expect((await request.get("/xx/", { maxRedirects: 0 })).status()).toBe(404);
 });
+
+plain("WEB-2: behind the edge worker, a redirect starts with the origin the worker sent, so the worker can rewrite it to the public address", async ({
+  baseURL,
+}) => {
+  // The worker fetches Cloud Run with Host set to the run.app host, and Cloud Run adds
+  // X-Forwarded-Proto: https. edge/worker.ts rewrites a Location only when it starts with
+  // that origin, so the server's own bind address must never appear in it.
+  const { request: send } = await import("node:http");
+  const server = new URL(baseURL!);
+  const location = await new Promise<string>((resolve, reject) => {
+    const outgoing = send(
+      {
+        host: server.hostname,
+        port: server.port,
+        path: "/",
+        headers: {
+          host: "taskflow-web-example.a.run.app",
+          "x-forwarded-proto": "https",
+          "accept-language": "es-ES,es;q=0.9",
+        },
+      },
+      (response) => {
+        response.resume();
+        resolve(String(response.headers.location ?? ""));
+      },
+    );
+    outgoing.on("error", reject);
+    outgoing.end();
+  });
+  expect(location).toBe("https://taskflow-web-example.a.run.app/es/");
+});
+
+// WP20: the header, the language switch and the worded phone menu.
+const FRAME_PAGES: { url: string; language: Language }[] = [
+  { url: "/", language: "en" },
+  { url: "/privacy/", language: "en" },
+  { url: "/es/privacy/", language: "es" },
+  { url: "/ca/delete-account/", language: "ca" },
+];
+const NAV = ["voice", "features", "questions"] as const;
+const ANCHORS = { voice: "#voice", features: "#features", questions: "#questions" };
+// What a Spanish or Catalan page's header must not say.
+const ENGLISH_FRAME = [
+  "Open navigation",
+  "Mobile navigation",
+  "Main navigation",
+  "Switch to",
+  "Try it with your voice",
+  "What it does",
+  "Questions",
+  "Coming soon",
+  "Language",
+  "Appearance",
+  "Light",
+  "Dark",
+  "TaskFlow home",
+  "Explore the app",
+  "Get TaskFlow",
+];
+
+const menuButton = (page: Page) => page.locator("header .header-menu summary");
+async function openMenu(page: Page) {
+  await menuButton(page).click();
+  await expect(page.locator("header .header-menu")).toHaveAttribute("open", "");
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} header`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-4, WEB-304: at 1440 px the header has no button and its nav is the three labels in the page's language (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project.");
+      for (const { url, language } of FRAME_PAGES) {
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const header = page.locator("header.site-header");
+        await expect(header.locator(".button"), `${url}: .button in the header`).toHaveCount(0);
+        const nav = header.getByRole("navigation", { name: FRAME.navigation[language], exact: true });
+        await expect(nav, url).toBeVisible();
+        const links = nav.getByRole("link");
+        await expect(links, url).toHaveText(NAV.map((key) => FRAME[key][language]));
+        expect(
+          await links.evaluateAll((anchors) => anchors.map((a) => a.getAttribute("href"))),
+          url,
+        ).toEqual(NAV.map((key) => `${homeUrl(language)}${ANCHORS[key]}`));
+      }
+    });
+  });
+}
+
+test("WEB-2: at 1440 px the header's language switch names each language in itself and marks the current one, not by colour alone", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project.");
+  for (const { url, language } of FRAME_PAGES) {
+    await page.goto(url);
+    const switcher = page
+      .locator("header")
+      .getByRole("navigation", { name: FRAME.language[language], exact: true });
+    await expect(switcher, url).toBeVisible();
+    const links = switcher.getByRole("link");
+    await expect(links, url).toHaveText(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
+    for (const code of LANGUAGES) {
+      const link = switcher.getByRole("link", { name: LANGUAGE_NAMES[code], exact: true });
+      await expect(link, `${url} ${code}`).toHaveAttribute("lang", code);
+      await expect(link, `${url} ${code}`).toHaveAttribute("hreflang", code);
+      if (code === language) {
+        await expect(link, `${url} ${code}`).toHaveAttribute("aria-current", "page");
+        const style = await link.evaluate((a) => {
+          const computed = getComputedStyle(a);
+          return { weight: computed.fontWeight, shadow: computed.boxShadow };
+        });
+        expect(style.weight, `${url}: the current language's weight`).toBe("800");
+        expect(style.shadow, `${url}: the current language's ring`).not.toBe("none");
+      } else await expect(link, `${url} ${code}`).not.toHaveAttribute("aria-current", /.*/);
+    }
+  }
+  await page.goto("/privacy/");
+  await page.locator("header.site-header").getByRole("link", { name: "Español", exact: true }).click();
+  await expect(page).toHaveURL(/\/es\/privacy\/$/);
+  await page.goto("/es/");
+  await page.locator("header.site-header").getByRole("link", { name: "English", exact: true }).click();
+  await expect(page).toHaveURL((url) => url.pathname === "/");
+});
+
+test("WEB-2: choosing Català on / lands on /ca/ and remembers it, so the bare address then answers with /ca/", async ({
+  page,
+  context,
+  isMobile,
+}) => {
+  await page.goto("/");
+  await hydrated(page);
+  if (isMobile) await openMenu(page);
+  await page.locator("header.site-header").getByRole("link", { name: "Català", exact: true }).click();
+  await expect(page).toHaveURL(/\/ca\/$/);
+  const cookie = (await context.cookies()).find((entry) => entry.name === "taskflow-lang");
+  expect(cookie?.value).toBe("ca");
+  expect(cookie?.path).toBe("/");
+  expect(cookie?.sameSite).toBe("Lax");
+  // About a year (Max-Age 31536000), within a minute.
+  expect(Math.abs(cookie!.expires - Date.now() / 1000 - 31_536_000)).toBeLessThan(60);
+  const response = await page.request.get("/", { maxRedirects: 0 });
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toMatch(/\/ca\/$/);
+});
+
+test("WEB-307, WEB-3: on a phone the header says Menu in a 48 px button, and the menu holds the switch, the three links, ‘Coming soon to Android’ and Appearance, in order", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone header (390 × 664).");
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    const button = menuButton(page);
+    await expect(button, url).toBeVisible();
+    await expect(button, url).toHaveText(FRAME.menu[language]);
+    await expect(button, url).toHaveAccessibleName(FRAME.menu[language]);
+    await expect(button, url).not.toHaveAttribute("aria-label", /.*/);
+    expect((await button.boundingBox())!.height, `${url}: the menu button's height`).toBeGreaterThanOrEqual(48);
+    // No theme icon in the phone header.
+    await expect(page.locator("header .theme-toggle"), url).toBeHidden();
+    for (const name of [FRAME.toDark[language], FRAME.toLight[language]])
+      await expect(page.getByRole("button", { name, exact: true }), url).toHaveCount(0);
+
+    await openMenu(page);
+    const panel = page.locator("header .header-menu-panel");
+    await expect(panel, url).toBeVisible();
+    const switcher = panel.getByRole("navigation", { name: FRAME.language[language], exact: true });
+    const nav = panel.getByRole("navigation", { name: FRAME.navigation[language], exact: true });
+    const appearance = panel.getByRole("group", { name: FRAME.appearance[language], exact: true });
+    // Everything a visitor can use in the open menu, in reading order.
+    const controls = panel.locator("a, button").filter({ visible: true });
+    expect(
+      (await controls.allInnerTexts()).map((text) => text.replace(/\s+/g, " ").trim()),
+      `${url}: the menu's rows`,
+    ).toEqual([
+      ...LANGUAGES.map((code) => LANGUAGE_NAMES[code]),
+      ...NAV.map((key) => FRAME[key][language]),
+      FRAME.comingSoon[language],
+      FRAME.light[language],
+      FRAME.dark[language],
+    ]);
+    // And on screen, top to bottom: the switch, the links, Appearance.
+    const [switchBox, navBox, appearanceBox] = await Promise.all(
+      [switcher, nav, appearance].map((part) => part.boundingBox()),
+    );
+    expect(switchBox!.y + switchBox!.height, `${url}: switch above links`).toBeLessThanOrEqual(navBox!.y + 1);
+    expect(navBox!.y + navBox!.height, `${url}: links above Appearance`).toBeLessThanOrEqual(appearanceBox!.y + 1);
+    await expect(nav.getByRole("link").last(), url).toHaveAttribute("href", `${url}#get-taskflow`);
+    const pressed = await appearance
+      .getByRole("button")
+      .evaluateAll((buttons) => buttons.map((b) => b.getAttribute("aria-pressed")).sort());
+    expect(pressed, `${url}: Appearance's aria-pressed`).toEqual(["false", "true"]);
+    // Every row of the menu, and its button, is at least 48 px tall.
+    for (const row of await panel.locator("a, button").filter({ visible: true }).all()) {
+      const box = await row.boundingBox();
+      expect(box!.height, `${url}: “${await row.innerText()}”`).toBeGreaterThanOrEqual(48);
+    }
+  }
+});
+
+test("WEB-307: in the open menu Dark switches the theme, Escape closes the menu onto its button, and a tap outside closes it", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  await hydrated(page);
+  await openMenu(page);
+  const appearance = page.getByRole("group", { name: FRAME.appearance.en, exact: true });
+  await appearance.getByRole("button", { name: FRAME.dark.en, exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(appearance.getByRole("button", { name: FRAME.dark.en, exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.locator("header .header-menu")).not.toHaveAttribute("open", "");
+  await expect(menuButton(page)).toBeFocused();
+
+  await openMenu(page);
+  const panel = (await page.locator("header .header-menu-panel").boundingBox())!;
+  const viewport = page.viewportSize()!;
+  // A point below the open panel that holds no link or control.
+  const point = await page.evaluate(
+    ({ top, height }) => {
+      for (let y = Math.ceil(top + 12); y < height - 4; y += 16)
+        for (const x of [12, Math.round(innerWidth / 2), innerWidth - 12]) {
+          const element = document.elementFromPoint(x, y);
+          if (element && !element.closest("a, button, summary, input, textarea, select, label, details"))
+            return { x, y };
+        }
+      return null;
+    },
+    { top: panel.y + panel.height, height: viewport.height },
+  );
+  expect(point, "a free point below the open menu").not.toBeNull();
+  await page.touchscreen.tap(point!.x, point!.y);
+  await expect(page.locator("header .header-menu")).not.toHaveAttribute("open", "");
+  expect(new URL(page.url()).pathname).toBe("/");
+});
+
+test("WEB-3: on a phone, the menu's ‘Coming soon to Android’ row closes the menu and shows the closing card, which names Android and Google Play", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await openMenu(page);
+    await page
+      .locator("header .header-menu-panel")
+      .getByRole("link", { name: FRAME.comingSoon[language], exact: true })
+      .click();
+    await expect(page.locator("header .header-menu"), url).not.toHaveAttribute("open", "");
+    const closing = page.locator("#get-taskflow");
+    await expect(closing, url).toBeInViewport();
+    await expect(closing.getByRole("heading", { level: 2 }), url).toContainText("Android");
+    await expect(closing, url).toContainText("Google Play");
+  }
+});
+
+test("WEB-304: on Spanish and Catalan pages the header and the open menu say nothing in English", async ({
+  page,
+}) => {
+  for (const url of ["/es/", "/es/privacy/", "/ca/", "/ca/delete-account/"]) {
+    await page.goto(url);
+    await hydrated(page);
+    if (await menuButton(page).isVisible()) await openMenu(page);
+    // Its text (the closed menu's too, on desktop) and every name, title and alt in it.
+    const said = await page.locator("header.site-header").evaluate((header) => {
+      const found = [header.textContent ?? ""];
+      for (const element of Array.from(header.querySelectorAll("*")))
+        for (const name of ["aria-label", "title", "alt"]) {
+          const value = element.getAttribute(name);
+          if (value) found.push(value);
+        }
+      for (const element of Array.from(header.querySelectorAll("[aria-labelledby]")))
+        for (const id of element.getAttribute("aria-labelledby")!.split(/\s+/))
+          found.push(document.getElementById(id)?.textContent ?? "");
+      return found.join(" \n ");
+    });
+    for (const words of ENGLISH_FRAME) expect(said, `${url}: “${words}”`).not.toContain(words);
+  }
+});
+
+test("WEB-307: with forced colours, the phone header's menu icon still draws", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone header (390 × 664).");
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/");
+  const icon = menuButton(page).locator("svg");
+  await expect(icon).toBeVisible();
+  const strokes = await icon.evaluate((svg) =>
+    [svg, ...Array.from(svg.querySelectorAll("*"))].map((element) => getComputedStyle(element).stroke),
+  );
+  const drawn = strokes.filter(
+    (stroke) => stroke !== "none" && stroke !== "transparent" && !/rgba\([^)]*,\s*0\)$/.test(stroke),
+  );
+  expect(drawn.length, `strokes: ${strokes.join(", ")}`).toBeGreaterThan(0);
+});
+
+test("WEB-304: the Spanish 404's header hydrates with no error", async ({ page }) => {
+  const errors = watchHydration(page);
+  const response = await page.goto("/es/no-such-page/");
+  expect(response?.status()).toBe(404);
+  await hydrated(page);
+  await expect(page.locator("header .brand")).toHaveAccessibleName(FRAME.home.es);
+  expect(errors).toEqual([]);
+});
+
+test("WEB-307: in Catalan at 801, 1024 and 1100 px nothing scrolls sideways, and the header fits one row or shows the phone menu", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Desktop widths.");
+  for (const url of ["/ca/", "/ca/delete-account/"])
+    for (const width of [801, 1024, 1100]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(url);
+      await hydrated(page);
+      await page.evaluate(() => document.fonts.ready);
+      const where = `${url} at ${width} px`;
+      expect(await scrollsSideways(page), `${where}: sideways scroll`).toBe(false);
+      if (await menuButton(page).isVisible()) continue;
+      // The desktop header: every part visible, side by side on one band, each label on one line.
+      const layout = await page.locator("header .header-inner").evaluate((inner) => {
+        const parts = Array.from(
+          inner.querySelectorAll<HTMLElement>(".brand, .desktop-nav a, .language-switch a, .theme-toggle"),
+        ).filter((element) => element.checkVisibility());
+        const boxes = parts.map((element) => element.getBoundingClientRect());
+        // A text node that wraps draws one box per line.
+        const lines = parts.map((element) => {
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          let most = 0;
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!node.textContent?.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            most = Math.max(most, new Set(Array.from(range.getClientRects()).map((rect) => Math.round(rect.top))).size);
+          }
+          return most;
+        });
+        return {
+          count: parts.length,
+          lowestTop: Math.max(...boxes.map((box) => box.top)),
+          highestBottom: Math.min(...boxes.map((box) => box.bottom)),
+          wrapped: parts.filter((_, index) => lines[index] > 1).map((element) => element.textContent),
+          right: Math.max(...boxes.map((box) => box.right)),
+        };
+      });
+      // Brand, three links, three languages and the theme switch.
+      expect(layout.count, where).toBe(8);
+      expect(layout.lowestTop, `${where}: one row`).toBeLessThan(layout.highestBottom);
+      expect(layout.wrapped, `${where}: wrapped labels`).toEqual([]);
+      expect(layout.right, `${where}: inside the window`).toBeLessThanOrEqual(width);
+    }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} frame axe`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-2, WEB-304, WEB-307: axe reports no violations with the menu closed and open (${theme})`, async ({
+      page,
+    }) => {
+      for (const url of ["/", "/es/privacy/", "/ca/delete-account/"]) {
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await axeViolations(page), `${url}, menu closed`).toEqual([]);
+        if (!(await menuButton(page).isVisible())) continue;
+        await openMenu(page);
+        expect(await axeViolations(page), `${url}, menu open`).toEqual([]);
+      }
+    });
+  });
+}
+
+// WP21: titles, link previews and the 404.
+async function head(page: Page) {
+  return page.evaluate(() => {
+    const meta = (key: string) =>
+      Array.from(document.querySelectorAll(`meta[property="${key}"], meta[name="${key}"]`)).map(
+        (element) => element.getAttribute("content") ?? "",
+      );
+    return {
+      title: document.title,
+      description: meta("description"),
+      ogTitle: meta("og:title"),
+      ogDescription: meta("og:description"),
+      ogLocale: meta("og:locale"),
+      ogLocaleAlternate: meta("og:locale:alternate").sort(),
+      ogImage: meta("og:image"),
+      ogImageAlt: meta("og:image:alt"),
+      ogUrl: meta("og:url"),
+      twitterCard: meta("twitter:card"),
+      twitterTitle: meta("twitter:title"),
+      twitterDescription: meta("twitter:description"),
+      canonical: document.querySelectorAll('link[rel="canonical"]').length,
+    };
+  });
+}
+// A PNG's width and height, from its IHDR chunk.
+const pngSize = (body: Buffer) => ({ width: body.readUInt32BE(16), height: body.readUInt32BE(20) });
+
+test("WEB-302: each home's title, description and link preview say what TaskFlow is, in its language", async ({
+  page,
+  request,
+}) => {
+  const images: Record<string, string> = {};
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    const tags = await head(page);
+    expect(tags.title, `${url} title`).toBe(META.title[language]);
+    expect(tags.description, `${url} description`).toEqual([META.description[language]]);
+    expect(tags.ogTitle, `${url} og:title`).toEqual([META.title[language]]);
+    expect(tags.ogDescription, `${url} og:description`).toEqual([META.description[language]]);
+    expect(tags.ogLocale, `${url} og:locale`).toEqual([META.locale[language]]);
+    expect(tags.ogLocaleAlternate, `${url} og:locale:alternate`).toEqual(
+      LANGUAGES.filter((code) => code !== language)
+        .map((code) => META.locale[code])
+        .sort(),
+    );
+    expect(tags.twitterCard, `${url} twitter:card`).toEqual(["summary_large_image"]);
+    expect(tags.twitterTitle, `${url} twitter:title`).toEqual([META.title[language]]);
+    expect(tags.ogImage, `${url} og:image`).toHaveLength(1);
+    expect(tags.ogImageAlt, `${url} og:image:alt`).toEqual([META.imageAlt[language]]);
+    // The preview's address carries the production origin; fetch the same path here.
+    const image = new URL(tags.ogImage[0]);
+    images[language] = image.pathname + image.search;
+    const response = await request.get(images[language]);
+    expect(response.status(), `${url} og:image ${images[language]}`).toBe(200);
+    expect(response.headers()["content-type"], `${url} og:image`).toContain("image/png");
+    expect(pngSize(await response.body()), `${url} og:image size`).toEqual({ width: 1200, height: 630 });
+  }
+  expect(images.es, "the Spanish preview is its own image").not.toBe(images.en);
+  expect(images.ca, "the Catalan preview is its own image").not.toBe(images.en);
+  expect(images.ca, "the Catalan preview is its own image").not.toBe(images.es);
+});
+
+test("WEB-306: a missing page answers 404 with its three-language title, no canonical or og:url, no pun and no ‘↗’", async ({
+  page,
+  request,
+}) => {
+  expect((await request.get("/no-such-page/")).status()).toBe(404);
+  await page.goto("/no-such-page/");
+  const tags = await head(page);
+  expect(tags.title).toBe(NOT_FOUND.title);
+  expect(tags.canonical, "link[rel=canonical]").toBe(0);
+  expect(tags.ogUrl, "og:url").toEqual([]);
+  expect(await page.locator("body").innerText()).not.toMatch(/flow again|off track/i);
+  expect(await page.content()).not.toContain("↗");
+});
+
+test("WEB-306: each 404 puts the address's language first as the h1, keeps all three blocks, and hydrates with no error", async ({
+  page,
+}) => {
+  const errors = watchHydration(page);
+  for (const language of LANGUAGES) {
+    const url = `${homeUrl(language)}no-such-page/`;
+    const response = await page.goto(url);
+    expect(response?.status(), url).toBe(404);
+    await hydrated(page);
+    const h1 = page.getByRole("heading", { level: 1 });
+    await expect(h1, url).toHaveText(NOT_FOUND.heading[language]);
+    expect(await h1.evaluate((element) => element.closest("[lang]")?.getAttribute("lang")), url).toBe(language);
+    await expect(page.locator("main").getByRole("heading", { level: 2 }), url).toHaveText(
+      LANGUAGES.filter((code) => code !== language).map((code) => NOT_FOUND.heading[code]),
+    );
+    for (const code of LANGUAGES) {
+      const block = page.locator(`main [lang="${code}"]`, {
+        has: page.getByRole("heading", { name: NOT_FOUND.heading[code], exact: true }),
+      });
+      await expect(block, `${url} ${code}`).toHaveCount(1);
+      await expect(block.locator("p"), `${url} ${code}`).toHaveText(NOT_FOUND.body[code]);
+      await expect(block.getByRole("link", { name: NOT_FOUND.home[code], exact: true })).toHaveAttribute(
+        "href",
+        homeUrl(code),
+      );
+      await expect(
+        block.getByRole("link", { name: NOT_FOUND.deleteAccount[code], exact: true }),
+      ).toHaveAttribute("href", `${homeUrl(code)}delete-account/`);
+    }
+    expect(errors, `${url}: hydration errors`).toEqual([]);
+  }
+});
+
+test("WEB-306: on a phone, each 404's first deletion link is in the first viewport at 390 × 664 and 320 × 568", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phone sizes.");
+  for (const size of [
+    { width: 390, height: 664 },
+    { width: 320, height: 568 },
+  ])
+    for (const language of LANGUAGES) {
+      await page.setViewportSize(size);
+      await page.goto(`${homeUrl(language)}no-such-page/`);
+      await hydrated(page);
+      await page.evaluate(() => document.fonts.ready);
+      const first = page.locator(`main [lang="${language}"]`, {
+        has: page.getByRole("heading", { level: 1 }),
+      });
+      await expect(
+        first.getByRole("link", { name: NOT_FOUND.deleteAccount[language], exact: true }),
+        `${language} at ${size.width} × ${size.height}`,
+      ).toBeInViewport();
+    }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} 404`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-306: axe, with document-title, reports no violations on the 404 in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        const url = `${homeUrl(language)}no-such-page/`;
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const title = await new AxeBuilder({ page }).withRules(["document-title"]).analyze();
+        expect(title.passes.map(({ id }) => id), `${url}: document-title passes`).toEqual(["document-title"]);
+        expect(await axeViolations(page), url).toEqual([]);
+      }
+    });
+  });
+}
+
+// Round 2, WP37: the language links 8 px apart, the phone menu for large-text desktops,
+// and the footer nav's 44 px targets.
+type Box = { name: string; left: number; right: number; top: number; bottom: number; width: number; height: number };
+const boxesOf = (links: Locator): Promise<Box[]> =>
+  links.evaluateAll((anchors) =>
+    anchors.map((a) => {
+      const { left, right, top, bottom, width, height } = a.getBoundingClientRect();
+      return { name: a.textContent?.trim() ?? "", left, right, top, bottom, width, height };
+    }),
+  );
+// Each language link is 48 px tall and 8 px from the one before it: beside it on the same
+// row (its left edge minus the previous one's right edge), or below it when the row wraps.
+function expectLanguageLinks(boxes: Box[], where: string) {
+  expect(boxes.map(({ name }) => name), where).toEqual(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
+  for (const box of boxes) expect(box.height, `${where}: “${box.name}” height`).toBeGreaterThanOrEqual(48);
+  for (const [i, box] of boxes.entries()) {
+    if (i === 0) continue;
+    const previous = boxes[i - 1];
+    const sameRow = box.top < previous.bottom && previous.top < box.bottom;
+    const gap = sameRow ? box.left - previous.right : box.top - previous.bottom;
+    expect(gap, `${where}: “${previous.name}” to “${box.name}”`).toBeGreaterThanOrEqual(8 - 0.1);
+  }
+}
+const headerHeight = async (page: Page) => (await page.locator("header.site-header").boundingBox())!.height;
+
+test("WEB-711: at 1440 px the header's language links are 48 px tall and 8 px apart", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project.");
+  await page.emulateMedia({ colorScheme: "light" });
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    const links = page.locator("header .header-languages").getByRole("link");
+    await expect(links.first(), url).toBeVisible();
+    expectLanguageLinks(await boxesOf(links), `${url} header`);
+  }
+});
+
+test("WEB-711: on a phone the open menu's and the footer's language links are 48 px tall and 8 px apart", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "390 × 664 is the mobile project.");
+  await page.emulateMedia({ colorScheme: "light" });
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    await openMenu(page);
+    const menu = page
+      .locator("header .header-menu-panel")
+      .getByRole("navigation", { name: FRAME.language[language], exact: true })
+      .getByRole("link");
+    await expect(menu.first(), url).toBeVisible();
+    expectLanguageLinks(await boxesOf(menu), `${url} menu`);
+    await page.keyboard.press("Escape");
+    const footer = page
+      .locator("footer")
+      .getByRole("navigation", { name: FRAME.language[language], exact: true })
+      .getByRole("link");
+    await footer.first().scrollIntoViewIfNeeded();
+    await expect(footer.first(), url).toBeVisible();
+    expectLanguageLinks(await boxesOf(footer), `${url} footer`);
+  }
+});
+
+test("WEB-711, WEB-307: in Catalan at 1025 and 1100 px with default text the desktop header is one row, with the nav and the switch and no Menu", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Desktop widths.");
+  for (const width of [1025, 1100]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/ca/");
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    const where = `/ca/ at ${width} px`;
+    await expect(page.locator("header .desktop-nav"), where).toBeVisible();
+    await expect(page.locator("header .header-languages"), where).toBeVisible();
+    await expect(menuButton(page), where).toBeHidden();
+    expect(await scrollsSideways(page), `${where}: sideways scroll`).toBe(false);
+    expect(await headerHeight(page), `${where}: header height`).toBeLessThanOrEqual(105);
+    expectLanguageLinks(await boxesOf(page.locator("header .header-languages").getByRole("link")), where);
+  }
+});
+
+test("WEB-712: on a 1440 px desktop with the browser's text at 200%, the header is one row with Menu, and #questions lands below it", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Browser text size is a desktop setting (1440 × 1000).");
+  await page.emulateMedia({ colorScheme: "light" });
+  // text200: the browser's default font size from 16 to 32 px, as the renders do it.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } });
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    // The setting is live: the root follows the browser's text size.
+    await expect
+      .poll(
+        () => page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize)),
+        { message: `${url}: the root's font size` },
+      )
+      .toBe(32);
+    const button = menuButton(page);
+    await expect(button, url).toBeVisible();
+    await expect(button, url).toHaveText(FRAME.menu[language]);
+    await expect(page.locator("header .desktop-nav"), url).toBeHidden();
+    await expect(page.locator("header .header-languages"), url).toBeHidden();
+    expect(await headerHeight(page), `${url}: header height at 200%`).toBeLessThanOrEqual(105);
+    expect(await scrollsSideways(page), `${url}: sideways scroll at 200%`).toBe(false);
+
+    await page.goto(`${url}#questions`);
+    const title = page.locator("#questions-title");
+    // Wait for the (smooth) scroll to the section to come to rest.
+    let last = Number.NaN;
+    await expect
+      .poll(
+        async () => {
+          const y = await page.evaluate(() => window.scrollY);
+          const still = y === last && y > 0;
+          last = y;
+          return still;
+        },
+        { message: `${url}#questions: the scroll settles`, intervals: [300] },
+      )
+      .toBe(true);
+    await expect(title, `${url}#questions`).toBeInViewport();
+    const headerBottom = await page
+      .locator("header.site-header")
+      .evaluate((header) => header.getBoundingClientRect().bottom);
+    const titleTop = await title.evaluate((element) => element.getBoundingClientRect().top);
+    expect(titleTop, `${url}#questions: the title's top, against the header's bottom (${headerBottom})`).toBeGreaterThanOrEqual(
+      headerBottom - 0.5,
+    );
+  }
+});
+
+test("WEB-712: at 1440 × 1000 with default text each home keeps the desktop nav and switch, and no Menu", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project.");
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await expect(page.locator("header .desktop-nav"), url).toBeVisible();
+    await expect(page.locator("header .header-languages"), url).toBeVisible();
+    await expect(menuButton(page), url).toBeHidden();
+    expect(await headerHeight(page), `${url}: header height`).toBeLessThanOrEqual(105);
+  }
+});
+
+test("WEB-703: on /ca/ every footer nav link is at least 44 × 44 px", async ({ page }) => {
+  await page.goto("/ca/");
+  await hydrated(page);
+  await page.evaluate(() => document.fonts.ready);
+  const links = page
+    .locator("footer")
+    .getByRole("navigation", { name: FOOTER.navigation.ca, exact: true })
+    .getByRole("link");
+  await expect(links).toHaveText([FRAME.voice.ca, FRAME.features.ca, FRAME.questions.ca]);
+  for (const box of await boxesOf(links)) {
+    expect(box.width, `“${box.name}” width`).toBeGreaterThanOrEqual(44);
+    expect(box.height, `“${box.name}” height`).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("WP37: the site's styles no longer hold the dead .section-eyebrow > span rule", async ({ page }) => {
+  await page.goto("/");
+  const selectors = await page.evaluate(() => {
+    const found: string[] = [];
+    const walk = (rules: CSSRuleList) => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule) found.push(rule.selectorText);
+        if (rule instanceof CSSGroupingRule) walk(rule.cssRules);
+      }
+    };
+    for (const sheet of Array.from(document.styleSheets)) walk(sheet.cssRules);
+    return found;
+  });
+  // The scan reads the site's own rules: .section-eyebrow itself is still there.
+  expect(
+    selectors.some((selector) => selector.split(",").some((part) => part.trim() === ".section-eyebrow")),
+    "the .section-eyebrow rule",
+  ).toBe(true);
+  expect(selectors.filter((selector) => /\.section-eyebrow\s*>\s*span/.test(selector))).toEqual([]);
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} homes axe, WP37`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-711, WEB-712, WEB-703: axe reports no violations on /, /es/ and /ca/, with the menu closed and open (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        const url = homeUrl(language);
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await axeViolations(page), `${url}, menu closed`).toEqual([]);
+        if (!(await menuButton(page).isVisible())) continue;
+        await openMenu(page);
+        expect(await axeViolations(page), `${url}, menu open`).toEqual([]);
+      }
+    });
+  });
+}

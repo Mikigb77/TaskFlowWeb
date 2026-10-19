@@ -24,7 +24,7 @@
 //       with the voice API stubbed by tests/support/ux-voice.ts: it is never called;
 //   home-nojs…, home-menu…, privacy-menu…, home-faq…  no JavaScript, the phone menu, the FAQ;
 //   AUDIT.md, audit.json, aria/, focus/  the measured audit (tests/support/ux-audit.ts);
-//   opengraph-image.png and INDEX.md.
+//   opengraph-image.png (and .es.png, .ca.png: each home's link preview) and INDEX.md.
 import {
   test as base,
   expect,
@@ -114,12 +114,19 @@ const PAGES: PageSpec[] = [
   })),
   {
     key: "not-found",
-    versions: {
-      en: {
-        url: "/ux-renders-missing-page/",
-        source: ["src/app/not-found.tsx"],
-      },
-    },
+    versions: Object.fromEntries(
+      LANGUAGES.map((language) => [
+        language,
+        {
+          url: `${language === "en" ? "" : `/${language}`}/ux-renders-missing-page/`,
+          source: [
+            "src/app/not-found.tsx",
+            "src/components/NotFoundPage.tsx",
+            `src/content/site/${language}.ts`,
+          ],
+        },
+      ]),
+    ) as PageSpec["versions"],
     status: 404,
   },
 ];
@@ -219,7 +226,7 @@ function writeIndex() {
     "",
     "## Pages",
     "",
-    "- **Files:** `<page>.<language>.<desktop|mobile>.<light|dark>.<fold|full>.png`, plus `opengraph-image.png`, the link preview named by the home page's `og:image`.",
+    "- **Files:** `<page>.<language>.<desktop|mobile>.<light|dark>.<fold|full>.png`, plus `opengraph-image.png`, `opengraph-image.es.png` and `opengraph-image.ca.png`, the link previews named by each home's `og:image`.",
     "- **desktop:** Chromium, 1440 × 1000 at 1×. **mobile:** Playwright's iPhone 13 profile in Chromium, 390 × 664 at 3×, with touch.",
     "- **light / dark:** the visitor's system setting, with no stored choice, as on a first visit.",
     "- **fold:** the first viewport, at device scale (mobile PNGs are 1170 × 1992).",
@@ -427,25 +434,34 @@ if (!enabled) {
     ).toEqual([]);
   });
 
+  // Each home's link preview: opengraph-image.png (English), .es.png and .ca.png.
   test("render opengraph-image", async ({ page, baseURL }, testInfo) => {
     test.skip(
       testInfo.project.name !== "desktop",
-      "One link preview is enough.",
+      "One link preview per language is enough.",
     );
-    await page.goto("/");
-    const content = await page
-      .locator('meta[property="og:image"]')
-      .first()
-      .getAttribute("content");
-    test.skip(!content, "The home page has no og:image.");
-    // metadataBase may name another host; fetch the same path from the server under test.
-    const image = new URL(content!);
-    const response = await page.request.get(
-      new URL(image.pathname + image.search, baseURL).href,
-    );
-    expect(response.status()).toBe(200);
-    mkdirSync(OUT, { recursive: true });
-    writeFileSync(path.join(OUT, "opengraph-image.png"), await response.body());
+    for (const language of LANGUAGES) {
+      await page.goto(language === "en" ? "/" : `/${language}/`);
+      const content = await page
+        .locator('meta[property="og:image"]')
+        .first()
+        .getAttribute("content");
+      if (!content) continue;
+      // metadataBase may name another host; fetch the same path from the server under test.
+      const image = new URL(content);
+      const response = await page.request.get(
+        new URL(image.pathname + image.search, baseURL).href,
+      );
+      expect(response.status(), language).toBe(200);
+      mkdirSync(OUT, { recursive: true });
+      writeFileSync(
+        path.join(
+          OUT,
+          language === "en" ? "opengraph-image.png" : `opengraph-image.${language}.png`,
+        ),
+        await response.body(),
+      );
+    }
   });
 
   // Every page, language, project and theme: the renders, then the audit of the same page.
@@ -689,7 +705,7 @@ if (!enabled) {
           await page.goto(url);
           await hydrated(page);
           await page.locator(".header-menu summary").click();
-          await page.locator(".header-menu[open] nav").waitFor();
+          await page.locator(".header-menu[open] .header-menu-panel").waitFor();
           await page.evaluate(() => document.fonts.ready);
           await page.screenshot({
             path: path.join(OUT, `${key}-menu.${language}.mobile.${theme}.fold.png`),

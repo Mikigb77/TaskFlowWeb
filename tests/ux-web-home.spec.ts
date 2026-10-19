@@ -27,19 +27,30 @@ for (const theme of THEMES) {
 
     test(`WEB-6, WEB-17, WEB-11, WEB-16: the walkthrough, the appearance section, the slogan bar and the drawn microphone are gone (${theme})`, async ({
       page,
+      isMobile,
     }) => {
       await page.goto("/");
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       for (const gone of ["#demo", "#appearance", ".promise-bar", ".task-demo", ".voice-illustration"])
         await expect(page.locator(gone), gone).toHaveCount(0);
       await expect(page.getByRole("button", { name: /mood/i })).toHaveCount(0);
-      // One theme control: the header's switch, and nothing else about looks.
+      // One theme control and nothing else about looks: the header's switch on desktop; on
+      // phones, the menu's Appearance row (WP20).
       const looks = /\b(dark|light|mode|theme|appearance|mood)\b/i;
       const themeControls = page
         .getByRole("button", { name: looks })
         .or(page.getByRole("switch", { name: looks }))
         .or(page.getByRole("radio", { name: looks }))
         .or(page.getByRole("checkbox", { name: looks }));
+      if (isMobile) {
+        await expect(themeControls).toHaveCount(0);
+        await page.locator(".header-menu summary").click();
+        await expect(
+          page.getByRole("group", { name: "Appearance" }).getByRole("button"),
+        ).toHaveCount(2);
+        await expect(themeControls).toHaveCount(2);
+        return;
+      }
       await expect(themeControls).toHaveCount(1);
       await expect(
         page.getByRole("button", {

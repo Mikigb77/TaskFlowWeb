@@ -16,6 +16,33 @@ export const THEMES: Theme[] = ["light", "dark"];
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export const homeUrl = (language: Language) => (language === "en" ? "/" : `/${language}/`);
+// A page the site has in each language: /privacy/, /es/privacy/, /ca/privacy/.
+export const pageUrl = (language: Language, page: string) => `${homeUrl(language)}${page}/`;
+
+// Resolves once React has hydrated the frame: the theme controls stay disabled until then.
+export async function hydrated(page: Page) {
+  await page.waitForFunction(
+    () =>
+      document.readyState === "complete" &&
+      document.querySelectorAll("button.theme-toggle").length > 0 &&
+      !document.querySelector("button.theme-toggle:disabled"),
+    null,
+    { timeout: 15_000 },
+  );
+}
+
+// Collects React's hydration errors (console errors and uncaught page errors) from now on.
+export function watchHydration(page: Page) {
+  const errors: string[] = [];
+  const hydration = /hydrat|did not match|server rendered|#418|#423|#425/i;
+  page.on("console", (message) => {
+    if (message.type() === "error" && hydration.test(message.text())) errors.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    if (hydration.test(error.message)) errors.push(error.message);
+  });
+  return errors;
+}
 
 export const test = base.extend<{ voice: VoiceStub }>({
   voice: [

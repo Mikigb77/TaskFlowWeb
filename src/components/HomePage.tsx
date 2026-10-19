@@ -1,16 +1,7 @@
-import { Fragment } from "react";
 import Icon from "./Icon";
 import Phone from "./Phone";
 import VoiceDemo from "./VoiceDemo";
 import { copy, type SiteLanguage } from "../content/site";
-
-const lines = (text: string[]) =>
-  text.map((line, index) => (
-    <Fragment key={index}>
-      {index > 0 && <br />}
-      {line}
-    </Fragment>
-  ));
 
 export default function HomePage({ language }: { language: SiteLanguage }) {
   const { hero, features, faq, closing } = copy[language];
@@ -148,15 +139,7 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
         aria-labelledby="questions-title"
       >
         <div className="faq-intro">
-          <p className="eyebrow section-eyebrow">
-            <span>04 /</span> {faq.eyebrow}
-          </p>
           <h2 id="questions-title">{faq.title}</h2>
-          <p>{lines(faq.intro)}</p>
-          <div className="faq-doodle" aria-hidden="true">
-            <Icon name="spark" size={56} />
-            <span>{lines(faq.doodle)}</span>
-          </div>
         </div>
         <div className="faq-list">
           {faq.items.map(({ question, answer }) => (

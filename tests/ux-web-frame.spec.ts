@@ -1,8 +1,31 @@
 // Acceptance tests for the frame (header, phone menu, footer) from the UX web loop, run
-// 2026-10-18-site, that prove held changes: WP33's footer link (Footer.tsx holds the other
-// session's uncommitted work). This file stays uncommitted with it. See tests/support/ux-web.ts.
-import { expect, test } from "./support/ux-web";
-import { TRY_VOICE } from "./support/ux-web-copy";
+// 2026-10-18-site, that prove held changes: WP33's footer link, WP22 (layout.tsx: the page's
+// language, the skip link, two theme colours, the font) and WP23 (the footer in the page's
+// language). layout.tsx and Footer.tsx hold the other session's uncommitted work, so this file
+// stays uncommitted with them. Round 2's WP38 (the 404 preloads the layout's font) is held
+// with WP22, so its tests are here too. See tests/support/ux-web.ts.
+import type { APIRequestContext } from "@playwright/test";
+import {
+  axeViolations,
+  expect,
+  homeUrl,
+  hydrated,
+  type Language,
+  LANGUAGES,
+  pageUrl,
+  smallestText,
+  test,
+  THEMES,
+} from "./support/ux-web";
+import {
+  FOOTER,
+  FRAME,
+  LANGUAGE_NAMES,
+  LEGAL_PAGES,
+  NOT_FOUND,
+  SKIP_LINK,
+  TRY_VOICE,
+} from "./support/ux-web-copy";
 
 test.use({ colorScheme: "light" });
 
@@ -38,3 +61,406 @@ test("WEB-6: the footer's demo link reads ‘Try it with your voice’ and bring
   await expect(page).toHaveURL(/\/#voice$/);
   await expect(page.locator("#voice")).toBeInViewport();
 });
+
+// Every page the site has, with its language: the homes, the legal pages and the 404.
+const ALL_PAGES: { url: string; language: Language }[] = [
+  ...LANGUAGES.map((language) => ({ url: homeUrl(language), language })),
+  ...LANGUAGES.flatMap((language) =>
+    LEGAL_PAGES.map((name) => ({ url: pageUrl(language, name), language })),
+  ),
+  ...LANGUAGES.map((language) => ({ url: `${homeUrl(language)}no-such-page/`, language })),
+];
+
+// WP22: the page's head.
+test("WEB-2, WEB-304: with JavaScript, <html lang> is the page's language", async ({ page }) => {
+  for (const [url, lang] of [
+    ["/es/", "es"],
+    ["/es/privacy/", "es"],
+    ["/ca/", "ca"],
+    ["/ca/delete-account/", "ca"],
+    ["/", "en"],
+    ["/privacy/", "en"],
+  ]) {
+    await page.goto(url);
+    await expect(page.locator("html"), url).toHaveAttribute("lang", lang);
+  }
+});
+
+test("WEB-304: the first Tab stop is the skip link in the page's language, and it moves focus to the content", async ({
+  page,
+}) => {
+  for (const [url, language] of [
+    ["/es/privacy/", "es"],
+    ["/ca/", "ca"],
+    ["/", "en"],
+  ] as [string, Language][]) {
+    await page.goto(url);
+    await hydrated(page);
+    await page.keyboard.press("Tab");
+    const focused = page.locator(":focus");
+    await expect(focused, url).toHaveText(SKIP_LINK[language]);
+    await expect(focused, url).toHaveAttribute("href", "#main-content");
+    await expect(focused, url).toHaveAttribute("lang", language);
+    await page.keyboard.press("Enter");
+    await expect
+      .poll(() => page.evaluate(() => document.activeElement?.id), url)
+      .toBe("main-content");
+  }
+});
+
+test("WEB-313: the built head has a light and a dark theme colour, and choosing a theme sets both", async ({
+  page,
+  request,
+  isMobile,
+}) => {
+  const html = await (await request.get("/")).text();
+  const metas = Array.from(html.matchAll(/<meta\b[^>]*name="theme-color"[^>]*>/g)).map(([tag]) => ({
+    media: /media="([^"]*)"/.exec(tag)?.[1] ?? "",
+    content: /content="([^"]*)"/.exec(tag)?.[1]?.toLowerCase() ?? "",
+  }));
+  expect(metas, "meta[name=theme-color] in the served HTML").toHaveLength(2);
+  expect(metas.find((meta) => meta.media.includes("dark"))?.content).toBe("#121c18");
+  expect(metas.find((meta) => meta.media.includes("light"))?.content).toBe("#f7f8f2");
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  await hydrated(page);
+  const colours = () =>
+    page
+      .locator('meta[name="theme-color"]')
+      .evaluateAll((elements) => elements.map((meta) => meta.getAttribute("content")?.toLowerCase()));
+  for (const [theme, colour] of [
+    ["dark", "#121c18"],
+    ["light", "#f7f8f2"],
+  ] as const) {
+    if (isMobile) {
+      await page.locator("header .header-menu summary").click();
+      await page
+        .getByRole("group", { name: FRAME.appearance.en, exact: true })
+        .getByRole("button", { name: FRAME[theme].en, exact: true })
+        .click();
+      await page.keyboard.press("Escape");
+    } else
+      await page
+        .getByRole("button", { name: theme === "dark" ? FRAME.toDark.en : FRAME.toLight.en, exact: true })
+        .click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    expect(await colours(), `after choosing ${theme}`).toEqual([colour, colour]);
+  }
+});
+
+test("WEB-311: the home loads one font file, from Next's font loader, and preloads no TTF", async ({ page }) => {
+  const fonts: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (request.resourceType() === "font" || /\.(woff2?|ttf|otf)$/.test(url.pathname)) fonts.push(url.pathname);
+  });
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForLoadState("networkidle");
+  expect(fonts, "font requests").toHaveLength(1);
+  expect(fonts[0]).toMatch(/^\/_next\/static\/media\//);
+  expect(fonts).not.toContain("/fonts/Manrope.ttf");
+  await expect(page.locator('link[rel="preload"][href*="Manrope.ttf"]')).toHaveCount(0);
+});
+
+test("WEB-302: no page's title or og:title keeps the slogan or ‘voice-to-task’", async ({ page }) => {
+  for (const { url } of ALL_PAGES) {
+    await page.goto(url);
+    const titles = [
+      await page.title(),
+      ...(await page
+        .locator('meta[property="og:title"], meta[name="twitter:title"]')
+        .evaluateAll((metas) => metas.map((meta) => meta.getAttribute("content") ?? ""))),
+    ];
+    for (const title of titles) {
+      expect(title, url).not.toContain("Make room");
+      expect(title.toLowerCase(), url).not.toContain("voice-to-task");
+    }
+  }
+});
+
+// WP23: the footer.
+const ENGLISH_FOOTER = [
+  "Privacy",
+  "Terms and Conditions",
+  "Legal Notice",
+  "Delete account",
+  "Email support",
+  "Contact support",
+  "Back to top",
+  "Footer navigation",
+  "Legal and privacy",
+  "A product by",
+  "Try it with your voice",
+  "What it does",
+  "A little focus",
+  "headspace",
+];
+
+test("WEB-304: on Spanish and Catalan pages the footer says nothing in English", async ({ page }) => {
+  for (const url of ["/es/", "/es/privacy/", "/ca/", "/ca/delete-account/"]) {
+    await page.goto(url);
+    await hydrated(page);
+    const said = await page.locator("footer").evaluate((footer) => {
+      const found = [footer.textContent ?? ""];
+      for (const element of [footer, ...Array.from(footer.querySelectorAll("*"))])
+        for (const name of ["aria-label", "title", "alt"]) {
+          const value = element.getAttribute(name);
+          if (value) found.push(value);
+        }
+      return found.join(" \n ");
+    });
+    for (const words of ENGLISH_FOOTER) expect(said, `${url}: “${words}”`).not.toContain(words);
+  }
+});
+
+test("WEB-304: the footer's links keep the page's language, with its labels and names", async ({ page }) => {
+  for (const language of LANGUAGES)
+    for (const url of [homeUrl(language), pageUrl(language, "privacy"), pageUrl(language, "delete-account")]) {
+      await page.goto(url);
+      await hydrated(page);
+      const footer = page.locator("footer");
+      await expect(
+        footer.getByRole("navigation", { name: FOOTER.navigation[language], exact: true }).getByRole("link"),
+        url,
+      ).toHaveText([FRAME.voice[language], FRAME.features[language], FRAME.questions[language]]);
+      const legal = footer.getByRole("navigation", { name: FOOTER.legal[language], exact: true });
+      for (const { page: name, name: label } of FOOTER.links)
+        await expect(legal.getByRole("link", { name: label[language], exact: true }), url).toHaveAttribute(
+          "href",
+          pageUrl(language, name),
+        );
+      await expect(
+        legal.getByRole("link", { name: FOOTER.support[language], exact: true }),
+        url,
+      ).toHaveAttribute("href", "mailto:taskflow.support@garbar.tech");
+      // Every link but the email and the switch's other languages stays in this language.
+      const hrefs = await footer.locator("a[href]").evaluateAll(
+        (anchors, language) =>
+          anchors
+            .filter((a) => !a.getAttribute("href")!.startsWith("mailto:"))
+            .filter((a) => !a.hasAttribute("hreflang") || a.getAttribute("hreflang") === language)
+            .map((a) => new URL(a.getAttribute("href")!, location.href).pathname),
+        language,
+      );
+      expect(hrefs.length, url).toBeGreaterThan(8);
+      for (const href of hrefs)
+        if (language === "en") expect(href, url).not.toMatch(/^\/(es|ca)\//);
+        else expect(href.startsWith(`/${language}/`), `${url}: ${href}`).toBe(true);
+    }
+});
+
+test("WEB-2: the footer has the language switch, each name in its own language, the current one marked", async ({
+  page,
+}) => {
+  for (const [url, language] of [
+    ["/", "en"],
+    ["/es/privacy/", "es"],
+    ["/ca/delete-account/", "ca"],
+  ] as [string, Language][]) {
+    await page.goto(url);
+    await hydrated(page);
+    const switcher = page
+      .locator("footer")
+      .getByRole("navigation", { name: FRAME.language[language], exact: true });
+    await expect(switcher.getByRole("link"), url).toHaveText(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
+    for (const code of LANGUAGES) {
+      const link = switcher.getByRole("link", { name: LANGUAGE_NAMES[code], exact: true });
+      await expect(link, `${url} ${code}`).toHaveAttribute("lang", code);
+      await expect(link, `${url} ${code}`).toHaveAttribute("hreflang", code);
+      if (code === language) await expect(link, `${url} ${code}`).toHaveAttribute("aria-current", "page");
+      else await expect(link, `${url} ${code}`).not.toHaveAttribute("aria-current", /.*/);
+    }
+  }
+});
+
+test("WEB-4: no footer link points at #demo", async ({ page }) => {
+  for (const { url } of ALL_PAGES) {
+    await page.goto(url);
+    const demo = await page
+      .locator("footer a[href]")
+      .evaluateAll((anchors) => anchors.filter((a) => a.getAttribute("href")!.includes("#demo")).length);
+    expect(demo, url).toBe(0);
+  }
+});
+
+test("WEB-704: every page shows the trademark line in its language", async ({ page }) => {
+  for (const { url, language } of ALL_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    await expect(page.locator("footer").getByText(FOOTER.trademark[language], { exact: true }), url).toBeVisible();
+  }
+});
+
+test("WEB-703, WEB-309: on a phone, Back to top and the legal links are 44 × 44 px or more and 8 px apart", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Measured on the phone (390 × 664).");
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    const footer = page.locator("footer");
+    const back = footer.getByRole("link", { name: FOOTER.backToTop[language], exact: true });
+    await expect(back, url).toHaveCount(1);
+    await expect(back, url).toHaveAccessibleName(FOOTER.backToTop[language]);
+    await back.scrollIntoViewIfNeeded();
+    const backBox = (await back.boundingBox())!;
+    expect(backBox.width, `${url}: Back to top's width`).toBeGreaterThanOrEqual(44);
+    expect(backBox.height, `${url}: Back to top's height`).toBeGreaterThanOrEqual(44);
+    const legal = footer.getByRole("navigation", { name: FOOTER.legal[language], exact: true });
+    const boxes = await legal.getByRole("link").evaluateAll((anchors) =>
+      anchors.map((a) => {
+        const { left, top, right, bottom, width, height } = a.getBoundingClientRect();
+        return { name: a.textContent?.trim() ?? "", left, top, right, bottom, width, height };
+      }),
+    );
+    expect(boxes, url).toHaveLength(5);
+    for (const box of boxes) {
+      expect(box.width, `${url}: “${box.name}” width`).toBeGreaterThanOrEqual(44);
+      expect(box.height, `${url}: “${box.name}” height`).toBeGreaterThanOrEqual(44);
+    }
+    for (const [i, a] of boxes.entries())
+      for (const b of boxes.slice(i + 1)) {
+        const dx = Math.max(b.left - a.right, a.left - b.right);
+        const dy = Math.max(b.top - a.bottom, a.top - b.bottom);
+        expect(Math.max(dx, dy), `${url}: “${a.name}” to “${b.name}”`).toBeGreaterThanOrEqual(8 - 0.5);
+      }
+  }
+});
+
+test("WEB-309: no footer text is under 12 px, and the operator line grows with the browser's text size", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    const smallest = await smallestText(page, "footer");
+    expect(smallest!.size, `${homeUrl(language)}: “${smallest!.text}”`).toBeGreaterThanOrEqual(12);
+    await expect(page.locator("footer").getByText(FOOTER.operator[language]), homeUrl(language)).toBeVisible();
+  }
+  const operator = page.locator("footer").getByText(FOOTER.operator.en);
+  await page.goto("/");
+  const size = () => operator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  const before = await size();
+  // text200: the browser's default font size from 16 to 32 px, as the renders do it.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } });
+  await expect.poll(size, "the operator line at 200% text").toBeGreaterThan(before * 1.5);
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} frame`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-2, WEB-304, WEB-313, WEB-703: axe reports no violations on the frame's pages (${theme})`, async ({
+      page,
+    }) => {
+      for (const url of ["/", "/es/privacy/", "/ca/", "/ca/delete-account/"]) {
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await axeViolations(page), url).toEqual([]);
+      }
+    });
+  });
+}
+
+// Round 2, WP38: the 404 preloads the same font file as every other page.
+const MISSING = LANGUAGES.map((language) => ({ language, url: `${homeUrl(language)}ux-renders-missing-page/` }));
+const FONT_FILE = /\.(woff2?|ttf|otf)$/;
+
+// The <link rel="preload" as="font"> tags in the response's <head>, as the server sent them.
+function fontPreloads(html: string) {
+  const head = html.split("</head>")[0];
+  return Array.from(head.matchAll(/<link\b[^>]*>/gi))
+    .map(([tag]) => tag)
+    .filter((tag) => /\brel="preload"/i.test(tag) && /\bas="font"/i.test(tag))
+    .map((tag) => ({
+      href: /\bhref="([^"]*)"/i.exec(tag)?.[1] ?? null,
+      type: /\btype="([^"]*)"/i.exec(tag)?.[1] ?? null,
+      crossorigin: /\scrossorigin(=|\s|\/|>)/i.test(tag),
+    }));
+}
+async function homeFont(request: APIRequestContext) {
+  const response = await request.get("/");
+  expect(response.status(), "/").toBe(200);
+  const preloads = fontPreloads(await response.text());
+  expect(preloads, "/: font preloads in <head>").toHaveLength(1);
+  return preloads[0].href!;
+}
+
+test("WEB-713: each 404's head holds exactly one woff2 font preload, with crossorigin, the same as the home's", async ({
+  request,
+}) => {
+  const href = await homeFont(request);
+  expect(href).toMatch(/^\/_next\/static\/media\/[^/]+\.woff2$/);
+  for (const { url } of MISSING) {
+    const response = await request.get(url);
+    expect(response.status(), url).toBe(404);
+    expect(fontPreloads(await response.text()), `${url}: font preloads in <head>`).toEqual([
+      { href, type: "font/woff2", crossorigin: true },
+    ]);
+  }
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    const response = await request.get(url);
+    expect(response.status(), url).toBe(200);
+    expect(fontPreloads(await response.text()), `${url}: font preloads in <head>`).toEqual([
+      { href, type: "font/woff2", crossorigin: true },
+    ]);
+  }
+});
+
+// One test for each address, so each starts with an empty cache.
+for (const { url, notFound } of [
+  ...MISSING.map(({ url }) => ({ url, notFound: true })),
+  ...LANGUAGES.map((language) => ({ url: homeUrl(language), notFound: false })),
+])
+  test(`WEB-713: ${url} downloads one font file, the home's${notFound ? ", through its preload" : ""}, and no TTF`, async ({
+    page,
+    request,
+  }) => {
+    const href = await homeFont(request);
+    const fonts: string[] = [];
+    page.on("request", (sent) => {
+      const { pathname } = new URL(sent.url());
+      if (sent.resourceType() === "font" || FONT_FILE.test(pathname)) fonts.push(pathname);
+    });
+    const response = await page.goto(url);
+    expect(response?.status(), url).toBe(notFound ? 404 : 200);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForLoadState("networkidle");
+    expect(fonts, `${url}: font requests`).toEqual([href]);
+    if (!notFound) return;
+    const timings = await page.evaluate((pattern) => {
+      const font = new RegExp(pattern);
+      return performance
+        .getEntriesByType("resource")
+        .map((entry) => ({
+          path: new URL(entry.name).pathname,
+          initiator: (entry as PerformanceResourceTiming).initiatorType,
+        }))
+        .filter(({ path }) => font.test(path));
+    }, FONT_FILE.source);
+    expect(timings, `${url}: font resource timings`).toEqual([{ path: href, initiator: "link" }]);
+  });
+
+for (const theme of THEMES) {
+  test.describe(`${theme} 404, WP38`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-713: each 404's h1 is in the address's language, and axe reports no violations (${theme})`, async ({
+      page,
+    }) => {
+      for (const { language, url } of MISSING) {
+        const response = await page.goto(url);
+        expect(response?.status(), url).toBe(404);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(page.getByRole("heading", { level: 1 }), url).toHaveText(NOT_FOUND.heading[language]);
+        expect(await axeViolations(page), url).toEqual([]);
+      }
+    });
+  });
+}

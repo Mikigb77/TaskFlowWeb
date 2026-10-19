@@ -1,6 +1,47 @@
 import type { SiteCopy } from "./types";
 
 export const en: SiteCopy = {
+  meta: {
+    title: "TaskFlow — Say it, and it’s on your calendar",
+    description:
+      "Note down what you need to do, and TaskFlow puts it on your calendar. Say several things at once. For Android phones, coming soon to Google Play.",
+    imageAlt:
+      "TaskFlow’s calendar on an Android phone, with “Call the dentist” and “Buy bread” on tomorrow",
+  },
+  notFound: {
+    title: "Page not found",
+    body: "This address doesn’t exist on the TaskFlow website.",
+    home: "Go to the TaskFlow home page",
+    deleteAccount: "Delete account",
+  },
+  frame: {
+    home: "TaskFlow home",
+    navigation: "Main navigation",
+    voice: "Try it with your voice",
+    features: "What it does",
+    questions: "Questions",
+    comingSoon: "Coming soon to Android",
+    menu: "Menu",
+    language: "Language",
+    appearance: "Appearance",
+    light: "Light",
+    dark: "Dark",
+    toDark: "Switch to dark mode",
+    toLight: "Switch to light mode",
+    skipToContent: "Skip to content",
+    footer: {
+      navigation: "Footer navigation",
+      legal: "Legal and privacy",
+      privacy: "Privacy",
+      terms: "Terms and Conditions",
+      legalNotice: "Legal Notice",
+      deleteAccount: "Delete account",
+      support: "Email support",
+      operator: "A product by {company}",
+      trademark: "Android is a trademark of Google LLC.",
+      backToTop: "Back to top",
+    },
+  },
   hero: {
     title: "Say it, and it’s on ",
     titleAccent: "your calendar.",
@@ -40,10 +81,7 @@ export const en: SiteCopy = {
     },
   },
   faq: {
-    eyebrow: "A FEW GOOD QUESTIONS",
-    title: "Glad you asked.",
-    intro: ["A little more about TaskFlow", "and where we’re heading."],
-    doodle: ["Less guesswork.", "More clarity."],
+    title: "Questions",
     items: [
       {
         question: "Can I download TaskFlow yet?",
@@ -61,24 +99,24 @@ export const en: SiteCopy = {
           "Yes. You sign in once: tap Continue with Google, or use your email and a password, then type the 6-digit code we email you. Your tasks are kept in your account, so you don’t lose them if you change phones.",
       },
       {
-        question: "How does voice-to-task work?",
+        question: "How do I add tasks by voice?",
         answer:
-          "In the app, record what you need to do in your own words. TaskFlow transcribes your recording and uses AI to suggest tasks with titles, dates, times, priorities, and notes. Check and change the drafts before saving. AI processing needs an internet connection.",
+          "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change or delete a task by voice: TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google to be turned into tasks.",
       },
       {
         question: "Can I use it offline?",
         answer:
-          "You can create, edit, and complete your own tasks stored on your phone while offline. Account sync, AI processing, and attachment transfers need a connection. Downloaded files work offline; shared-list content is removed when your device next learns that access has ended.",
+          "Yes. Your tasks are saved on your phone, so you can check, add and complete them without internet. Saving to your account, understanding what you say, and uploading files need a connection.",
       },
       {
-        question: "Can I share a list?",
+        question: "Can I share tasks with my family?",
         answer:
-          "The Android development app supports shared lists. A list owner invites an account and shares a code separately; recipients choose to accept. Editors can change tasks and files, while viewers can read them. This feature is still being tested before public release.",
+          "Yes. Share a project, such as Home or Shopping: tap Share and invite someone by email. Once they accept, everyone in the project sees its tasks. Each task shows who created it, and you can see just one person’s tasks.",
       },
       {
         question: "Can I keep notes as well as tasks?",
         answer:
-          "Yes. The development app has a separate Notes view for ideas and reference material, with optional checklists and links. Choose Task or Note when capturing. Typed notes work locally; recorded notes need online transcription and keep your wording without turning it into scheduled tasks.",
+          "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
       },
     ],
   },

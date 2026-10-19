@@ -1,5 +1,21 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
+
+// The theme control: the header's icon switch on desktop, the menu's Appearance row on phones.
+async function chooseTheme(page: Page, isMobile: boolean, theme: "light" | "dark") {
+  if (isMobile) {
+    await page.locator(".header-menu summary").click();
+    await page
+      .getByRole("group", { name: "Appearance" })
+      .getByRole("button", { name: theme === "dark" ? "Dark" : "Light", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+  } else
+    await page
+      .getByRole("button", { name: `Switch to ${theme} mode`, exact: true })
+      .click();
+}
 
 test("the home loads without errors or outside requests, and its main button leads to the live demo", async ({
   page,
@@ -25,11 +41,9 @@ test("the home loads without errors or outside requests, and its main button lea
   expect(externalRequests).toEqual([]);
 });
 
-test("theme persists across reloads and pages", async ({ page }) => {
+test("theme persists across reloads and pages", async ({ page, isMobile }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Switch to dark mode", exact: true })
-    .click();
+  await chooseTheme(page, isMobile, "dark");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -39,26 +53,27 @@ test("theme persists across reloads and pages", async ({ page }) => {
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();
-  await page
-    .getByRole("button", { name: "Switch to light mode", exact: true })
-    .click();
+  await chooseTheme(page, isMobile, "light");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
 
 test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
   await page.goto("/");
   if (isMobile) {
-    await page.getByLabel("Open navigation").click();
+    const menu = page.locator(".header-menu summary");
+    await expect(menu).toHaveText("Menu");
+    await menu.click();
     await expect(
-      page.getByRole("navigation", { name: "Mobile navigation" }),
+      page.getByRole("navigation", { name: "Main navigation" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(
-      page.getByRole("navigation", { name: "Mobile navigation" }),
+      page.getByRole("navigation", { name: "Main navigation" }),
     ).not.toBeVisible();
-    await page.getByLabel("Open navigation").click();
+    await expect(menu).toBeFocused();
+    await menu.click();
     await page
-      .getByRole("navigation", { name: "Mobile navigation" })
+      .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: "Questions" })
       .click();
     await expect(page.locator(".header-menu")).not.toHaveAttribute("open");
@@ -74,10 +89,10 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
     page.getByText(/coming soon to Google Play\. Until then/),
   ).toBeVisible();
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
+  await expect(page.getByText(/check, add and complete them without internet/)).toBeVisible();
   const response = await page.goto("/a-page-that-does-not-exist/");
   expect(response?.status()).toBe(404);
-  await page.getByRole("link", { name: "Back to TaskFlow" }).click();
+  await page.getByRole("link", { name: "Go to the TaskFlow home page" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "on your calendar.",
   );
@@ -85,14 +100,12 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
 
 test("light and dark layouts pass accessibility checks and fit narrow screens", async ({
   page,
+  isMobile,
 }, testInfo) => {
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
   for (const theme of ["light", "dark"]) {
-    if (theme === "dark")
-      await page
-        .getByRole("button", { name: "Switch to dark mode", exact: true })
-        .click();
+    if (theme === "dark") await chooseTheme(page, isMobile, "dark");
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();
@@ -146,13 +159,12 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
 
 test("system appearance is followed until a choice is made", async ({
   page,
+  isMobile,
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page
-    .getByRole("button", { name: "Switch to light mode", exact: true })
-    .click();
+  await chooseTheme(page, isMobile, "light");
   await page.emulateMedia({ colorScheme: "light" });
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -172,6 +184,6 @@ test("the marketing content and FAQ remain usable without JavaScript", async ({
     "on your calendar.",
   );
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
+  await expect(page.getByText(/check, add and complete them without internet/)).toBeVisible();
   await context.close();
 });

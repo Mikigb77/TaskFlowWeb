@@ -128,11 +128,6 @@ h3 {
   color: var(--green);
   margin-bottom: 20px;
 }
-.section-eyebrow > span {
-  display: inline-block;
-  margin-right: 11px;
-  opacity: 1;
-}
 h2 {
   font-size: clamp(32px, 3.6vw, 45px);
   line-height: 1.22;
@@ -161,13 +156,6 @@ h2 {
   background: var(--green-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow);
-}
-.button-small {
-  min-height: 42px;
-  padding: 11px 17px;
-  font-size: 11px;
-  gap: 21px;
-  border-radius: 7px;
 }
 .button-lime {
   background: var(--lime);
@@ -241,11 +229,12 @@ h2 {
   backdrop-filter: blur(14px);
 }
 .header-inner {
-  height: 87px;
+  min-height: 87px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 25px;
+  gap: 8px 25px;
   border-bottom: 1px solid var(--line);
 }
 .brand {
@@ -274,16 +263,14 @@ h2 {
   gap: 31px;
   margin-left: 42px;
 }
-.desktop-nav a,
-.footer-top nav a {
-  font-size: 13px;
+.desktop-nav a {
+  font-size: 1rem;
   font-weight: 650;
   color: var(--muted);
   padding-block: 13px;
   transition: color 0.2s;
 }
-.desktop-nav a:hover,
-.footer-top nav a:hover {
+.desktop-nav a:hover {
   color: var(--green);
 }
 .header-actions {
@@ -291,11 +278,36 @@ h2 {
   align-items: center;
   gap: 17px;
 }
+/* The same page in each language; the current one is marked by weight and a ring. */
+.language-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.language-switch a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+.language-switch a:hover {
+  color: var(--ink);
+  background: var(--mint);
+}
+.language-switch a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px var(--green);
+}
 .theme-toggle {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: transparent;
@@ -699,27 +711,6 @@ h1 {
   border-top: 1px solid var(--line);
   padding-top: 88px;
 }
-.faq-intro > p:not(.eyebrow) {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.9;
-  margin-top: 17px;
-}
-.faq-doodle {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 31px;
-  color: var(--green);
-}
-.faq-doodle > svg {
-  transform: rotate(12deg);
-}
-.faq-doodle > span {
-  font-size: 11px;
-  line-height: 1.6;
-  transform: rotate(-5deg);
-}
 .faq-item {
   border-bottom: 1px solid var(--line);
 }
@@ -732,7 +723,7 @@ h1 {
   gap: 20px;
   align-items: center;
   padding-block: 23px;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 650;
   list-style: none;
 }
@@ -755,7 +746,7 @@ summary::-webkit-details-marker {
   color: var(--green);
 }
 .faq-item p {
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.9;
   color: var(--muted);
   padding-bottom: 24px;
@@ -845,44 +836,54 @@ summary::-webkit-details-marker {
   padding-bottom: 35px;
 }
 .footer-top .brand {
-  font-size: 22px;
+  min-height: 48px;
+  font-size: 1.375rem;
 }
 .footer-top .brand-mark {
   width: 31px;
   height: 31px;
   border-radius: 10px;
 }
-.footer-top p {
-  color: var(--muted);
-  font-size: 10px;
-  margin-top: 12px;
-}
 .footer-top nav {
   display: flex;
-  gap: 26px;
-  padding-top: 3px;
+  flex-wrap: wrap;
+  column-gap: 26px;
+}
+.footer-top nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.footer-top nav a:hover {
+  color: var(--green);
 }
 .footer-bottom {
-  padding-block: 23px 28px;
+  padding-block: 16px 28px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.875rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px 20px;
 }
-.footer-note {
-  display: flex;
+.footer-back {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-height: 44px;
 }
-.tiny-spark {
-  color: var(--green);
-  font-size: 15px;
-}
-.footer-bottom a {
-  padding-block: 9px;
+.footer-back svg {
+  display: block;
+  width: 1.15em;
+  height: 1.15em;
 }
 .prose-page {
   max-width: 800px;
@@ -914,15 +915,65 @@ summary::-webkit-details-marker {
   font-size: 11px;
   margin-top: 45px;
 }
+/* The 404's three blocks. The address's language comes first (<html data-not-found>,
+   set before the first paint), whatever the order in the page. */
 .not-found {
-  padding-block: 100px 150px;
+  display: flex;
+  flex-direction: column;
+  padding-block: 64px 120px;
 }
-.not-found h1 {
-  margin-top: 22px;
+.not-found-block {
+  order: 1;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
 }
-.not-found p:not(.eyebrow) {
+.not-found-block :is(h1, h2) {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root:not([data-not-found="es"], [data-not-found="ca"])
+  .not-found-block[lang="en"],
+[data-not-found="es"] .not-found-block[lang="es"],
+[data-not-found="ca"] .not-found-block[lang="ca"] {
+  order: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+:root:not([data-not-found="es"], [data-not-found="ca"])
+  .not-found-block[lang="en"]
+  :is(h1, h2),
+[data-not-found="es"] .not-found-block[lang="es"] :is(h1, h2),
+[data-not-found="ca"] .not-found-block[lang="ca"] :is(h1, h2) {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+}
+.not-found p {
   color: var(--muted);
-  margin-block: 25px;
+  font-size: 1rem;
+  margin-block: 12px 8px;
+}
+.not-found-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 32px;
+}
+/* Block links, so a label that wraps keeps its arrow right after the last word. */
+.not-found .text-link {
+  display: block;
+  padding-block: 10px;
+  font-size: 1rem;
+}
+.not-found .text-link svg {
+  display: inline;
+  margin-left: 0.5em;
+  vertical-align: -0.2em;
 }
 
 @media (min-width: 1500px) {
@@ -964,64 +1015,98 @@ summary::-webkit-details-marker {
     padding-inline: 26px;
   }
 }
-@media (max-width: 800px) {
-  .container {
-    width: calc(100% - 48px);
-  }
-  .header-inner {
-    height: 76px;
-  }
-  .desktop-nav {
+/* The phone menu, up to 64em (1024 px at default text, wider when the browser's text is larger): below that, the Catalan nav and the language switch don't fit on one row. */
+@media (max-width: 64em) {
+  .desktop-nav,
+  .header-languages,
+  .header-actions > .theme-toggle {
     display: none;
-  }
-  .header-actions {
-    gap: 11px;
   }
   .header-menu {
     display: block;
   }
   .header-menu summary {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    justify-content: center;
     align-items: center;
-    width: 42px;
-    height: 42px;
-    border: 1px solid var(--line);
-    border-radius: 50%;
+    gap: 8px;
+    min-height: 48px;
+    padding-inline: 16px;
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
     list-style: none;
   }
-  .header-menu summary > span {
-    display: block;
-    width: 15px;
-    height: 1.5px;
-    background: var(--ink);
-    transition: transform 0.2s;
+  .header-menu[open] summary {
+    background: var(--mint);
   }
-  .header-menu[open] summary > span:first-child {
-    transform: translateY(3.75px) rotate(45deg);
-  }
-  .header-menu[open] summary > span:last-child {
-    transform: translateY(-3.75px) rotate(-45deg);
-  }
-  .header-menu nav {
+  .header-menu-panel {
     position: absolute;
-    left: 24px;
     right: 24px;
-    top: 70px;
+    top: calc(100% + 4px);
+    width: min(26rem, calc(100% - 48px));
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
     box-shadow: var(--shadow);
     padding: 12px 20px;
   }
-  .header-menu nav a {
+  .menu-languages {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .header-menu-panel nav:not(.language-switch) a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
-    padding-block: 16px;
+    gap: 12px;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 650;
+    padding-block: 12px;
+  }
+  .appearance-choice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 1rem;
+    font-weight: 650;
+  }
+  .appearance-choice > div {
+    display: flex;
+    gap: 8px;
+  }
+  .appearance-choice button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 48px;
+    padding-inline: 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    font-weight: 650;
+  }
+  .appearance-choice button[aria-pressed="true"] {
+    font-weight: 800;
+    box-shadow: inset 0 0 0 2px var(--green);
+  }
+}
+@media (max-width: 800px) {
+  .container {
+    width: calc(100% - 48px);
+  }
+  .header-inner {
+    min-height: 76px;
+  }
+  .header-actions {
+    gap: 11px;
   }
   .hero {
     grid-template-columns: 1fr 1fr;
@@ -1103,14 +1188,8 @@ summary::-webkit-details-marker {
     grid-template-columns: 1fr;
     gap: 35px;
   }
-  .faq-doodle {
-    display: none;
-  }
   .footer-top nav {
-    gap: 17px;
-  }
-  .footer-top nav a {
-    font-size: 12px;
+    column-gap: 17px;
   }
 }
 @media (max-width: 580px) {
@@ -1121,7 +1200,7 @@ summary::-webkit-details-marker {
     scroll-padding-top: 90px;
   }
   .header-inner {
-    height: 73px;
+    min-height: 73px;
   }
   .brand {
     font-size: 23px;
@@ -1129,9 +1208,6 @@ summary::-webkit-details-marker {
   .brand-mark {
     width: 33px;
     height: 33px;
-  }
-  .header-cta {
-    display: none;
   }
   .hero {
     grid-template-columns: 1fr;
@@ -1230,13 +1306,13 @@ summary::-webkit-details-marker {
     gap: 29px;
   }
   .faq-item summary {
-    font-size: 14px;
+    font-size: 1rem;
     line-height: 1.7;
     padding-block: 21px;
     gap: 10px;
   }
   .faq-item p {
-    font-size: 14px;
+    font-size: 1rem;
     padding-right: 5px;
   }
   .closing-section {
@@ -1259,23 +1335,12 @@ summary::-webkit-details-marker {
     padding-bottom: 22px;
   }
   .footer-top nav {
-    width: 100%;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 0;
-  }
-  .footer-top nav a {
-    font-size: 12px;
+    column-gap: 22px;
   }
   .footer-bottom {
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 10px;
-  }
-  .footer-note {
-    order: 3;
-    width: 100%;
-    margin-top: 3px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
   .prose-page {
     padding-block: 40px 70px;
@@ -1287,7 +1352,7 @@ summary::-webkit-details-marker {
     font-size: 17px;
   }
   .not-found {
-    padding-block: 70px 100px;
+    padding-block: 32px 80px;
   }
 }
 @media (max-width: 360px) {

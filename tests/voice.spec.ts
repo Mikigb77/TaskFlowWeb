@@ -141,9 +141,16 @@ test("live text capture produces editable multiple tasks and shows the remaining
       .analyze()
   ).violations;
   expect(violations).toEqual([]);
-  await page
-    .getByRole("button", { name: "Switch to dark mode", exact: true })
-    .click();
+  // The theme switch: the header's icon on desktop, the menu's Appearance row on phones.
+  if (await page.locator(".header-actions > .theme-toggle").isVisible())
+    await page
+      .getByRole("button", { name: "Switch to dark mode", exact: true })
+      .click();
+  else {
+    await page.locator(".header-menu summary").click();
+    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.keyboard.press("Escape");
+  }
   expect(
     (
       await new AxeBuilder({ page })

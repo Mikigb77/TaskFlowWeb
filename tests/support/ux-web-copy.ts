@@ -149,3 +149,176 @@ export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
     },
   },
 ];
+
+// WP19: the FAQ's heading, and its last four items in the order the plan gives.
+export const FAQ_TITLE: Copy = { en: "Questions", es: "Preguntas", ca: "Preguntes" };
+export const FAQ_REST: { question: Copy; answer: Copy }[] = [
+  {
+    question: {
+      en: "How do I add tasks by voice?",
+      es: "¿Cómo añado tareas hablando?",
+      ca: "Com afegeixo tasques parlant?",
+    },
+    answer: {
+      en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change or delete a task by voice: TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google to be turned into tasks.",
+      es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar o eliminar una tarea hablando: TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google para convertirlas en tareas.",
+      ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar o suprimir una tasca parlant: TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google per convertir-les en tasques.",
+    },
+  },
+  {
+    question: {
+      en: "Can I use it offline?",
+      es: "¿Puedo usarla sin conexión?",
+      ca: "La puc fer servir sense connexió?",
+    },
+    answer: {
+      en: "Yes. Your tasks are saved on your phone, so you can check, add and complete them without internet. Saving to your account, understanding what you say, and uploading files need a connection.",
+      es: "Sí. Tus tareas se guardan en el móvil: puedes consultarlas, añadirlas y completarlas sin internet. Guardar en tu cuenta, entender lo que dices y subir archivos necesitan conexión.",
+      ca: "Sí. Les tasques es desen al mòbil: pots consultar-les, afegir-ne i completar-les sense internet. Desar al compte, entendre el que dius i pujar fitxers necessiten connexió.",
+    },
+  },
+  {
+    question: {
+      en: "Can I share tasks with my family?",
+      es: "¿Puedo compartir tareas con mi familia?",
+      ca: "Puc compartir tasques amb la meva família?",
+    },
+    answer: {
+      en: "Yes. Share a project, such as Home or Shopping: tap Share and invite someone by email. Once they accept, everyone in the project sees its tasks. Each task shows who created it, and you can see just one person’s tasks.",
+      es: "Sí. Comparte un proyecto, como Casa o Compras: toca Compartir e invita a alguien por correo. Cuando acepte, todos los miembros ven sus tareas. Cada tarea muestra quién la creó, y puedes ver solo las de una persona.",
+      ca: "Sí. Comparteix un projecte, com Casa o Compres: toca Comparteix i convida algú per correu. Quan accepti, tots els membres en veuen les tasques. Cada tasca mostra qui l’ha creada, i pots veure només les d’una persona.",
+    },
+  },
+  {
+    question: {
+      en: "Can I keep notes as well as tasks?",
+      es: "¿Puedo guardar notas además de tareas?",
+      ca: "Puc desar notes a més de tasques?",
+    },
+    answer: {
+      en: "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
+      es: "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+      ca: "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com la contrasenya del wifi. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+    },
+  },
+];
+
+// WP20: the header and the phone menu. One label per destination (plan conventions).
+export const FRAME = {
+  voice: TRY_VOICE,
+  features: WHAT_IT_DOES,
+  questions: FAQ_TITLE,
+  comingSoon: {
+    en: "Coming soon to Android",
+    es: "Muy pronto en Android",
+    ca: "Molt aviat a Android",
+  } as Copy,
+  menu: { en: "Menu", es: "Menú", ca: "Menú" } as Copy,
+  language: { en: "Language", es: "Idioma", ca: "Idioma" } as Copy,
+  appearance: { en: "Appearance", es: "Apariencia", ca: "Aparença" } as Copy,
+  light: { en: "Light", es: "Claro", ca: "Clar" } as Copy,
+  dark: { en: "Dark", es: "Oscuro", ca: "Fosc" } as Copy,
+  home: { en: "TaskFlow home", es: "Inicio de TaskFlow", ca: "Inici de TaskFlow" } as Copy,
+  navigation: {
+    en: "Main navigation",
+    es: "Navegación principal",
+    ca: "Navegació principal",
+  } as Copy,
+  toDark: {
+    en: "Switch to dark mode",
+    es: "Cambiar a modo oscuro",
+    ca: "Canvia al mode fosc",
+  } as Copy,
+  toLight: {
+    en: "Switch to light mode",
+    es: "Cambiar a modo claro",
+    ca: "Canvia al mode clar",
+  } as Copy,
+};
+// Each language's name in its own language, in the switch's order.
+export const LANGUAGE_NAMES: Copy = { en: "English", es: "Español", ca: "Català" };
+
+// WP21: the homes' title, description and link preview.
+export const META = {
+  title: {
+    en: "TaskFlow — Say it, and it’s on your calendar",
+    es: "TaskFlow — Dilo y ya está en tu calendario",
+    ca: "TaskFlow — Digues-ho i ja és al teu calendari",
+  } as Copy,
+  description: {
+    en: "Note down what you need to do, and TaskFlow puts it on your calendar. Say several things at once. For Android phones, coming soon to Google Play.",
+    es: "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, muy pronto en Google Play.",
+    ca: "Apunta el que has de fer i TaskFlow ho posa al teu calendari. Digues diverses coses alhora. Per a mòbils Android, molt aviat a Google Play.",
+  } as Copy,
+  locale: { en: "en_US", es: "es_ES", ca: "ca_ES" } as Copy,
+  imageAlt: {
+    en: "TaskFlow’s calendar on an Android phone, with “Call the dentist” and “Buy bread” on tomorrow",
+    es: "El calendario de TaskFlow en un móvil Android, con «Llamar al dentista» y «Comprar pan» para mañana",
+    ca: "El calendari de TaskFlow en un mòbil Android, amb «Trucar al dentista» i «Comprar pa» per a demà",
+  } as Copy,
+};
+
+// WP21: the 404, one block per language.
+export const NOT_FOUND = {
+  title: "Page not found · Página no encontrada · No hem trobat la pàgina — TaskFlow",
+  heading: {
+    en: "Page not found",
+    es: "Página no encontrada",
+    ca: "No hem trobat aquesta pàgina",
+  } as Copy,
+  body: {
+    en: "This address doesn’t exist on the TaskFlow website.",
+    es: "Esta dirección no existe en la web de TaskFlow.",
+    ca: "Aquesta adreça no existeix al web de TaskFlow.",
+  } as Copy,
+  home: {
+    en: "Go to the TaskFlow home page",
+    es: "Ir al inicio de TaskFlow",
+    ca: "Ves a l’inici de TaskFlow",
+  } as Copy,
+  deleteAccount: { en: "Delete account", es: "Eliminar cuenta", ca: "Suprimeix el compte" } as Copy,
+};
+
+// WP22: the skip link.
+export const SKIP_LINK: Copy = {
+  en: "Skip to content",
+  es: "Saltar al contenido",
+  ca: "Salta al contingut",
+};
+
+// WP23: the footer.
+export const FOOTER = {
+  navigation: {
+    en: "Footer navigation",
+    es: "Navegación del pie de página",
+    ca: "Navegació del peu de pàgina",
+  } as Copy,
+  legal: { en: "Legal and privacy", es: "Legal y privacidad", ca: "Legal i privacitat" } as Copy,
+  links: [
+    { page: "privacy", name: { en: "Privacy", es: "Privacidad", ca: "Privacitat" } as Copy },
+    {
+      page: "terms",
+      name: {
+        en: "Terms and Conditions",
+        es: "Términos y condiciones",
+        ca: "Termes i condicions",
+      } as Copy,
+    },
+    { page: "legal", name: { en: "Legal Notice", es: "Aviso legal", ca: "Avís legal" } as Copy },
+    {
+      page: "delete-account",
+      name: { en: "Delete account", es: "Eliminar cuenta", ca: "Suprimeix el compte" } as Copy,
+    },
+  ],
+  support: { en: "Email support", es: "Escribir a soporte", ca: "Escriu al suport" } as Copy,
+  operator: { en: "A product by ", es: "Un producto de ", ca: "Un producte de " } as Copy,
+  trademark: {
+    en: "Android is a trademark of Google LLC.",
+    es: "Android es una marca comercial de Google LLC.",
+    ca: "Android és una marca comercial de Google LLC.",
+  } as Copy,
+  backToTop: { en: "Back to top", es: "Volver arriba", ca: "Torna a dalt" } as Copy,
+};
+
+// Every page the site has: the three homes and the legal pages in each language.
+export const LEGAL_PAGES = ["privacy", "terms", "legal", "delete-account"] as const;

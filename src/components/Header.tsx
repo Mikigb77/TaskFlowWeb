@@ -2,14 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import Icon from "./Icon";
-import { ThemeToggle } from "./ThemeProvider";
+import LanguageSwitch from "./LanguageSwitch";
+import { AppearanceChoice, ThemeToggle } from "./ThemeProvider";
+import { useSiteLanguage } from "./useSiteLanguage";
+import { copy, homePath } from "../content/site";
 
-const links = [
-  ["Features", "/#features"],
-  ["Try voice", "/#voice"],
-  ["Questions", "/#questions"],
-];
 export default function Header() {
+  const language = useSiteLanguage();
+  const { frame } = copy[language];
+  const home = homePath(language);
+  const links = [
+    [frame.voice, `${home}#voice`],
+    [frame.features, `${home}#features`],
+    [frame.questions, `${home}#questions`],
+  ];
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
@@ -18,8 +24,16 @@ export default function Header() {
         menu.current.querySelector("summary")?.focus();
       }
     };
+    const outside = (event: PointerEvent) => {
+      if (menu.current?.open && !menu.current.contains(event.target as Node))
+        menu.current.open = false;
+    };
     document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("keydown", close);
+      document.removeEventListener("pointerdown", outside);
+    };
   }, []);
   const closeMenu = () => {
     if (menu.current) menu.current.open = false;
@@ -27,7 +41,7 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="container header-inner">
-        <a href="/" className="brand" aria-label="TaskFlow home">
+        <a href={home} className="brand" aria-label={frame.home}>
           <span className="brand-mark">
             <Icon name="logo" size={23} />
           </span>
@@ -35,7 +49,7 @@ export default function Header() {
             taskflow<span className="brand-period">.</span>
           </span>
         </a>
-        <nav className="desktop-nav" aria-label="Main navigation">
+        <nav className="desktop-nav" aria-label={frame.navigation}>
           {links.map(([label, href]) => (
             <a key={href} href={href}>
               {label}
@@ -43,25 +57,30 @@ export default function Header() {
           ))}
         </nav>
         <div className="header-actions">
+          <LanguageSwitch className="header-languages" label={frame.language} />
           <ThemeToggle />
-          <a className="button button-small header-cta" href="/#voice">
-            Explore the app <Icon name="arrowUp" size={17} />
-          </a>
           <details className="header-menu" ref={menu}>
-            <summary aria-label="Open navigation">
-              <span></span>
-              <span></span>
+            <summary>
+              <Icon name="menu" size={20} />
+              <span>{frame.menu}</span>
             </summary>
-            <nav aria-label="Mobile navigation">
-              {links.map(([label, href]) => (
-                <a key={href} href={href} onClick={closeMenu}>
-                  {label} <Icon name="arrow" size={18} />
+            <div className="header-menu-panel">
+              <LanguageSwitch
+                className="menu-languages"
+                label={frame.language}
+              />
+              <nav aria-label={frame.navigation}>
+                {links.map(([label, href]) => (
+                  <a key={href} href={href} onClick={closeMenu}>
+                    {label} <Icon name="arrow" size={18} />
+                  </a>
+                ))}
+                <a href={`${home}#get-taskflow`} onClick={closeMenu}>
+                  {frame.comingSoon} <Icon name="arrow" size={18} />
                 </a>
-              ))}
-              <a href="/#get-taskflow" onClick={closeMenu}>
-                Get TaskFlow <Icon name="arrow" size={18} />
-              </a>
-            </nav>
+              </nav>
+              <AppearanceChoice />
+            </div>
           </details>
         </div>
       </div>

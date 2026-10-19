@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ca } from "./ca";
 import { en } from "./en";
 import { es } from "./es";
@@ -39,6 +40,36 @@ export function homeAlternates(language: SiteLanguage) {
         },
       }
     : undefined;
+}
+
+// Open Graph locales, for link previews.
+const locales: Record<SiteLanguage, string> = {
+  en: "en_US",
+  es: "es_ES",
+  ca: "ca_ES",
+};
+
+// The home's title, description and link preview in one language. The preview image
+// comes from the opengraph-image file next to the home's page file.
+export function homeMetadata(language: SiteLanguage): Metadata {
+  const { title, description } = copy[language].meta;
+  return {
+    title,
+    description,
+    alternates: homeAlternates(language),
+    openGraph: {
+      type: "website",
+      siteName: "TaskFlow",
+      title,
+      description,
+      ...(process.env.SITE_URL ? { url: homePath(language) } : {}),
+      locale: locales[language],
+      alternateLocale: languages
+        .filter((code) => code !== language)
+        .map((code) => locales[code]),
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export function languageFromPath(pathname: string): SiteLanguage {

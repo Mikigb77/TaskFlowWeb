@@ -1,8 +1,47 @@
-import { en } from "./en";
 import type { SiteCopy } from "./types";
 
-// Each section reuses the English until its own package writes it in this language.
 export const es: SiteCopy = {
+  meta: {
+    title: "TaskFlow — Dilo y ya está en tu calendario",
+    description:
+      "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, muy pronto en Google Play.",
+    imageAlt:
+      "El calendario de TaskFlow en un móvil Android, con «Llamar al dentista» y «Comprar pan» para mañana",
+  },
+  notFound: {
+    title: "Página no encontrada",
+    body: "Esta dirección no existe en la web de TaskFlow.",
+    home: "Ir al inicio de TaskFlow",
+    deleteAccount: "Eliminar cuenta",
+  },
+  frame: {
+    home: "Inicio de TaskFlow",
+    navigation: "Navegación principal",
+    voice: "Pruébalo con tu voz",
+    features: "Qué hace",
+    questions: "Preguntas",
+    comingSoon: "Muy pronto en Android",
+    menu: "Menú",
+    language: "Idioma",
+    appearance: "Apariencia",
+    light: "Claro",
+    dark: "Oscuro",
+    toDark: "Cambiar a modo oscuro",
+    toLight: "Cambiar a modo claro",
+    skipToContent: "Saltar al contenido",
+    footer: {
+      navigation: "Navegación del pie de página",
+      legal: "Legal y privacidad",
+      privacy: "Privacidad",
+      terms: "Términos y condiciones",
+      legalNotice: "Aviso legal",
+      deleteAccount: "Eliminar cuenta",
+      support: "Escribir a soporte",
+      operator: "Un producto de {company}",
+      trademark: "Android es una marca comercial de Google LLC.",
+      backToTop: "Volver arriba",
+    },
+  },
   hero: {
     title: "Dilo y ya está en ",
     titleAccent: "tu calendario.",
@@ -41,9 +80,8 @@ export const es: SiteCopy = {
       body: "Tus tareas se guardan en el móvil, así puedes consultarlas y añadirlas sin internet. Se guardan en tu cuenta cuando vuelves a tener conexión.",
     },
   },
-  // The heading and the answers after the third stay English until WP19.
   faq: {
-    ...en.faq,
+    title: "Preguntas",
     items: [
       {
         question: "¿Ya puedo descargar TaskFlow?",
@@ -60,7 +98,26 @@ export const es: SiteCopy = {
         answer:
           "Sí. Inicias sesión una vez: toca Continuar con Google, o usa tu correo y una contraseña, y escribe el código de 6 cifras que te enviamos. Tus tareas se guardan en tu cuenta, así no las pierdes si cambias de móvil.",
       },
-      ...en.faq.items.slice(3),
+      {
+        question: "¿Cómo añado tareas hablando?",
+        answer:
+          "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar o eliminar una tarea hablando: TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google para convertirlas en tareas.",
+      },
+      {
+        question: "¿Puedo usarla sin conexión?",
+        answer:
+          "Sí. Tus tareas se guardan en el móvil: puedes consultarlas, añadirlas y completarlas sin internet. Guardar en tu cuenta, entender lo que dices y subir archivos necesitan conexión.",
+      },
+      {
+        question: "¿Puedo compartir tareas con mi familia?",
+        answer:
+          "Sí. Comparte un proyecto, como Casa o Compras: toca Compartir e invita a alguien por correo. Cuando acepte, todos los miembros ven sus tareas. Cada tarea muestra quién la creó, y puedes ver solo las de una persona.",
+      },
+      {
+        question: "¿Puedo guardar notas además de tareas?",
+        answer:
+          "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+      },
     ],
   },
   closing: {

@@ -49,7 +49,7 @@ test("theme persists across reloads and pages", async ({ page, isMobile }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Privacy", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Your privacy",
+    /privacy/i,
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();

@@ -473,9 +473,9 @@
   min-width: 0;
   padding: 10px 0;
 }
-/* Inside the final checked card, before its details: the checkbox stays put. */
+/* One full-width completion message above the entire generated task group. */
 .voice-completion {
-  margin: 4px 0 16px;
+  margin: 0 0 22px;
   padding: 14px;
   border-radius: 12px;
   background: var(--mint);

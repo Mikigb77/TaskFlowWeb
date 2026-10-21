@@ -6,6 +6,7 @@ Build and deploy the latest origin/main to a small, public Cloud Run service.
 Uses a temporary git archive, not the working tree. Requires Git, tar, gcloud,
 Google authentication and an already billed project. Docker/Node are not needed
 locally: Cloud Build builds the container. Does not modify gcloud defaults or DNS.
+The protected live voice demo is enabled unless DisableVoice is explicitly set.
 #>
 [CmdletBinding()]
 param(
@@ -18,15 +19,21 @@ param(
     [ValidatePattern('^[a-z][a-z0-9-]{0,19}[a-z0-9]$')]
     [string]$Service = 'taskflow-web',
     [ValidatePattern('^https://[a-z0-9.-]+$')]
-    [string]$SiteUrl,
-    [switch]$EnableVoice,
+    [string]$SiteUrl = 'https://taskflow.garbar.tech',
+    [switch]$DisableVoice,
     [ValidatePattern('^[A-Za-z0-9_-]+$')]
-    [string]$TurnstileSiteKey,
+    # Public widget identifier, also published in README.md; not a secret.
+    [string]$TurnstileSiteKey = '0x4AAAAAAFSOD8PvA-Wh35pV',
     [switch]$Plan
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$voiceEnabled = -not $DisableVoice
+
+if ($voiceEnabled -and (-not $TurnstileSiteKey -or $SiteUrl -ne 'https://taskflow.garbar.tech')) {
+    throw 'Voice requires the protected TaskFlow hostname and a public Turnstile site key. For a preview on another origin, use -DisableVoice.'
+}
 
 function Invoke-Checked {
     param([string]$Program, [string[]]$Arguments)
@@ -64,6 +71,22 @@ if ($privateFiles.Count -gt 0) {
     throw "Refusing to upload tracked environment/credential files: $($privateFiles -join ', ')"
 }
 
+# Check the exact release commit before creating resources or starting a paid build.
+# Validate company details and publication status; legal compliance is not a boolean gate.
+$legalPath = 'src/content/legal/company.json'
+if ($legalPath -in $tracked) {
+    $legal = (Invoke-Checked 'git' @('-C', $repo, 'show', "${commit}:$legalPath")) | ConvertFrom-Json
+    $legalReady = $legal.publicationApproved -eq $true -and $legal.incorporationConfirmed -eq $true -and
+        $legal.taxId -and $legal.registeredAddress -and $legal.commercialRegister -and
+        ($legal.generalEmail -match '^[^\s@]+@[^\s@]+\.[^\s@]+$') -and
+        ($legal.contactEmail -match '^[^\s@]+@[^\s@]+\.[^\s@]+$') -and $legal.minimumAge -and
+        $legal.contactChannelsVerified -eq $true -and ($legal.version -match '^\d{4}-\d{2}-\d{2}$')
+    if (-not $legalReady) {
+        if ($Plan) { Write-Warning 'The selected main commit has incomplete legal document configuration.' }
+        else { throw 'Legal document configuration is incomplete. Run npm run legal:check before deployment.' }
+    }
+}
+
 $project = (Invoke-Cloud @('projects', 'describe', $ProjectId, '--format=json')) | ConvertFrom-Json
 $billing = (Invoke-Cloud @('billing', 'projects', 'describe', $ProjectId, '--format=json')) | ConvertFrom-Json
 if (-not $billing.billingEnabled) {
@@ -71,9 +94,6 @@ if (-not $billing.billingEnabled) {
 }
 $origin = "https://$Service-$($project.projectNumber).$Region.run.app"
 if (-not $SiteUrl) { $SiteUrl = $origin }
-if ($EnableVoice -and (-not $TurnstileSiteKey -or $SiteUrl -ne 'https://taskflow.garbar.tech')) {
-    throw 'Voice requires the protected TaskFlow hostname and a public Turnstile site key.'
-}
 $image = "$Region-docker.pkg.dev/$ProjectId/$Service/website:$commit"
 $runtimeId = "$Service-runtime"
 $builderId = "$Service-builder"
@@ -89,7 +109,7 @@ $bucket = "$ProjectId-$Service-builds"
     commit = $commit
     image = $image
     url = $SiteUrl
-    voiceEnabled = [bool]$EnableVoice
+    voiceEnabled = $voiceEnabled
     aiMonthlyPauseEUR = 25
     scaling = '0–1 instances; 1 CPU; 512 MiB; request-based billing'
     indexable = $false
@@ -149,7 +169,7 @@ try {
     $digestImage = $imageDetails.image_summary.fully_qualified_digest
     if (-not $digestImage) { throw 'Artifact Registry did not return an image digest.' }
     $voiceFlags = @('--update-env-vars=VOICE_DEMO_ENABLED=false')
-    if ($EnableVoice) {
+    if ($voiceEnabled) {
         $voiceFlags = @("--update-env-vars=GOOGLE_CLOUD_PROJECT=$ProjectId,VOICE_DEMO_ENABLED=true,VOICE_PUBLIC_ORIGIN=$SiteUrl,VOICE_MONTHLY_BUDGET_EUR=25,TURNSTILE_SITE_KEY=$TurnstileSiteKey",
             '--update-secrets=VOICE_APP_SECRET=taskflow-voice-app:latest,VOICE_EDGE_SECRET=taskflow-voice-edge:latest,TURNSTILE_SECRET_KEY=taskflow-turnstile:latest')
     }

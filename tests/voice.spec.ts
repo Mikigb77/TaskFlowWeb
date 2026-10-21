@@ -10,7 +10,7 @@ test.use({
   },
 });
 
-test("live text capture produces editable multiple tasks and shows the remaining allowance", async ({
+test("live text capture shows the tasks as the app does and the remaining tries", async ({
   page,
 }, testInfo) => {
   let remaining = 3,
@@ -78,27 +78,27 @@ test("live text capture produces editable multiple tasks and shows the remaining
   await page.getByRole("button", { name: "Try the live demo" }).click();
   const demo = page.locator("#voice");
   await expect(demo.getByText("3 of 3 tries left")).toBeVisible();
-  await demo.getByRole("button", { name: "Type it instead" }).click();
+  await demo.getByRole("button", { name: "Type instead" }).click();
   await demo
-    .getByLabel("What is on your mind?")
+    .getByLabel("Type what you need to do")
     .fill("Doctor Friday at 5 p.m. Bring results. Also buy coffee sometime.");
-  await demo.getByRole("button", { name: "Create drafts" }).click();
+  await demo.getByRole("button", { name: "Done", exact: true }).click();
   const processing = demo.getByRole("heading", {
-    name: "Making a little clarity…",
+    name: "Understanding…",
   });
   await expect(processing).toBeFocused();
   await expect(processing).toBeInViewport();
-  await expect(demo.getByRole("button", { name: "Create drafts" })).toHaveCount(
+  await expect(demo.getByRole("button", { name: "Done", exact: true })).toHaveCount(
     0,
   );
-  await expect(demo.getByLabel("What is on your mind?")).toHaveCount(0);
+  await expect(demo.getByLabel("Type what you need to do")).toHaveCount(0);
   await page.screenshot({
     path: `artifacts/voice-processing-${testInfo.project.name}.png`,
   });
   finishProcessing();
   await expect(demo.getByText("2 of 3 tries left")).toBeVisible();
   const review = demo.getByRole("heading", {
-    name: "2 drafts, ready for you.",
+    name: "2 things to add",
   });
   await expect(review).toBeFocused();
   await expect(review).toBeInViewport();
@@ -107,33 +107,28 @@ test("live text capture produces editable multiple tasks and shows the remaining
   // back past the recording controls, including on a phone-sized viewport.
   await expect(firstCard).toBeInViewport({ ratio: 1 });
   await expect(
-    demo.getByRole("button", { name: "Start recording" }),
+    demo.getByRole("button", { name: "Tap to talk" }),
   ).toHaveCount(0);
-  await expect(demo.locator(".voice-modes")).toHaveCount(0);
+  await expect(
+    demo.getByRole("button", { name: "Type instead" }),
+  ).toHaveCount(0);
   await expect(demo.locator(".voice-verification")).toHaveCount(0);
   await page.screenshot({
     path: `artifacts/voice-review-${testInfo.project.name}.png`,
   });
-  const drafts = demo.locator("fieldset");
-  await expect(drafts).toHaveCount(2);
-  await demo.getByText("Edit task 2", { exact: true }).click();
-  await drafts.nth(1).getByLabel("Title", { exact: true }).fill("");
-  await demo.getByText("Edit task 2", { exact: true }).click();
-  await demo.getByRole("button", { name: "Add to preview list" }).click();
-  await expect(
-    drafts.nth(1).getByLabel("Title", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    demo.getByRole("heading", { name: "Your preview list" }),
-  ).toHaveCount(0);
-  await expect(drafts.nth(1).getByLabel("Date optional")).toHaveValue("");
-  await expect(drafts.nth(1).getByLabel("Time optional")).toBeDisabled();
-  await drafts
-    .nth(1)
-    .getByLabel("Title", { exact: true })
-    .fill("Buy decaf coffee");
-  await expect(drafts.nth(0).getByLabel("Time optional")).toHaveValue("17:00");
-  await demo.getByText("Edit task 2", { exact: true }).click();
+  // The result as the app shows it: a title and a date line, in the page's language.
+  await expect(firstCard).toContainText("Fri, Oct 16 · 5:00 PM");
+  await expect(demo.locator(".voice-task-card").nth(1)).toContainText(
+    "No date",
+  );
+  await expect(demo.locator("fieldset, select, input:not([type=checkbox])")).toHaveCount(0);
+  // WD16 permits local completion controls in generated results; editing stays absent.
+  await expect(demo.getByRole("checkbox")).toHaveCount(2);
+  for (const title of ["Doctor appointment", "Buy coffee"]) {
+    const checkbox = demo.getByRole("checkbox", { name: title, exact: true });
+    await expect(checkbox).not.toBeChecked();
+    expect(await checkbox.evaluate((input) => input instanceof HTMLInputElement && input.type === "checkbox")).toBe(true);
+  }
   const violations = (
     await new AxeBuilder({ page })
       .include("#voice")
@@ -141,9 +136,16 @@ test("live text capture produces editable multiple tasks and shows the remaining
       .analyze()
   ).violations;
   expect(violations).toEqual([]);
-  await page
-    .getByRole("button", { name: "Switch to dark mode", exact: true })
-    .click();
+  // The theme switch: the header's icon on desktop, the menu's Appearance row on phones.
+  if (await page.locator(".header-actions > .theme-toggle").isVisible())
+    await page
+      .getByRole("button", { name: "Switch to dark mode", exact: true })
+      .click();
+  else {
+    await page.locator(".header-menu summary").click();
+    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.keyboard.press("Escape");
+  }
   expect(
     (
       await new AxeBuilder({ page })
@@ -152,49 +154,32 @@ test("live text capture produces editable multiple tasks and shows the remaining
         .analyze()
     ).violations,
   ).toEqual([]);
-  await demo.getByRole("button", { name: "Add to preview list" }).click();
-  await expect(
-    demo.getByRole("heading", { name: "Your preview list" }),
-  ).toBeFocused();
-  await expect(
-    demo.getByRole("button", { name: /Doctor appointment/ }),
-  ).toBeInViewport();
-  await demo.getByRole("button", { name: /Buy decaf coffee/ }).click();
-  await expect(
-    demo.getByRole("button", { name: /Buy decaf coffee/ }),
-  ).toHaveAttribute("aria-pressed", "true");
   expect(requests).toBe(1);
-  await demo.getByRole("button", { name: "Edit drafts", exact: true }).click();
-  await expect(
-    demo.getByRole("heading", { name: "Buy decaf coffee", exact: true }),
-  ).toBeVisible();
-  await demo.getByRole("button", { name: "Edit original thought" }).click();
-  await expect(demo.getByLabel("What is on your mind?")).toHaveValue(
+  await demo.getByRole("button", { name: "Change the text" }).click();
+  await expect(demo.getByLabel("Type what you need to do")).toHaveValue(
     "Doctor Friday at 5 p.m. Bring results. Also buy coffee sometime.",
   );
+  await expect(demo.getByLabel("Type what you need to do")).toBeFocused();
   await demo
-    .getByLabel("What is on your mind?")
+    .getByLabel("Type what you need to do")
     .fill(
       "Doctor Friday at 5 p.m. Bring results. Also buy decaf coffee sometime.",
     );
-  await demo.getByRole("button", { name: "Create drafts" }).click();
+  await demo.getByRole("button", { name: "Done", exact: true }).click();
   await expect(review).toBeFocused();
   expect(requests).toBe(2);
   expect(new Set(requestIds).size).toBe(2);
-  await demo.getByRole("button", { name: "Try a new thought" }).click();
-  await expect(
-    demo.getByRole("button", { name: "Start recording" }),
-  ).toBeEnabled();
-  await expect(demo.locator(".voice-task-card")).toHaveCount(0);
-  await demo.getByRole("button", { name: "Type it instead" }).click();
-  await expect(demo.getByLabel("What is on your mind?")).toHaveValue("");
   await demo.getByRole("button", { name: "Close demo" }).click();
   await expect(
     demo.getByRole("button", { name: "Try the live demo" }),
   ).toBeFocused();
+  await demo.getByRole("button", { name: "Try the live demo" }).click();
+  await expect(demo.locator(".voice-task-card")).toHaveCount(0);
+  await demo.getByRole("button", { name: "Type instead" }).click();
+  await expect(demo.getByLabel("Type what you need to do")).toHaveValue("");
 });
 
-test("a used allowance blocks recording and submission while keeping the sample usable", async ({
+test("a used allowance says when the tries come back, with nothing to tap", async ({
   page,
 }) => {
   await page.route("**/api/voice/status/", (route) =>
@@ -204,15 +189,20 @@ test("a used allowance blocks recording and submission while keeping the sample 
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Try the live demo" }).click();
+  const demo = page.locator("#voice");
   await expect(
-    page.getByRole("button", { name: "Start recording" }),
-  ).toBeDisabled();
+    demo.getByRole("heading", {
+      // The weekday in full, or ‘today’ when the tries come back on today's date.
+      name: /^You’ve used this demo’s 3 tries\. You can try again (on [A-Z][a-z]+day|today) at /,
+    }),
+  ).toBeFocused();
+  await expect(demo.getByRole("button", { name: "Tap to talk" })).toHaveCount(
+    0,
+  );
   await expect(
-    page.getByRole("button", { name: "Create drafts" }),
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "Add to my preview" }),
-  ).toBeEnabled();
+    demo.getByRole("button", { name: "Done", exact: true }),
+  ).toHaveCount(0);
+  await expect(demo.locator("button:disabled")).toHaveCount(0);
 });
 
 test("live-demo outages remain understandable without affecting the marketing page", async ({
@@ -222,19 +212,17 @@ test("live-demo outages remain understandable without affecting the marketing pa
     route.fulfill({
       status: 503,
       json: {
-        error:
-          "The live demo is taking a break. The sample walkthrough is still available.",
+        code: "paused",
+        error: "The live demo is off for now. Please try again later.",
       },
     }),
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Try the live demo" }).click();
-  await expect(page.locator("#voice").getByRole("alert")).toContainText(
-    "taking a break",
+  await expect(page.locator("#voice").getByRole("alert")).toHaveText(
+    "The live demo is off for now. The example above shows what TaskFlow does.",
   );
-  await expect(
-    page.getByRole("button", { name: "Add to my preview" }),
-  ).toBeEnabled();
+  await expect(page.locator("#voice .voice-off .voice-example")).toBeVisible();
 });
 
 test.describe("microphone capture", () => {
@@ -272,45 +260,25 @@ test.describe("microphone capture", () => {
     });
     await page.goto("/");
     await page.getByRole("button", { name: "Try the live demo" }).click();
-    await page.getByRole("button", { name: "Start recording" }).click();
-    await expect(page.getByText(/Recording · 1s/)).toBeVisible();
-    await page.getByRole("button", { name: "Stop recording" }).click();
-    await expect(
-      page.getByText("Recording ready. Listen before sending."),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Start recording" }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Record again" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Ready when you are." }),
-    ).toBeFocused();
-    expect(requests).toBe(0);
-    await page
-      .getByRole("button", { name: "Record again", exact: true })
-      .click();
-    await expect(page.getByText(/Recording · 1s/)).toBeVisible();
-    await page.getByRole("button", { name: "Stop recording" }).click();
-    await expect(
-      page.getByText("Recording ready. Listen before sending."),
-    ).toBeVisible();
-    expect(requests).toBe(0);
-    await page.getByRole("button", { name: "Create drafts" }).click();
-    await expect(
-      page.getByText("No tasks were found.", { exact: false }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Let’s give that another go." }),
-    ).toBeFocused();
+    await page.getByRole("button", { name: "Tap to talk" }).click();
+    await expect(page.getByText(/Listening · 0:01/)).toBeVisible();
     await expect(page.locator("#voice audio")).toHaveCount(0);
-    await page.getByRole("button", { name: "Try a new thought" }).click();
-    await expect(
-      page.getByRole("button", { name: "Start recording" }),
-    ).toBeEnabled();
+    expect(requests).toBe(0);
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    const noTasks = page.getByRole("heading", {
+      name: "No tasks were found. Your words are kept. That used a try.",
+    });
+    await expect(noTasks).toBeFocused();
+    await expect(page.locator("#voice .voice-results svg")).toHaveCount(0);
+    await expect(page.locator("#voice audio")).toHaveCount(0);
     expect(received).toBe(true);
     expect(requests).toBe(1);
+    // Say it again starts listening at once, as the app does.
+    await page.getByRole("button", { name: "Say it again" }).click();
+    await expect(page.getByText(/Listening · 0:01/)).toBeVisible();
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(noTasks).toBeFocused();
+    expect(requests).toBe(2);
   });
 });
 
@@ -362,35 +330,41 @@ test("only a server-granted developer window unlocks a used allowance and it exp
   await page.getByRole("button", { name: "Try the live demo" }).click();
   const demo = page.locator("#voice");
   await expect(
-    demo.getByRole("button", { name: "Start recording" }),
-  ).toBeDisabled();
+    demo.getByText(/^You’ve used this demo’s 3 tries\./),
+  ).toBeVisible();
+  await expect(demo.getByRole("button", { name: "Tap to talk" })).toHaveCount(
+    0,
+  );
   await demo.getByText("Developer testing", { exact: true }).click();
   await expect(demo.locator("code")).toHaveText(developerCode);
   testingUntil = now + 30 * 60_000;
   await demo.getByRole("button", { name: "Check developer access" }).click();
   await expect(demo.getByText(/Developer testing ·/)).toBeVisible();
   await expect(
-    demo.getByRole("button", { name: "Start recording" }),
+    demo.getByRole("button", { name: "Tap to talk" }),
   ).toBeEnabled();
-  await demo.getByRole("button", { name: "Type it instead" }).click();
-  await demo.getByLabel("What is on your mind?").fill("Buy coffee");
-  await demo.getByRole("button", { name: "Create drafts" }).click();
+  await demo.getByRole("button", { name: "Type instead" }).click();
+  await demo.getByLabel("Type what you need to do").fill("Buy coffee");
+  await demo.getByRole("button", { name: "Done", exact: true }).click();
   await expect(
-    demo.getByRole("heading", { name: "1 draft, ready for you." }),
+    demo.getByRole("heading", { name: "1 thing to add" }),
   ).toBeVisible();
-  await demo.getByRole("button", { name: "Try a new thought" }).click();
-  await expect(
-    demo.getByRole("button", { name: "Start recording" }),
-  ).toBeEnabled();
+  await demo.getByRole("button", { name: "Change the text" }).click();
+  await expect(demo.getByLabel("Type what you need to do")).toHaveValue(
+    "Buy coffee",
+  );
   testingUntil = null;
   await page.clock.fastForward(30 * 60_000 + 1000);
   await expect(demo.getByText("0 of 3 tries left")).toBeVisible();
   await expect(
-    demo.getByRole("button", { name: "Start recording" }),
-  ).toBeDisabled();
+    demo.getByText(/^You’ve used this demo’s 3 tries\./),
+  ).toBeVisible();
+  await expect(demo.getByRole("button", { name: "Tap to talk" })).toHaveCount(
+    0,
+  );
   await expect(
-    demo.getByRole("button", { name: "Create drafts" }),
-  ).toBeDisabled();
+    demo.getByRole("button", { name: "Done", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("the last allowed request can be retrieved after an interrupted response", async ({
@@ -415,10 +389,7 @@ test("the last allowed request can be retrieved after an interrupted response", 
     if (attempts === 1) {
       requestId = route.request().headers()["x-request-id"];
       remaining = 0;
-      await route.fulfill({
-        status: 503,
-        json: { code: "unavailable", error: "Please retry." },
-      });
+      await route.abort("connectionreset");
     } else {
       expect(route.request().headers()["x-request-id"]).toBe(requestId);
       await route.fulfill({
@@ -433,24 +404,28 @@ test("the last allowed request can be retrieved after an interrupted response", 
   });
   await page.goto("/");
   await page.getByRole("button", { name: "Try the live demo" }).click();
-  await page.getByRole("button", { name: "Type it instead" }).click();
-  await page.getByLabel("What is on your mind?").fill("Buy coffee");
-  await page.getByRole("button", { name: "Create drafts" }).click();
+  await page.getByRole("button", { name: "Type instead" }).click();
+  await page.getByLabel("Type what you need to do").fill("Buy coffee");
+  await page.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.locator("#voice").getByRole("alert")).toContainText(
-    "Please retry.",
+    "No connection.",
   );
   await expect(page.locator("#voice").getByRole("alert")).toBeFocused();
   await expect(page.locator("#voice").getByRole("alert")).toBeInViewport();
-  await expect(page.getByLabel("What is on your mind?")).toHaveValue(
+  await expect(page.getByLabel("Type what you need to do")).toHaveValue(
     "Buy coffee",
   );
   await expect(page.getByText("0 of 3 tries left")).toBeVisible();
-  await page.getByRole("button", { name: "Create drafts" }).click();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(
     page.getByText("No tasks were found.", { exact: false }),
   ).toBeVisible();
   expect(attempts).toBe(2);
+  // The last try's result: no action to repeat it, but when the tries come back.
   await expect(
-    page.getByRole("button", { name: "Try a new thought" }),
-  ).toBeDisabled();
+    page.locator("#voice").getByText(/^You’ve used this demo’s 3 tries\./),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Change the text" }),
+  ).toHaveCount(0);
 });

@@ -1,7 +1,23 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
 
-test("visitors can edit, save, complete, and reset a sample task", async ({
+// The theme control: the header's icon switch on desktop, the menu's Appearance row on phones.
+async function chooseTheme(page: Page, isMobile: boolean, theme: "light" | "dark") {
+  if (isMobile) {
+    await page.locator(".header-menu summary").click();
+    await page
+      .getByRole("group", { name: "Appearance" })
+      .getByRole("button", { name: theme === "dark" ? "Dark" : "Light", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
+  } else
+    await page
+      .getByRole("button", { name: `Switch to ${theme} mode`, exact: true })
+      .click();
+}
+
+test("the home loads without errors or outside requests, and its main button leads to the live demo", async ({
   page,
   baseURL,
 }) => {
@@ -16,112 +32,48 @@ test("visitors can edit, save, complete, and reset a sample task", async ({
       externalRequests.push(request.url());
   });
   await page.goto("/");
-  await page.getByRole("link", { name: "See it in action" }).click();
-  await expect(page).toHaveURL(/#demo$/);
   await page
-    .getByRole("button", { name: "A little me-time", exact: true })
+    .locator(".hero")
+    .getByRole("link", { name: "Try it with your voice" })
     .click();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Evening walk",
-  );
-  await expect(page.getByLabel("Priority", { exact: true })).toHaveValue("Low");
-  await page.getByLabel("Task title", { exact: true }).fill("A walk with Luna");
-  await page.getByLabel("Date", { exact: true }).fill("2026-09-26");
-  await page.getByLabel("Time", { exact: true }).fill("19:30");
-  await page
-    .getByLabel("A note for later", { exact: true })
-    .fill("Bring her favorite ball.");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(
-    page.getByRole("heading", { name: "There. A little lighter." }),
-  ).toBeVisible();
-  await expect(page.locator(".saved-task")).toContainText("A walk with Luna");
-  await expect(page.locator(".saved-task")).toContainText("19:30");
-  await expect(page.locator(".saved-task")).toContainText("Sep 26");
-  await expect(page.locator(".saved-task")).toContainText(
-    "Bring her favorite ball.",
-  );
-  await page
-    .getByRole("button", { name: "Complete preview task", exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: "That’s a good feeling." }),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Mark preview task incomplete" })
-    .click();
-  await page.getByRole("button", { name: "Try another thought" }).click();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Doctor appointment",
-  );
-  await page.reload();
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "Doctor appointment",
-  );
+  await expect(page).toHaveURL(/#voice$/);
   expect(errors).toEqual([]);
   expect(externalRequests).toEqual([]);
 });
 
-test("theme persists across reloads and pages without losing demo edits", async ({
-  page,
-}) => {
+test("theme persists across reloads and pages", async ({ page, isMobile }) => {
   await page.goto("/");
-  await page.getByLabel("Task title", { exact: true }).fill("My edited draft");
-  await page
-    .getByRole("button", { name: "Switch to dark mode", exact: true })
-    .click();
+  await chooseTheme(page, isMobile, "dark");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByLabel("Task title", { exact: true })).toHaveValue(
-    "My edited draft",
-  );
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Privacy", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Your privacy",
+    /privacy/i,
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("link", { name: "Back to TaskFlow" }).click();
-  await page
-    .getByRole("button", { name: "Try a different mood: switch to light mode" })
-    .click();
+  await chooseTheme(page, isMobile, "light");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-});
-
-test("a draft needs a title and a valid date before it can be added", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.getByLabel("Task title", { exact: true }).fill("   ");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(page.locator("#demo").getByRole("alert")).toContainText(
-    "Give your task a title",
-  );
-  await page.getByLabel("Task title", { exact: true }).fill("A valid task");
-  await page.getByLabel("Date", { exact: true }).fill("");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(
-    page.getByRole("heading", { name: "A thought, all sorted." }),
-  ).toBeVisible();
-  await page.getByLabel("Date", { exact: true }).fill("2026-09-27");
-  await page.getByRole("button", { name: "Add to my preview" }).click();
-  await expect(page.locator(".saved-task")).toContainText("Sep 27");
 });
 
 test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
   await page.goto("/");
   if (isMobile) {
-    await page.getByLabel("Open navigation").click();
+    const menu = page.locator(".header-menu summary");
+    await expect(menu).toHaveText("Menu");
+    await menu.click();
     await expect(
-      page.getByRole("navigation", { name: "Mobile navigation" }),
+      page.getByRole("navigation", { name: "Main navigation" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(
-      page.getByRole("navigation", { name: "Mobile navigation" }),
+      page.getByRole("navigation", { name: "Main navigation" }),
     ).not.toBeVisible();
-    await page.getByLabel("Open navigation").click();
+    await expect(menu).toBeFocused();
+    await menu.click();
     await page
-      .getByRole("navigation", { name: "Mobile navigation" })
+      .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: "Questions" })
       .click();
     await expect(page.locator(".header-menu")).not.toHaveAttribute("open");
@@ -134,28 +86,26 @@ test("navigation, FAQs, and page recovery work", async ({ page, isMobile }) => {
   await expect(page).toHaveURL(/#questions$/);
   await page.getByText("Can I download TaskFlow yet?", { exact: true }).click();
   await expect(
-    page.getByText(/A public download is coming later/),
+    page.getByText(/coming soon to Google Play\. Until then/),
   ).toBeVisible();
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
+  await expect(page.getByText(/check, add and complete them without internet/)).toBeVisible();
   const response = await page.goto("/a-page-that-does-not-exist/");
   expect(response?.status()).toBe(404);
-  await page.getByRole("link", { name: "Back to TaskFlow" }).click();
+  await page.getByRole("link", { name: "Go to the TaskFlow home page" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Make room",
+    "on your calendar.",
   );
 });
 
 test("light and dark layouts pass accessibility checks and fit narrow screens", async ({
   page,
+  isMobile,
 }, testInfo) => {
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
   for (const theme of ["light", "dark"]) {
-    if (theme === "dark")
-      await page
-        .getByRole("button", { name: "Switch to dark mode", exact: true })
-        .click();
+    if (theme === "dark") await chooseTheme(page, isMobile, "dark");
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();
@@ -173,10 +123,15 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    await page.locator(".appearance-section").scrollIntoViewIfNeeded();
-    await expect(
-      page.locator(`.appearance-phone .${theme}-only`),
-    ).toBeVisible();
+    const heroImage = page.locator(`.hero img.${theme}-only`);
+    await expect(heroImage).toBeVisible();
+    await expect
+      .poll(() =>
+        heroImage.evaluate(
+          (image: HTMLImageElement) => image.complete && image.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
     await page.waitForFunction(() =>
       Array.from(document.images)
         .filter((image) => getComputedStyle(image).display !== "none")
@@ -191,10 +146,6 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
     await page.locator(".hero").screenshot({
       path: `artifacts/${testInfo.project.name}-hero-${theme}.png`,
     });
-    await page.locator("#demo").screenshot({
-      path: `artifacts/${testInfo.project.name}-demo-${theme}.png`,
-      style: ".site-header, .skip-link { visibility: hidden; }",
-    });
   }
   for (const width of [320, 768, 1024]) {
     await page.setViewportSize({ width, height: 900 });
@@ -208,13 +159,12 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
 
 test("system appearance is followed until a choice is made", async ({
   page,
+  isMobile,
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page
-    .getByRole("button", { name: "Switch to light mode", exact: true })
-    .click();
+  await chooseTheme(page, isMobile, "light");
   await page.emulateMedia({ colorScheme: "light" });
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
@@ -231,12 +181,9 @@ test("the marketing content and FAQ remain usable without JavaScript", async ({
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Make room",
+    "on your calendar.",
   );
   await page.getByText("Can I use it offline?", { exact: true }).click();
-  await expect(page.getByText(/Downloaded files work offline/)).toBeVisible();
-  await expect(
-    page.getByText(/Enable JavaScript to try the interactive demo/),
-  ).toBeVisible();
+  await expect(page.getByText(/check, add and complete them without internet/)).toBeVisible();
   await context.close();
 });

@@ -7,7 +7,7 @@ param([string]$ProjectId = 'taskflow-511107', [string]$Account = 'tech.garbar@gm
 $ErrorActionPreference = 'Stop'
 $flags = @("--project=$ProjectId", "--account=$Account", '--quiet')
 function Cloud([string[]]$Arguments) { & gcloud @Arguments @flags; if ($LASTEXITCODE -ne 0) { throw 'Google Cloud command failed.' } }
-$repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $wslRepo = (& wsl -d $WslDistribution -- wslpath -a ($repo -replace '\\', '/')).Trim()
 if ($wslRepo -notmatch '^/mnt/[a-z]/[A-Za-z0-9/_. -]+$') { throw 'Unsupported workspace path.' }
 function Wrangler([string]$Arguments) {
@@ -55,4 +55,4 @@ foreach ($collection in @('voiceVisitors', 'voiceNetworks', 'voiceJobs')) {
     Cloud @('firestore', 'fields', 'ttls', 'update', 'expiresAt', "--collection-group=$collection", '--database=(default)', '--enable-ttl', '--async')
 }
 Write-Host "Voice infrastructure ready. Public Turnstile site key: $($widget.sitekey)"
-Write-Host 'Deploy with -EnableVoice -SiteUrl https://taskflow.garbar.tech -TurnstileSiteKey <public-site-key>.'
+Write-Host 'The cloud deployment enables voice by default. If the widget key changed, use scripts/deploy-cloud.ps1 -TurnstileSiteKey <public-site-key>.'

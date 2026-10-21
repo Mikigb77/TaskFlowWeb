@@ -84,7 +84,7 @@ export function checkAdmission(
     throw new DemoError(
       503,
       "budget_pause",
-      "The live demo is taking a break. You can still explore the sample walkthrough below.",
+      "The live demo is off for now. Please try again later.",
     );
   return {
     visitor: developerTesting ? user.active : [...user.active, now],

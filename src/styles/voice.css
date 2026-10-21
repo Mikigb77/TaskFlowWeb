@@ -1,23 +1,19 @@
 .voice-section {
   background: var(--soft);
-  scroll-margin-top: 80px;
 }
 .voice-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 32px;
   margin-bottom: 36px;
 }
 .voice-heading h2 {
-  font-size: clamp(32px, 4vw, 48px);
+  font-size: clamp(2rem, 4vw, 3rem);
   letter-spacing: -0.04em;
-  margin: 14px 0;
+  margin: 0 0 14px;
 }
-.voice-heading > div > p:last-child {
+.voice-heading > p {
   color: var(--muted);
   max-width: 580px;
   line-height: 1.7;
+  margin-bottom: 16px;
 }
 .voice-trial-badge {
   flex-shrink: 0;
@@ -26,16 +22,36 @@
   background: var(--mint);
   color: var(--green);
   border-radius: 30px;
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .voice-panel {
+  /* A field's edge: 3:1 against the card and the page, in light and dark. */
+  --field-edge: #7d8a80;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 28px;
   padding: clamp(22px, 4vw, 48px);
   box-shadow: 0 10px 40px #142d2110;
   scroll-margin-top: 0;
+}
+:root[data-theme="dark"] .voice-panel {
+  --field-edge: #6f8276;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .voice-panel {
+    --field-edge: #6f8276;
+  }
+}
+/* The one status message, for screen readers only. */
+.voice-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .voice-stage {
   animation: voice-reveal 180ms ease-out;
@@ -47,19 +63,21 @@
 .voice-processing h3,
 .voice-connecting h3 {
   margin: 0;
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: clamp(1.5rem, 3vw, 2rem);
   letter-spacing: -0.035em;
 }
 .voice-panel h3:focus,
+.voice-panel .voice-handover:focus,
 .voice-error:focus {
   outline: none;
 }
-.voice-stage-heading > p,
-.voice-processing > p {
+/* From 10 s of waiting, with Stop waiting under it. */
+.voice-waiting-long {
+  max-width: 480px;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 10px 0 0;
 }
 .voice-capture-heading {
   text-align: center;
@@ -109,16 +127,6 @@
 .voice-processing-preview span:nth-child(3) {
   width: 55%;
 }
-.voice-stage-heading .voice-result-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--green);
-  letter-spacing: 0.08em;
-  margin: 0 0 12px;
-}
 .voice-intro {
   display: grid;
   justify-items: center;
@@ -126,37 +134,93 @@
   gap: 18px;
   padding: 16px 0;
 }
-.voice-intro h3 {
-  font-size: 28px;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
 .voice-intro > p {
   max-width: 490px;
   margin: 0;
+  line-height: 1.7;
+}
+.voice-noscript {
+  font-size: 0.875rem;
   color: var(--muted);
   line-height: 1.7;
 }
-.voice-mic-orb {
-  width: 78px;
-  height: 78px;
+.voice-example {
+  width: min(100%, 560px);
   display: grid;
-  place-items: center;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.voice-example-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.voice-example-quote {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.voice-example-result {
+  justify-self: stretch;
+  margin-top: 14px;
+  text-align: left;
+}
+.voice-example-heading {
+  font-size: 1.125rem;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+.voice-example-result ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.voice-example-result li {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow-wrap: anywhere;
+}
+.voice-example-title {
+  font-weight: 600;
+}
+.voice-example-date {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.875rem;
   color: var(--green);
-  border-radius: 50%;
-  background: var(--mint);
+}
+.voice-example-date svg {
+  flex-shrink: 0;
+}
+.voice-privacy {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.7;
+  text-align: center;
+}
+.voice-privacy a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .voice-fine {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--muted);
   line-height: 1.8;
   max-width: 700px;
   margin: 18px auto 0;
   text-align: center;
-}
-.voice-fine a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .voice-topline {
   display: flex;
@@ -171,7 +235,7 @@
   padding-top: 18px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 .voice-developer-tools summary {
@@ -183,35 +247,6 @@
   overflow-wrap: anywhere;
   user-select: all;
 }
-.voice-modes {
-  display: flex;
-  max-width: 460px;
-  margin: 0 auto 24px;
-  gap: 6px;
-  background: var(--soft);
-  padding: 6px;
-  border-radius: 14px;
-}
-.voice-modes button {
-  flex: 1;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  border: 0;
-  color: var(--muted);
-  background: transparent;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-}
-.voice-modes button[aria-pressed="true"] {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 2px 8px #0000000a;
-}
 .voice-recorder {
   display: grid;
   justify-items: center;
@@ -220,65 +255,93 @@
   padding: 10px 0 20px;
 }
 .voice-prompt {
-  font-size: clamp(17px, 2vw, 22px);
+  font-size: clamp(1.0625rem, 2vw, 1.375rem);
   font-weight: 500;
   max-width: 620px;
   line-height: 1.65;
   margin: 0 0 8px;
 }
+/* Tap to talk: a solid circle with its label under it. */
 .voice-record-button {
   display: grid;
   place-items: center;
-  width: 82px;
-  height: 82px;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  color: var(--green);
-  background: var(--mint);
+  color: var(--paper);
+  background: var(--green);
   cursor: pointer;
-  box-shadow: 0 0 0 9px var(--soft);
+  box-shadow: 0 0 0 9px var(--mint);
 }
+.voice-record-button:focus-visible {
+  outline-offset: 12px;
+}
+@media (hover: hover) {
+  .voice-record-button:not(:disabled):hover {
+    background: var(--green-hover);
+  }
+}
+/* While listening: the worded, filled Done button. */
 .voice-record-button.is-recording {
-  background: var(--peach);
-  color: var(--ink);
-  box-shadow: 0 0 0 9px var(--peach);
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  min-width: min(10rem, 100%);
+  padding: 16px 23px;
+  border-radius: 9px;
+  color: var(--paper);
+  background: var(--green);
+  box-shadow: none;
 }
-.voice-stop-icon {
-  width: 22px;
-  height: 22px;
-  background: currentColor;
-  border-radius: 5px;
+.voice-record-button.is-recording:focus-visible {
+  outline-offset: 5px;
 }
-.voice-recorder > p:last-of-type {
-  font-size: 13px;
-  color: var(--muted);
+.voice-record-label {
+  font-size: 1rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.voice-hint {
   margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
 }
-.voice-recorder audio {
-  width: min(100%, 420px);
-}
-.voice-text-label,
-.voice-draft label {
-  display: flex;
-  flex-direction: column;
+.voice-text {
+  display: grid;
   gap: 9px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.voice-text-label {
   max-width: 740px;
   margin: 0 auto 20px;
 }
-.voice-text-label > span {
-  text-align: right;
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 400;
+.voice-text-label {
+  font-size: 1rem;
+  font-weight: 600;
 }
-.voice-panel textarea,
-.voice-panel input,
-.voice-panel select {
-  border: 1px solid var(--line);
+.voice-text-count {
+  justify-self: end;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.voice-text-pro {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.voice-mode-link,
+.voice-stop {
+  display: flex;
+  margin: 8px auto 0;
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.voice-panel textarea {
+  border: 1px solid var(--field-edge);
   background: var(--paper);
   color: var(--ink);
   font: inherit;
@@ -292,24 +355,34 @@
   resize: vertical;
   line-height: 1.65;
 }
-.voice-panel :is(input, textarea, select):focus-visible {
+.voice-panel textarea:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
 }
-.voice-panel button:disabled {
+.voice-panel button:disabled,
+.voice-panel button[aria-disabled="true"] {
   opacity: 0.55;
   cursor: not-allowed;
 }
+/* Try again waiting on its resend keeps focus: a dimmed fill, not opacity, so its
+   focus ring stays at full contrast. */
+.voice-panel .voice-retry[aria-disabled="true"] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--green) 55%, var(--surface));
+}
+/* Cloudflare's check takes room only when it needs a tap. */
 .voice-verification {
   display: flex;
   justify-content: center;
-  min-height: 66px;
   margin: 12px 0;
 }
-.voice-submit {
+.voice-submit,
+.voice-retry,
+.voice-check-retry,
+.voice-again {
   display: flex;
   margin: 10px auto 0;
-  min-width: 230px;
+  min-width: min(230px, 100%);
   justify-content: center;
 }
 .voice-error,
@@ -318,26 +391,49 @@
   color: var(--ink);
   border-radius: 12px;
   padding: 16px 18px;
-  font-size: 13px;
+  font-size: 1rem;
   line-height: 1.6;
 }
-.voice-results details {
-  line-height: 1.7;
-  font-size: 14px;
+/* The alert at the top of the panel, above the stage it explains. */
+.voice-panel > .voice-error {
+  margin: 0 0 24px;
 }
-.voice-results summary {
-  cursor: pointer;
-  color: var(--green);
-  font-weight: 600;
+.voice-check-error {
+  max-width: 560px;
+  margin: 0 auto;
 }
-.voice-results details p {
-  white-space: pre-wrap;
+/* The live demo is off, or its security check failed twice: the static example
+   stands in for the form. */
+.voice-off .voice-example {
+  margin: 0 auto;
+  padding-top: 0;
+  border-top: 0;
+  text-align: center;
+}
+.voice-off .voice-error,
+.voice-off .voice-handover {
+  max-width: 560px;
+  margin: 22px auto 0;
+}
+/* The result, as the app shows it: the heading, then each task's title, date line and notes. */
+.voice-result-heading {
+  margin: 0 0 22px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+}
+/* A sentence in a heading's place: no tasks, or every try used. */
+.voice-result-heading.voice-message {
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 .voice-drafts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  margin-bottom: 22px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
   align-items: start;
 }
 .voice-task-card {
@@ -348,39 +444,68 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.voice-task-card-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 11px;
-}
-.voice-priority {
-  padding: 4px 9px;
-  border-radius: 20px;
-  background: var(--soft);
-  text-transform: capitalize;
-}
-.voice-priority-high {
-  background: var(--peach);
-  color: var(--ink);
-}
-.voice-priority-low {
-  background: var(--mint);
-  color: var(--green);
-}
 .voice-task-card h4 {
-  margin: 16px 0 10px;
-  font-size: 18px;
+  margin: 0 0 8px;
+  font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+.voice-task-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.voice-task-toggle input {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: 10px 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+.voice-task-toggle input:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+.voice-task-toggle span {
+  min-width: 0;
+  padding: 10px 0;
+}
+/* Inside the final checked card, before its details: the checkbox stays put. */
+.voice-completion {
+  margin: 4px 0 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--mint);
+  animation: voice-reveal 260ms ease-out;
+}
+.voice-completion-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: var(--green);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.voice-completion-title svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.voice-completion-body {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.6;
 }
 .voice-task-schedule {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--green);
   margin: 0;
   line-height: 1.6;
@@ -389,109 +514,63 @@
   flex-shrink: 0;
 }
 .voice-task-notes {
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--muted);
   white-space: pre-wrap;
   margin: 10px 0 0;
 }
-.voice-task-edit {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+.voice-question {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  font-size: 0.875rem;
 }
-.voice-draft {
-  border: 0;
-  padding: 16px 0 0;
-  margin: 0;
-  display: grid;
-  gap: 16px;
-  min-width: 0;
+/* What the app does, and that it isn't out yet. */
+.voice-handover {
+  max-width: 700px;
+  margin: 0 auto 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.7;
+  text-align: center;
 }
-.voice-draft legend {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-.voice-draft-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.voice-draft small {
-  font-weight: 400;
-  color: var(--muted);
-}
-.voice-result-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px 28px;
-  margin: 20px 0;
-}
-.voice-result-actions button {
-  display: inline-flex;
-  gap: 7px;
-  align-items: center;
-  min-height: 44px;
-  font-size: 13px;
+.voice-again-later {
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.7;
+  text-align: center;
 }
 .voice-transcript {
-  padding-top: 20px;
+  margin-top: 22px;
   border-top: 1px solid var(--line);
 }
-.voice-saved-task {
-  width: 100%;
+.voice-transcript summary {
   display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 20px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 14px;
-  margin-bottom: 12px;
-  text-align: left;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-top: 8px;
   cursor: pointer;
-  overflow-wrap: anywhere;
+  color: var(--green);
+  font-size: 1rem;
+  font-weight: 600;
 }
-.voice-saved-task strong {
-  display: block;
-  font-size: 16px;
-}
-.voice-saved-task small {
-  display: block;
-  color: var(--muted);
+.voice-transcript p {
+  margin: 4px 0 0;
+  font-size: 1rem;
   line-height: 1.7;
-  margin-top: 5px;
+  white-space: pre-wrap;
 }
-.voice-task-circle {
-  margin-top: 1px;
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--green);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.voice-saved-task.is-complete strong {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-.voice-saved-task.is-complete .voice-task-circle {
-  background: var(--green);
-  color: var(--surface);
+/* WD2's line, under the card in every state. */
+.voice-plans {
+  max-width: 700px;
+  margin: 22px auto 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  text-align: center;
 }
 @media (max-width: 700px) {
-  .voice-heading {
-    align-items: start;
-    flex-direction: column;
-    gap: 14px;
-  }
   .voice-drafts {
     grid-template-columns: 1fr;
   }
@@ -501,24 +580,14 @@
   .voice-panel {
     padding: 20px 16px;
   }
-  .voice-draft-row {
-    grid-template-columns: 1fr;
-  }
   .voice-stage-heading {
     margin-bottom: 20px;
-  }
-  .voice-stage-heading > p {
-    font-size: 13px;
   }
   .voice-drafts {
     gap: 14px;
   }
   .voice-processing {
     min-height: 340px;
-  }
-  .voice-result-actions {
-    gap: 4px 22px;
-    margin: 12px 0;
   }
 }
 @keyframes voice-reveal {
@@ -538,6 +607,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .voice-stage,
+  .voice-completion,
   .voice-processing-orb::after {
     animation: none;
   }

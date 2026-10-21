@@ -1,10 +1,13 @@
 const paths: Record<string, string[]> = {
   asterisk: ["M12 2v20M2 12h20M5 5l14 14M5 19 19 5"],
   arrow: ["M4 12h16", "m14 6 6 6-6 6"],
+  back: ["M20 12H4", "m10 6-6 6 6 6"],
   arrowUp: ["M6 18 18 6", "M6 6h12v12"],
+  up: ["M12 20V4", "m6 10 6-6 6 6"],
   chevron: ["m9 5 7 7-7 7"],
   check: ["m5 12 4 4L19 6"],
   logo: ["m3 12 5 5L19 6", "m13 14 3 3 7-8"],
+  menu: ["M4 7h16", "M4 12h16", "M4 17h16"],
   calendar: [
     "M8 2v4M16 2v4",
     "M3 10h18",
@@ -33,7 +36,6 @@ const paths: Record<string, string[]> = {
   clock: ["M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18", "M12 7v5l3 2"],
   spark: ["m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"],
   leaf: ["M20 3c-9-1-16 2-16 9a7 7 0 0 0 7 7c7 0 10-7 9-16Z", "M3 21 15 9"],
-  flag: ["M5 22V3m0 1c5-4 9 4 15 0v11c-6 4-10-4-15 0"],
   shield: ["m12 2 8 3v7c0 5-8 10-8 10S4 17 4 12V5l8-3Z", "m8 12 3 3 5-6"],
   wifiOff: [
     "m2 2 20 20",

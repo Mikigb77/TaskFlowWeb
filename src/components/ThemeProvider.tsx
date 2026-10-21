@@ -9,12 +9,14 @@ import {
   type ReactNode,
 } from "react";
 import Icon from "./Icon";
+import { useSiteLanguage } from "./useSiteLanguage";
+import { copy } from "../content/site";
 
 type Theme = "light" | "dark";
 const ThemeContext = createContext({
   theme: "light" as Theme,
   ready: false,
-  toggle: () => {},
+  choose: (_value: Theme) => {},
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -23,9 +25,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const chosen = useRef(false);
   const apply = (value: Theme) => {
     document.documentElement.dataset.theme = value;
+    // One meta per colour scheme; all of them follow the chosen theme.
     document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", value === "dark" ? "#121c18" : "#f7f8f2");
+      .querySelectorAll('meta[name="theme-color"]')
+      .forEach((meta) =>
+        meta.setAttribute("content", value === "dark" ? "#121c18" : "#f7f8f2"),
+      );
     setTheme(value);
   };
   useEffect(() => {
@@ -57,8 +62,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("storage", storageChanged);
     };
   }, []);
-  const toggle = () => {
-    const value = theme === "light" ? "dark" : "light";
+  const choose = (value: Theme) => {
     chosen.current = true;
     try {
       localStorage.setItem("taskflow-theme", value);
@@ -66,42 +70,58 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     apply(value);
   };
   return (
-    <ThemeContext.Provider value={{ theme, toggle, ready }}>
+    <ThemeContext.Provider value={{ theme, choose, ready }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export function ThemeToggle({
-  variant = "icon",
-}: {
-  variant?: "icon" | "mood";
-}) {
-  const { theme, toggle, ready } = useContext(ThemeContext);
+// The desktop header's icon switch.
+export function ThemeToggle() {
+  const { theme, choose, ready } = useContext(ThemeContext);
+  const { frame } = copy[useSiteLanguage()];
   const next = theme === "dark" ? "light" : "dark";
-  const label =
-    variant === "mood"
-      ? `Try a different mood: switch to ${next} mode`
-      : `Switch to ${next} mode`;
+  const label = next === "dark" ? frame.toDark : frame.toLight;
   return (
     <button
       type="button"
-      className={variant === "mood" ? "button button-outline" : "theme-toggle"}
-      onClick={toggle}
+      className="theme-toggle"
+      onClick={() => choose(next)}
       aria-label={label}
       title={label}
       disabled={!ready}
     >
-      {variant === "mood" ? (
-        <>
-          Try a different mood <Icon name="spark" size={18} />
-        </>
-      ) : (
-        <>
-          <Icon name="moon" className="light-only" />
-          <Icon name="sun" className="dark-only" />
-        </>
-      )}
+      <Icon name="moon" className="light-only" />
+      <Icon name="sun" className="dark-only" />
     </button>
+  );
+}
+
+// The phone menu's Appearance row: both choices named, the current one pressed.
+export function AppearanceChoice() {
+  const { theme, choose, ready } = useContext(ThemeContext);
+  const { frame } = copy[useSiteLanguage()];
+  return (
+    <div
+      className="appearance-choice"
+      role="group"
+      aria-labelledby="appearance-label"
+    >
+      <span id="appearance-label">{frame.appearance}</span>
+      <div>
+        {(["light", "dark"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={theme === value}
+            onClick={() => choose(value)}
+            disabled={!ready}
+          >
+            {theme === value && <Icon name="check" size={18} />}
+            {value === "light" ? frame.light : frame.dark}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -15,9 +15,17 @@ import path from "node:path";
 import { checkAdmission, DemoError, NETWORK_LIMIT } from "../../src/lib/voice/policy";
 import type { Draft } from "../../src/lib/voice/policy";
 import { failure } from "../../src/lib/voice/security";
+import { ca } from "../../src/content/site/ca";
+import { en } from "../../src/content/site/en";
+import { es } from "../../src/content/site/es";
 
 export type Project = "desktop" | "mobile";
 export type Theme = "light" | "dark";
+// The home each scenario visits: the renders use English; the acceptance tests also run
+// every scenario on /es/ and /ca/ (tests/ux-web-voice.spec.ts).
+export type DemoLanguage = "en" | "es" | "ca";
+const SITE = { en, es, ca };
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export type ServerError = {
   status: number;
@@ -132,6 +140,14 @@ export const TASKS: Draft[] = [
   }),
   task({ title: "Buy coffee" }),
 ];
+// Long result details expose feedback placed only at the end of a mobile list.
+// Titles are neutral fixture data, so localized UI audits do not mistake them for copy.
+export const COMPLETION_TASKS: Draft[] = TASKS.map((draft, index) => ({
+  ...draft,
+  title: `#${index + 1}`,
+  notes: Array(14).fill(`2026-10-${23 + index} · 17:00 · 1234567890.`).join("\n"),
+  question: index === 1 ? "2026-10-23?" : null,
+}));
 const SIX: Draft[] = [
   ...TASKS,
   task({ title: "Pick up the dry cleaning", date: "2026-10-21", notes: "The blue coat." }),
@@ -161,7 +177,9 @@ export class VoiceStub {
     | "offline"
     | "html"
     | ServerError = { tasks: TASKS };
-  turnstile: "pass" | "interactive" | "error" | "unreachable" = "pass";
+  // "hold": every security check waits until releaseToken(); "hold-next": the first passes,
+  // as "pass" does, and every later one waits (the one after a failed request).
+  turnstile: "pass" | "interactive" | "error" | "unreachable" | "hold" | "hold-next" = "pass";
   // After a draft error, what status says (a used allowance, after visitor_limit).
   remainingAfterError: number | null = null;
   requests = { status: 0, draft: 0 };
@@ -257,30 +275,62 @@ export class VoiceStub {
 }
 
 // A stand-in for Cloudflare Turnstile, the size of the real widget (300 × 65), marked so
-// the audit skips it.
-function standIn(mode: "pass" | "interactive" | "error") {
+// the audit skips it. In the "hold" modes a waiting check keeps its callback until the
+// test calls releaseToken(page) (window.__uxReleaseToken). As the real one with
+// appearance "interaction-only", it stays hidden unless it needs a tap or fails, and it
+// calls before-interactive-callback when it needs a tap.
+function standIn(mode: "pass" | "interactive" | "error" | "hold" | "hold-next") {
   return `(() => {
   const mode = ${JSON.stringify(mode)};
   const widgets = new Map();
+  const held = new Map();
+  let renders = 0;
+  const passed = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1a7f37"/><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Success!</span>';
+  const brand = '<span style="margin-left:auto;text-align:right;font-size:9px;line-height:1.3;letter-spacing:.04em;opacity:.75">CLOUDFLARE<br>stand-in</span>';
+  // Passes every waiting check still on the page; returns how many.
+  window.__uxReleaseToken = () => {
+    const waiting = [...held.entries()];
+    held.clear();
+    for (const [id, callback] of waiting) {
+      const box = widgets.get(id);
+      if (box) box.innerHTML = passed + brand;
+      callback && callback("ux-renders-token");
+    }
+    return waiting.length;
+  };
   window.turnstile = {
     render(element, options) {
+      renders += 1;
+      // What the page asked Cloudflare for, and how wide its holder was then (WEB-9).
+      (window.__uxTurnstileOptions = window.__uxTurnstileOptions || []).push({
+        appearance: options.appearance,
+        retry: options.retry,
+        size: options.size,
+        width: element.clientWidth,
+      });
       const dark = matchMedia("(prefers-color-scheme: dark)").matches;
       const box = document.createElement("div");
       box.setAttribute("data-ux-ignore", "Cloudflare Turnstile stand-in");
       box.style.cssText = "width:300px;height:65px;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid " + (dark ? "#5b5b5b" : "#e0e0e0") + ";background:" + (dark ? "#232323" : "#fafafa") + ";color:" + (dark ? "#fff" : "#232323") + ";font:14px/1.2 system-ui,sans-serif;";
-      const brand = '<span style="margin-left:auto;text-align:right;font-size:9px;line-height:1.3;letter-spacing:.04em;opacity:.75">CLOUDFLARE<br>stand-in</span>';
       box.style.fontFamily = "Arial, Helvetica, sans-serif";
-      if (mode === "pass") {
-        box.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1a7f37"/><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Success!</span>' + brand;
+      const id = "ux-" + Math.random().toString(36).slice(2);
+      const hold = mode === "hold" || (mode === "hold-next" && renders > 1);
+      if (hold) {
+        box.innerHTML = '<span>Verifying&hellip;</span>' + brand;
+        held.set(id, options.callback);
+      } else if (mode === "pass" || mode === "hold-next") {
+        box.innerHTML = passed + brand;
         queueMicrotask(() => options.callback && options.callback("ux-renders-token"));
       } else if (mode === "interactive") {
         box.innerHTML = '<span style="width:24px;height:24px;box-sizing:border-box;border:2px solid #767676;border-radius:4px;background:' + (dark ? "#333" : "#fff") + '"></span><span>Verify you are human</span>' + brand;
+        queueMicrotask(() => options["before-interactive-callback"] && options["before-interactive-callback"]());
       } else {
         box.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#d1242f"/><path d="M12 6.5v7M12 17v.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><span>Error</span>' + brand;
         queueMicrotask(() => options["error-callback"] && options["error-callback"]());
       }
+      if (options.appearance === "interaction-only" && mode !== "interactive" && mode !== "error")
+        box.style.display = "none";
       element.append(box);
-      const id = "ux-" + Math.random().toString(36).slice(2);
       widgets.set(id, box);
       return id;
     },
@@ -288,6 +338,7 @@ function standIn(mode: "pass" | "interactive" | "error") {
     remove(id) {
       widgets.get(id)?.remove();
       widgets.delete(id);
+      held.delete(id);
     },
   };
 })();`;
@@ -321,7 +372,7 @@ async function microphone(page: Page, mode: Microphone) {
 // test: expireTimeouts() aborts it, with the TimeoutError the browser would raise, once
 // fake time has passed it. The clock keeps running, because axe needs the page's timers.
 type Held = { controller: AbortController; ms: number; at: number };
-async function fakeTime(page: Page) {
+export async function fakeTime(page: Page) {
   await page.clock.install();
   await page.addInitScript(() => {
     const held: { controller: AbortController; ms: number; at: number }[] = [];
@@ -333,7 +384,12 @@ async function fakeTime(page: Page) {
     };
   });
 }
-async function expireTimeouts(page: Page) {
+// The request timeouts the page has set since fakeTime(): each one's length and start.
+export const heldTimeouts = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __uxTimeouts: Held[] }).__uxTimeouts.map(({ ms, at }) => ({ ms, at })),
+  );
+export async function expireTimeouts(page: Page) {
   return page.evaluate(() => {
     const now = Date.now();
     for (const timeout of (window as unknown as { __uxTimeouts: Held[] }).__uxTimeouts)
@@ -344,17 +400,30 @@ async function expireTimeouts(page: Page) {
 
 export const VOICE_PANEL = "#voice .voice-panel";
 
+// The options each Turnstile render received since the page loaded, with the holder's width
+// at that moment, as the stand-in recorded them.
+export type TurnstileRender = { appearance?: string; retry?: string; size?: string; width: number };
+export const turnstileRenders = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { __uxTurnstileOptions?: TurnstileRender[] }).__uxTurnstileOptions ?? [],
+  );
+
+// With VoiceStub.turnstile "hold" or "hold-next": passes the security checks still waiting
+// on the page, and returns how many there were.
+export const releaseToken = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __uxReleaseToken: () => number }).__uxReleaseToken());
+
 const stage = (page: Page, name: string) =>
   page.locator(`${VOICE_PANEL}[data-stage="${name}"]`).waitFor();
 const alert = (page: Page) => page.locator(`${VOICE_PANEL} [role="alert"]`).waitFor();
 
-async function openDemo(page: Page) {
-  await page.goto("/#voice");
+async function openDemo(page: Page, home = "/") {
+  await page.goto(`${home}#voice`);
   await page.locator("#voice .voice-intro button").click();
 }
 async function typeThought(page: Page) {
   await stage(page, "capture");
-  await page.locator("#voice .voice-modes button").nth(1).click();
+  await page.locator("#voice .voice-mode-link").click();
   await page.locator("#voice textarea").fill(TYPED);
 }
 async function submit(page: Page) {
@@ -362,14 +431,14 @@ async function submit(page: Page) {
   await expect(button).toBeEnabled({ timeout: 10_000 });
   await button.click();
 }
+// Two taps, as the app: Tap to talk, then Done, which stops and sends.
 async function record(page: Page) {
   await stage(page, "capture");
   await page.locator("#voice .voice-record-button").click();
-  const stop = page.locator("#voice .voice-record-button.is-recording");
-  await stop.waitFor();
+  const done = page.locator("#voice .voice-record-button.is-recording");
+  await done.waitFor();
   await page.waitForTimeout(2500);
-  await stop.click();
-  await stage(page, "recorded");
+  await done.click();
 }
 
 export type DemoKit = {
@@ -397,18 +466,26 @@ const PHONE = { themes: ["light"] as Theme[], projects: ["mobile"] as Project[] 
 const quote = (error: ServerError) =>
   error.error ? `${error.status} \`${error.code}\`: “${error.error}”` : `${error.status} \`${error.code}\` (failure()'s fallback)`;
 
-export function scenarios(root: string): { list: Scenario[]; unread: string[] } {
+export function scenarios(
+  root: string,
+  language: DemoLanguage = "en",
+): { list: Scenario[]; unread: string[] } {
   const { errors, unread } = serverErrors(root);
   const one = (code: string) => errors.find((error) => error.code === code)!;
+  const home = language === "en" ? "/" : `/${language}/`;
+  const open = (page: Page) => openDemo(page, home);
+  const t = SITE[language].voice;
+  // The recording timer at a given second (a regex fragment), in the page's language.
+  const listening = (time: string) => escape(t.listening).replace(escape("{time}"), time);
   const list: Scenario[] = [
     {
       key: "voice-intro",
       ...MAIN,
-      states: [{ key: "voice-intro", what: "The closed demo card, as a first visit finds it" }],
+      states: [{ key: "voice-intro", what: "The closed demo card, as a first visit finds it: the start button and the static example" }],
       did: "Arrived at `/#voice`",
       answered: "Nothing yet",
       run: async ({ page, capture }) => {
-        await page.goto("/#voice");
+        await page.goto(`${home}#voice`);
         await page.locator(`${VOICE_PANEL}[data-stage="intro"]`).waitFor();
         await capture("voice-intro");
       },
@@ -416,14 +493,14 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     {
       key: "voice-connecting",
       ...MAIN,
-      states: [{ key: "voice-connecting", what: "Opening: the allowance check still running" }],
+      states: [{ key: "voice-connecting", what: "Opening: the status check still running (‘One moment…’)" }],
       did: "Tapped “Try the live demo”",
       answered: "Status: no answer yet",
       setup: async (_page, voice) => {
         voice.status = "hang";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await stage(page, "connecting");
         await capture("voice-connecting");
       },
@@ -444,7 +521,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         ...(answer === "offline" || (typeof answer === "object" && answer.code === "paused")
           ? LIGHT
           : PHONE),
-        states: [{ key, what: "Opening failed: the allowance check got an error" }],
+        states: [{ key, what: "Opening failed: the status check got an error" }],
         did: "Tapped “Try the live demo”",
         answered:
           answer === "offline"
@@ -456,7 +533,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
           voice.status = answer;
         },
         run: async ({ page, capture }) => {
-          await openDemo(page);
+          await open(page);
           await alert(page);
           await capture(key);
         },
@@ -469,20 +546,21 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       did: "Opened the demo",
       answered: "Status: 3 of 3 tries left",
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await stage(page, "capture");
-        await expect(page.locator("#voice [data-ux-ignore]")).toBeVisible();
+        // The check has run; with interaction-only it stays hidden when it passes.
+        await expect(page.locator("#voice [data-ux-ignore]")).toBeAttached();
         await capture("voice-capture");
       },
     },
     {
       key: "voice-typing",
       ...MAIN,
-      states: [{ key: "voice-typing", what: "“Type it instead”, with a thought typed" }],
-      did: "Opened the demo, chose “Type it instead” and typed a thought",
+      states: [{ key: "voice-typing", what: "“Type instead”, with a thought typed" }],
+      did: "Opened the demo, chose “Type instead” and typed a thought",
       answered: "Status: 3 of 3 tries left",
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await capture("voice-typing");
       },
@@ -490,14 +568,14 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     {
       key: "voice-check-pending",
       ...LIGHT,
-      states: [{ key: "voice-check-pending", what: "The security check asks for a tap; “Create drafts” waits" }],
+      states: [{ key: "voice-check-pending", what: "The security check asks for a tap; Done waits" }],
       did: "Opened the demo and typed a thought",
       answered: "Status: 3 tries left; the Cloudflare stand-in waits for a tap",
       setup: async (_page, voice) => {
         voice.turnstile = "interactive";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await capture("voice-check-pending");
       },
@@ -505,16 +583,23 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     {
       key: "voice-check-unreachable",
       ...LIGHT,
-      states: [{ key: "voice-check-unreachable", what: "Cloudflare's script couldn't load" }],
-      did: "Opened the demo",
-      answered: "Status: 3 tries left; Cloudflare's script fails to load",
+      states: [
+        { key: "voice-check-unreachable", what: "Cloudflare's script couldn't load: the message and Try again, the microphone off" },
+        { key: "voice-check-gave-up", what: "It failed again after Try again: instead of the form, the static example, the reason under it, and the hand-over" },
+      ],
+      did: "Opened the demo; then tapped the security check's Try again",
+      answered: "Status: 3 tries left; Cloudflare's script fails to load, every time",
       setup: async (_page, voice) => {
         voice.turnstile = "unreachable";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await alert(page);
         await capture("voice-check-unreachable");
+        await page.locator("#voice .voice-check-retry").click();
+        await stage(page, "unverified");
+        await alert(page);
+        await capture("voice-check-gave-up");
       },
     },
     {
@@ -527,7 +612,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         voice.turnstile = "error";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await alert(page);
         await capture("voice-check-error");
       },
@@ -549,11 +634,11 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         answered: "Status: 3 tries left",
         setup: (page) => microphone(page, mode),
         run: async ({ page, capture }) => {
-          await openDemo(page);
+          await open(page);
           await stage(page, "capture");
           await page.locator("#voice .voice-record-button").click();
           if (mode === "pending")
-            await expect(page.locator("#voice .voice-recorder [aria-live]")).not.toHaveText(/Tap to record/);
+            await expect(page.locator("#voice .voice-recorder .voice-hint")).toHaveText(t.micWaiting);
           else await alert(page);
           await capture(key);
         },
@@ -570,7 +655,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       answered: "Status: 3 tries left",
       setup: (page) => page.clock.install(),
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await stage(page, "capture");
         await page.locator("#voice .voice-record-button").click();
         await page.locator("#voice .voice-record-button.is-recording").waitFor();
@@ -580,45 +665,33 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
           const ms = started + seconds * 1000 - (await page.evaluate(() => Date.now()));
           if (ms > 0) await page.clock.fastForward(ms);
         };
-        const timer = page.locator("#voice .voice-recorder [aria-live]");
+        const timer = page.locator("#voice .voice-recorder .voice-hint");
         await at(5);
-        await expect(timer).toHaveText(/· [4-6]s \//);
+        await expect(timer).toHaveText(new RegExp(`^${listening("0:0[4-6]")}$`));
         await capture("voice-recording");
-        await at(50);
-        await expect(timer).toHaveText(/· (49|50|51)s \//);
+        await at(50.5);
+        await expect(timer).toHaveText(new RegExp(`^${listening("0:5[01]")} · ${escape(t.tenSecondsLeft)}$`));
         await capture("voice-recording-50s");
-      },
-    },
-    {
-      key: "voice-recorded",
-      ...MAIN,
-      states: [{ key: "voice-recorded", what: "Recorded: listen back, record again or create drafts" }],
-      did: "Recorded about 2.5 s with the fake microphone and stopped",
-      answered: "Status: 3 tries left",
-      run: async ({ page, capture }) => {
-        await openDemo(page);
-        await record(page);
-        await capture("voice-recorded");
       },
     },
     {
       key: "voice-waiting",
       ...MAIN,
       states: [
-        { key: "voice-waiting-01s", what: "Waiting for the drafts, 1 s in" },
-        { key: "voice-waiting-10s", what: "Still waiting, 10 s in" },
+        { key: "voice-waiting-01s", what: "Waiting for the tasks, 1 s in: ‘Understanding…’" },
+        { key: "voice-waiting-10s", what: "Still waiting, 10 s in: the longer-wait line and Stop waiting" },
         { key: "voice-waiting-30s", what: "Still waiting, 30 s in" },
-        { key: "voice-waiting-54s", what: "Still waiting, 54 s in" },
-        { key: "voice-timeout", what: "The page gives up: its own request timeout (55 s) has passed" },
+        { key: "voice-waiting-39s", what: "Still waiting, 39 s in, just before the page's timeout" },
+        { key: "voice-timeout", what: "The page gives up: its own request timeout (40 s) has passed" },
       ],
-      did: "Typed a thought and tapped “Create drafts”; the fake clock moves time to each state's second, then the page's timeout fires with the browser's TimeoutError",
+      did: "Typed a thought and tapped Done; the fake clock moves time to each state's second, then the page's timeout fires with the browser's TimeoutError",
       answered: "Draft: no answer, ever; the try counts, as the server records it on admitting the request",
       setup: async (page, voice) => {
         voice.draft = "hang";
         await fakeTime(page);
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await submit(page);
         await stage(page, "processing");
@@ -637,8 +710,8 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         await capture("voice-waiting-10s");
         await at(30);
         await capture("voice-waiting-30s");
-        await at(54);
-        await capture("voice-waiting-54s");
+        await at(39);
+        await capture("voice-waiting-39s");
         await at(timeout.ms / 1000 + 0.2);
         await expireTimeouts(page);
         await alert(page);
@@ -646,16 +719,38 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       },
     },
     {
+      key: "voice-stop-waiting",
+      ...LIGHT,
+      states: [{ key: "voice-stop-waiting", what: "Stop waiting tapped at 10 s: the text kept, the still-understanding message, and Try again to send it again" }],
+      did: "Typed a thought and tapped Done; at 10 s, tapped Stop waiting",
+      answered: "Draft: no answer, ever; the try counts, as the server records it on admitting the request",
+      setup: async (page, voice) => {
+        voice.draft = "hang";
+        await page.clock.install();
+      },
+      run: async ({ page, capture }) => {
+        await open(page);
+        await typeThought(page);
+        await submit(page);
+        await stage(page, "processing");
+        await page.clock.fastForward(10_500);
+        await page.locator("#voice .voice-stop").click();
+        await stage(page, "capture");
+        await alert(page);
+        await capture("voice-stop-waiting");
+      },
+    },
+    {
       key: "voice-offline",
       ...LIGHT,
       states: [{ key: "voice-offline", what: "The connection dropped while sending" }],
-      did: "Typed a thought and tapped “Create drafts”",
+      did: "Typed a thought and tapped Done",
       answered: "Draft: no connection (the request fails)",
       setup: async (_page, voice) => {
         voice.draft = "offline";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await submit(page);
         await alert(page);
@@ -666,13 +761,13 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       key: "voice-gateway",
       ...PHONE,
       states: [{ key: "voice-gateway", what: "An HTML error page instead of the API's answer" }],
-      did: "Typed a thought and tapped “Create drafts”",
+      did: "Typed a thought and tapped Done",
       answered: "Draft: 502 with an HTML error page, as a proxy sends",
       setup: async (_page, voice) => {
         voice.draft = "html";
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await submit(page);
         await alert(page);
@@ -680,35 +775,53 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
       },
     },
     {
+      key: "voice-resend",
+      ...LIGHT,
+      states: [
+        { key: "voice-resend", what: "A recording's request failed (no connection): the alert and Try again" },
+        { key: "voice-resend-waiting", what: "Try again tapped, the security check not back yet: Try again stays, unavailable; the hint says ‘One moment…’" },
+      ],
+      did: "Recorded about 2.5 s and tapped Done; then tapped Try again",
+      answered: "Draft: no connection (the request fails); the Cloudflare stand-in holds the next check",
+      setup: async (_page, voice) => {
+        voice.draft = "offline";
+        voice.turnstile = "hold-next";
+      },
+      run: async ({ page, capture }) => {
+        await open(page);
+        await record(page);
+        await alert(page);
+        const retry = page.locator("#voice .voice-retry");
+        await expect(retry).toBeEnabled();
+        await capture("voice-resend");
+        await retry.click();
+        await expect(retry).toBeDisabled();
+        await capture("voice-resend-waiting");
+      },
+    },
+    {
       key: "voice-result",
       ...MAIN,
       states: [
-        { key: "voice-result", what: "Three drafts to review: one dated, one with a question, one undated" },
-        { key: "voice-result-open", what: "The same, with “Edit task 1” and “Your transcript” open" },
-        { key: "voice-preview", what: "After “Add to preview list”, with the first task checked off" },
+        { key: "voice-result", what: "Three tasks: one dated, one with a question, one undated; then the hand-over" },
+        { key: "voice-result-open", what: "The same, with “See what I said” open" },
       ],
-      did: "Typed a thought and tapped “Create drafts”; then opened task 1 and the transcript; then added them to the preview list and checked one off",
+      did: "Typed a thought and tapped Done; then opened “See what I said”",
       answered: "Draft: 3 tasks; 2 of 3 tries left",
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await submit(page);
         await stage(page, "review");
         await capture("voice-result");
-        await page.locator("#voice .voice-task-edit summary").first().click();
         await page.locator("#voice .voice-transcript summary").click();
         await capture("voice-result-open");
-        await page.locator("#voice .voice-task-edit summary").first().click();
-        await page.locator("#voice .voice-results .voice-submit").click();
-        await stage(page, "preview");
-        await page.locator("#voice .voice-saved-task").first().click();
-        await capture("voice-preview");
       },
     },
     ...(
       [
-        ["voice-result-one", [TASKS[0]], LIGHT, "One draft"],
-        ["voice-result-six", SIX, LIGHT, "Six drafts, the most the API returns"],
+        ["voice-result-one", [TASKS[0]], LIGHT, "One task"],
+        ["voice-result-six", SIX, LIGHT, "Six tasks, the most the API returns"],
         ["voice-no-tasks", [], MAIN, "No tasks found in what was said"],
       ] as const
     ).map(
@@ -716,13 +829,13 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         key,
         ...where,
         states: [{ key, what }],
-        did: "Typed a thought and tapped “Create drafts”",
+        did: "Typed a thought and tapped Done",
         answered: `Draft: ${tasks.length} task${tasks.length === 1 ? "" : "s"}`,
         setup: async (_page, voice) => {
           voice.draft = { tasks: [...tasks] };
         },
         run: async ({ page, capture }) => {
-          await openDemo(page);
+          await open(page);
           await typeThought(page);
           await submit(page);
           await stage(page, "review");
@@ -733,7 +846,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
     {
       key: "voice-tries-used",
       ...MAIN,
-      states: [{ key: "voice-tries-used", what: "All three tries used: recording and sending are off" }],
+      states: [{ key: "voice-tries-used", what: "All three tries used: when they come back, and the hand-over; nothing to record or send" }],
       did: "Opened the demo",
       answered: "Status: 0 of 3 tries left, back in 5 hours",
       setup: async (_page, voice) => {
@@ -741,16 +854,16 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         voice.resetAt = Date.now() + 5 * 3_600_000;
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
-        await stage(page, "capture");
+        await open(page);
+        await stage(page, "tries-used");
         await capture("voice-tries-used");
       },
     },
     {
       key: "voice-last-try",
       ...LIGHT,
-      states: [{ key: "voice-last-try", what: "Drafts from the last try: “Try a new thought” is off" }],
-      did: "Opened the demo with 1 try left, typed a thought and tapped “Create drafts”",
+      states: [{ key: "voice-last-try", what: "Tasks from the last try: when the tries come back, in place of the action" }],
+      did: "Opened the demo with 1 try left, typed a thought and tapped Done",
       answered: "Status: 1 of 3 tries left; draft: 3 tasks and 0 tries left",
       setup: async (_page, voice) => {
         voice.remaining = 1;
@@ -758,7 +871,7 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         voice.draft = { tasks: TASKS, remainingAfter: 0 };
       },
       run: async ({ page, capture }) => {
-        await openDemo(page);
+        await open(page);
         await typeThought(page);
         await submit(page);
         await stage(page, "review");
@@ -776,8 +889,8 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
         projects: main ? BOTH : ["mobile"],
         states: [{ key, what: `The API refused: \`${error.code}\`` }],
         did: audio
-          ? "Recorded about 2.5 s and tapped “Create drafts”"
-          : "Typed a thought and tapped “Create drafts”",
+          ? "Recorded about 2.5 s and tapped Done"
+          : "Typed a thought and tapped Done",
         answered: `Draft: ${quote(error)} (${error.source})${error.code === "visitor_limit" ? "; status then says 0 tries left" : error.code === "invalid_draft" ? "; the try counts, as the server records it before the AI call" : ""}`,
         setup: async (_page, voice) => {
           voice.draft = error;
@@ -787,11 +900,15 @@ export function scenarios(root: string): { list: Scenario[]; unread: string[] } 
           }
         },
         run: async ({ page, capture }) => {
-          await openDemo(page);
+          await open(page);
           if (audio) await record(page);
-          else await typeThought(page);
-          await submit(page);
-          await alert(page);
+          else {
+            await typeThought(page);
+            await submit(page);
+          }
+          // The last try refused: the panel shows the tries-used state instead of the error.
+          if (error.code === "visitor_limit") await stage(page, "tries-used");
+          else await alert(page);
           await capture(key);
         },
       };

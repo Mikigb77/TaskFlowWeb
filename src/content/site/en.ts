@@ -127,4 +127,105 @@ export const en: SiteCopy = {
     plans:
       "Free with an account: 10 dictations a month, and tasks by hand with no limit. TaskFlow Pro, a monthly subscription: unlimited dictation and file space.",
   },
+  voice: {
+    title: "Try it with your voice",
+    intro:
+      "Say a few things you need to do, and when. You’ll see the tasks TaskFlow would add.",
+    badge: "This demo: 3 tries a day, no sign-up",
+    speak: "Speak in English, Spanish or Catalan, for up to a minute.",
+    start: "Try the live demo",
+    noscript: "Turn on JavaScript to try it with your voice.",
+    example: {
+      label: "For example, say:",
+      quote: "“Tomorrow, call the dentist and buy bread.”",
+      heading: "2 things to add",
+      tasks: [
+        { title: "Call the dentist", date: "Tomorrow" },
+        { title: "Buy bread", date: "Tomorrow" },
+      ],
+    },
+    privacy:
+      "What you say or type goes to Google only when you tap Done. We don’t keep your recording, and the text is deleted automatically after 24 hours.",
+    privacyLink: "How we use your data",
+    fine: "It can get dates wrong, so check them. Nothing here is saved to the app.",
+    starting: "One moment…",
+    triesLeft: "{n} of 3 tries left",
+    liveDemo: "Live demo",
+    close: "Close demo",
+    heading: "What would you like to remember?",
+    talk: "Tap to talk",
+    micHint: "Up to a minute. Your browser will ask to use the microphone.",
+    micWaiting: "Waiting for the microphone…",
+    done: "Done",
+    tryAgain: "Try again",
+    listening: "Listening · {time}",
+    listeningStatus: "Listening",
+    tenSecondsLeft: "10 seconds left",
+    understanding: "Understanding…",
+    typeInstead: "Type instead",
+    talkInstead: "Talk instead",
+    textLabel: "Type what you need to do",
+    textPlaceholder: "Tomorrow, call the dentist and buy bread.",
+    textCount: "{n} / {max} characters",
+    textPro:
+      "In the app, turning typed sentences into tasks is part of TaskFlow Pro. Without Pro, you say them, or add each task with a short form.",
+    micBlocked:
+      "The microphone is off for this page. Turn it on in your browser’s settings for this site, or type instead.",
+    micMissing:
+      "We can’t find a microphone on this device. You can type instead.",
+    micFailed:
+      "The microphone isn’t responding. Close other apps that may be using it and try again, or type instead.",
+    micUnsupported:
+      "This browser can’t record your voice. You can type instead.",
+    thingsToAdd: { one: "1 thing to add", other: "{n} things to add" },
+    noDate: "No date",
+    checkDetail: "Check this detail: {question}",
+    completionTitle: "All clear. Take a breath.",
+    completionBody: "Imagine a little more calm in your day.",
+    handOver:
+      "In the app: tap Add a task, say it, tap Done, and add it to your calendar. Coming soon to Google Play.",
+    sayAgain: "Say it again",
+    changeText: "Change the text",
+    seeWhatISaid: "See what I said",
+    noTasks: "No tasks were found. Your words are kept. That used a try.",
+    triesUsed: {
+      onDay:
+        "You’ve used this demo’s 3 tries. You can try again on {weekday} at {time}.",
+      onDayAtOne:
+        "You’ve used this demo’s 3 tries. You can try again on {weekday} at {time}.",
+      today:
+        "You’ve used this demo’s 3 tries. You can try again today at {time}.",
+      todayAtOne:
+        "You’ve used this demo’s 3 tries. You can try again today at {time}.",
+    },
+    triesUsedLater: "You’ve used this demo’s 3 tries. You can try again later.",
+    stillUnderstanding:
+      "Still understanding. This can take up to half a minute.",
+    stopWaiting: "Stop waiting",
+    checkTap: "Tap the security check above to continue.",
+    checkFailed:
+      "The security check didn’t load. Check your connection, then tap Try again.",
+    errors: {
+      offline:
+        "No connection. Check Wi-Fi or mobile data and try again. What you said is kept, and trying again won’t cost an extra try.",
+      offlineOpening: "No connection. Check Wi-Fi or mobile data and try again.",
+      notAnswering:
+        "The demo isn’t answering right now. Try again in a few minutes.",
+      timeout:
+        "This is taking too long. Try again in a moment; it won’t use another try.",
+      networkLimit:
+        "Many people on this network have tried the demo. Try again later, or from another connection.",
+      off: "The live demo is off for now. The example above shows what TaskFlow does.",
+      unverified:
+        "The security check didn’t load, so the live demo can’t run here. The example above shows what TaskFlow does.",
+      invalidDraft:
+        "We couldn’t turn that into tasks, and it used a try. Say what you need to do, and when.",
+      recording:
+        "We couldn’t hear that recording. Record it again; it didn’t use a try.",
+      processing:
+        "Still understanding. Try again in a moment; it won’t use another try.",
+      sayAgain: "Something went wrong. Say it again.",
+      empty: "Say or type what you need to do first.",
+    },
+  },
 };

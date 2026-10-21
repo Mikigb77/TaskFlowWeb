@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 # Secret is entered through stdin with `npx wrangler secret put VOICE_EDGE_SECRET
 # --config edge/wrangler.jsonc`; it must match Google Secret Manager.
 # This script publishes only the reviewed main branch.

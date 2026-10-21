@@ -1,6 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
+import VoiceExample from "./VoiceExample";
+import { useSiteLanguage } from "./useSiteLanguage";
+import { copy, homePath, type SiteLanguage } from "../content/site";
 import type { Draft } from "../lib/voice/policy";
 import { audioBase64, startRecorder } from "../lib/voice/recorder";
 
@@ -12,16 +15,107 @@ type Status = {
   developerCode?: string;
 };
 
-function scheduleLabel(task: Draft) {
-  const date = task.date
-    ? new Date(`${task.date}T12:00:00`).toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
-    : "Whenever you’re ready";
-  return `${date}${task.time ? ` · ${task.time}` : ""}`;
+// Dates and times in the page's language, never the browser's. The tries-used line
+// names the weekday in full; the tasks' date lines use their own short one.
+function dateFormats(language: SiteLanguage) {
+  return {
+    weekday: new Intl.DateTimeFormat(language, { weekday: "long" }),
+    day: new Intl.DateTimeFormat(language, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }),
+    time: new Intl.DateTimeFormat(language, {
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+  };
 }
+
+// A task's date line, as the app shows it: weekday, day and month, then the time.
+function dateLine(
+  task: Draft,
+  formats: ReturnType<typeof dateFormats>,
+  noDate: string,
+) {
+  if (!task.date) return noDate;
+  const [year, month, day] = task.date.split("-").map(Number);
+  const [hour, minute] = (task.time ?? "12:00").split(":").map(Number);
+  const at = new Date(year, month - 1, day, hour, minute);
+  return task.time
+    ? `${formats.day.format(at)} · ${formats.time.format(at)}`
+    : formats.day.format(at);
+}
+
+type Voice = (typeof copy)[SiteLanguage]["voice"];
+// What went wrong, in the visitor's words. `retry`: the same request can be sent again
+// with Try again, without using another try. `off`: the static example replaces the form.
+type Failure = {
+  message: string;
+  retry?: boolean;
+  off?: boolean;
+  check?: boolean;
+  triesUsed?: boolean;
+};
+
+// The API's refusals, by code (src/app/api/voice/draft/route.ts); the server's own
+// message is never shown. Anything else means the demo isn't answering.
+function failureFor(t: Voice, code: unknown): Failure {
+  switch (code) {
+    case "network_limit":
+      return { message: t.errors.networkLimit };
+    case "budget_pause":
+    case "paused":
+    case "not_ready":
+    case "budget_config":
+    case "unavailable":
+      return { message: t.errors.off, off: true };
+    case "invalid_draft":
+      return { message: t.errors.invalidDraft };
+    case "invalid_audio":
+    case "audio_length":
+    case "too_large":
+    case "payload":
+      return { message: t.errors.recording };
+    case "processing":
+      return { message: t.errors.processing, retry: true };
+    case "expired":
+    case "previous_failure":
+    case "request_id":
+    case "session_required":
+      return { message: t.errors.sayAgain };
+    case "empty":
+      return { message: t.errors.empty };
+    case "visitor_limit":
+      return { message: "", triesUsed: true };
+    case "verification":
+      return { message: "", check: true, retry: true };
+    default:
+      return { message: t.errors.notAnswering, retry: true };
+  }
+}
+
+// The API's JSON body, or null when the answer isn't the demo's (an HTML error page, say).
+async function readJson(response: Response) {
+  if (!response.headers.get("content-type")?.includes("application/json"))
+    return null;
+  try {
+    const data: unknown = await response.json();
+    return data && typeof data === "object"
+      ? (data as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// The status request got an answer that isn't a status; `code` is the API's, if any.
+class Refused extends Error {
+  constructor(public code: unknown) {
+    super("refused");
+  }
+}
+
 type Turnstile = {
   render(element: HTMLElement, options: Record<string, unknown>): string;
   reset(id: string): void;
@@ -33,15 +127,20 @@ declare global {
   }
 }
 
+// Cloudflare Turnstile. It shows only when Cloudflare needs a tap (interaction-only),
+// in its compact size on cards narrower than its normal 300 px. It doesn't retry on its
+// own: a failure is reported, and Try again mounts it again (a new `generation`).
 function Verification({
   siteKey,
   onToken,
   onError,
+  onTap,
   generation,
 }: {
   siteKey: string;
   onToken: (token: string) => void;
-  onError: (error: string) => void;
+  onError: () => void;
+  onTap: (waiting: boolean) => void;
   generation: number;
 }) {
   const element = useRef<HTMLDivElement>(null);
@@ -54,14 +153,17 @@ function Verification({
           sitekey: siteKey,
           action: "voice_demo",
           theme: "auto",
+          appearance: "interaction-only",
+          size: element.current.clientWidth < 300 ? "compact" : "normal",
+          retry: "never",
           callback: onToken,
           "expired-callback": () => onToken(""),
           "error-callback": () => {
             onToken("");
-            onError(
-              "The security check could not load. Please reopen the live demo.",
-            );
+            onError();
           },
+          "before-interactive-callback": () => onTap(true),
+          "after-interactive-callback": () => onTap(false),
         });
     };
     let script = document.getElementById(
@@ -75,15 +177,16 @@ function Verification({
         script.src =
           "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
         script.async = true;
+        // A script that failed to load won't fire again: remove it, so Try again loads a new one.
+        const added = script;
+        added.addEventListener("error", () => added.remove(), { once: true });
         document.head.appendChild(script);
       }
       script.addEventListener("load", mount);
       script.addEventListener("error", failed);
     }
     function failed() {
-      onError(
-        "The security check could not load. Check your connection or try again later.",
-      );
+      onError();
     }
     return () => {
       disposed = true;
@@ -91,17 +194,15 @@ function Verification({
       script?.removeEventListener("error", failed);
       if (widget) window.turnstile?.remove(widget);
     };
-  }, [siteKey, onToken, onError, generation]);
-  return (
-    <div
-      ref={element}
-      className="voice-verification"
-      aria-label="Security verification"
-    />
-  );
+  }, [siteKey, onToken, onError, onTap, generation]);
+  return <div ref={element} className="voice-verification" />;
 }
 
 export default function VoiceDemo() {
+  const language = useSiteLanguage();
+  const t = copy[language].voice;
+  // The start button stays disabled until the script has loaded.
+  const [ready, setReady] = useState(false);
   const [developerTools, setDeveloperTools] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [retryPending, setRetryPending] = useState(false);
@@ -116,13 +217,33 @@ export default function VoiceDemo() {
     [generation, setGeneration] = useState(0);
   const [recording, setRecording] = useState(false),
     [seconds, setSeconds] = useState(0),
-    [audio, setAudio] = useState<Blob | null>(null),
-    [audioUrl, setAudioUrl] = useState("");
+    [audio, setAudio] = useState<Blob | null>(null);
+  // Done was tapped: send as soon as the recording is ready and the security check's token arrives.
+  const [pending, setPending] = useState(false);
+  // The one status message, also used when every demo task is checked.
+  const [announcement, setAnnouncement] = useState("");
   const [transcript, setTranscript] = useState(""),
     [tasks, setTasks] = useState<Draft[]>([]),
-    [saved, setSaved] = useState(false),
-    [complete, setComplete] = useState<number[]>([]),
     [answered, setAnswered] = useState(false);
+  // Completion belongs only to the current demo result, never an account.
+  const [checkedTasks, setCheckedTasks] = useState<number[]>([]);
+  const [completionAt, setCompletionAt] = useState<number | null>(null);
+  // From 10 s of waiting: the line and Stop waiting.
+  const [waitedLong, setWaitedLong] = useState(false);
+  // The live demo is off: the static example and the message replace the form.
+  const [off, setOff] = useState(false);
+  // The security check: waiting for a tap, failed (with Try again), and failures in a row.
+  const [needsTap, setNeedsTap] = useState(false),
+    [checkFailed, setCheckFailed] = useState(false),
+    [checkFailures, setCheckFailures] = useState(0);
+  // The request being waited for, and why it was stopped, if it was.
+  const waiting = useRef<{
+    controller: AbortController;
+    reason: "" | "stop" | "close" | "timeout";
+  } | null>(null);
+  // The API refused the check's token: its message and Try again stay until tapped.
+  const [checkRefused, setCheckRefused] = useState(false);
+  const checkRetried = useRef(false);
   const recorder = useRef<Awaited<ReturnType<typeof startRecorder>> | null>(
     null,
   );
@@ -133,31 +254,99 @@ export default function VoiceDemo() {
   const stageHeading = useRef<HTMLHeadingElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
+  const recordButton = useRef<HTMLButtonElement>(null);
+  const textBox = useRef<HTMLTextAreaElement>(null);
+  // Where focus goes after switching between talking and typing.
+  const focusNext = useRef<"text" | "record" | null>(null);
+  const warned = useRef(false);
+  const developerActive = (status?.testingUntil || 0) > now;
+  const allowanceUsed = status?.remaining === 0 && !developerActive;
+  // Every try used: the panel says when they come back, instead of the capture stage.
+  // A request still to be retrieved (retryPending) doesn't use another try.
+  // Two security-check failures in a row: the static example and the hand-over instead.
   const stage = !opened
     ? "intro"
     : busy
       ? "processing"
       : answered
-        ? saved
-          ? "preview"
-          : "review"
-        : !status
-          ? "connecting"
-          : mode === "voice" && audio
-            ? "recorded"
-            : "capture";
-  const receiveToken = useCallback((value: string) => setToken(value), []);
-  const receiveError = useCallback((value: string) => setError(value), []);
+        ? "review"
+        : off
+          ? "off"
+          : !status
+            ? "connecting"
+            : allowanceUsed && !retryPending
+              ? "tries-used"
+              : checkFailures >= 2
+                ? "unverified"
+                : "capture";
+  // The tries-used state replaces the server's own message for it; after two
+  // security-check failures, the reason shows under the static example.
+  const shownError =
+    stage === "tries-used"
+      ? ""
+      : stage === "unverified"
+        ? t.errors.unverified
+        : error;
+  const allComplete =
+    stage === "review" &&
+    !loading &&
+    !shownError &&
+    tasks.length > 0 &&
+    tasks.every((_, index) => checkedTasks.includes(index));
+  function clearCompletion() {
+    setCheckedTasks([]);
+    setCompletionAt(null);
+  }
+  function toggleTask(index: number, checked: boolean) {
+    const next = checked
+      ? [...checkedTasks, index]
+      : checkedTasks.filter((value) => value !== index);
+    setCheckedTasks(next);
+    // Show the reward next to the checkbox that completed the list, even when
+    // tasks are checked out of order or the result has long notes on a phone.
+    setCompletionAt(
+      checked && tasks.every((_, taskIndex) => next.includes(taskIndex))
+        ? index
+        : null,
+    );
+  }
+  const receiveToken = useCallback((value: string) => {
+    setToken(value);
+    if (!value) return;
+    setNeedsTap(false);
+    setCheckFailed(false);
+    setCheckFailures(0);
+  }, []);
+  const receiveCheckError = useCallback(() => {
+    setNeedsTap(false);
+    setCheckFailed(true);
+    setCheckFailures((value) => value + 1);
+  }, []);
+  const receiveTap = useCallback(
+    (value: boolean) => {
+      setNeedsTap(value);
+      if (value) setAnnouncement(t.checkTap);
+    },
+    [t.checkTap],
+  );
   const refresh = useCallback(async () => {
     const response = await fetch("/api/voice/status/", { cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok)
-      throw new Error(
-        data.error || "The live demo is temporarily unavailable.",
-      );
-    setStatus(data as Status);
+    const data = await readJson(response);
+    if (!response.ok || typeof data?.remaining !== "number")
+      throw new Refused(data?.code);
+    setStatus(data as unknown as Status);
   }, []);
+  // The status request failed: no connection, the demo off, or no answer it understands.
+  function statusFailed(reason: unknown) {
+    const failed: Failure =
+      reason instanceof Refused
+        ? failureFor(t, reason.code)
+        : { message: t.errors.offlineOpening };
+    setOff(!!failed.off);
+    setError(failed.message || t.errors.notAnswering);
+  }
   useEffect(() => {
+    setReady(true);
     setDeveloperTools(
       new URLSearchParams(window.location.search).get("developer") === "1",
     );
@@ -181,27 +370,43 @@ export default function VoiceDemo() {
       mounted.current = false;
       if (timer.current) clearInterval(timer.current);
       void recorder.current?.stop();
+      waiting.current?.controller.abort();
     };
   }, []);
+  // After 10 s of waiting, say it can take up to half a minute, and offer Stop waiting.
   useEffect(() => {
-    if (!audio) {
-      setAudioUrl("");
-      return;
-    }
-    const url = URL.createObjectURL(audio);
-    setAudioUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [audio]);
+    setWaitedLong(false);
+    if (!busy) return;
+    const later = setTimeout(() => {
+      setWaitedLong(true);
+      setAnnouncement(t.stillUnderstanding);
+    }, 10_000);
+    return () => clearTimeout(later);
+  }, [busy, t.stillUnderstanding]);
+  // The security check passed after its Try again: carry on where the visitor would.
+  useEffect(() => {
+    if (checkFailed || !checkRetried.current) return;
+    checkRetried.current = false;
+    (mode === "text" ? textBox.current : recordButton.current)?.focus();
+  }, [checkFailed]);
   useEffect(() => {
     if (stage === "intro") return;
+    // Switching between talking and typing (or a microphone error) moves focus
+    // to the text box or the record button, where the visitor carries on.
+    const next = focusNext.current;
+    focusNext.current = null;
+    if (next) {
+      (next === "text" ? textBox.current : recordButton.current)?.focus();
+      return;
+    }
     // A stage replaces the previous view; keep both keyboard focus and the
     // result at the same visible card, including after the mobile keyboard closes.
-    const target = error ? errorMessage.current : stageHeading.current;
+    const target = shownError ? errorMessage.current : stageHeading.current;
     target?.focus({ preventScroll: true });
     const top = panel.current?.getBoundingClientRect().top;
     if (top !== undefined && (top < 88 || top > 160))
       panel.current?.scrollIntoView({ block: "start", behavior: "instant" });
-  }, [stage, error]);
+  }, [stage, shownError, mode]);
   const stop = useCallback(async () => {
     if (timer.current) clearInterval(timer.current);
     const active = recorder.current;
@@ -212,30 +417,46 @@ export default function VoiceDemo() {
       if (blob) setAudio(blob);
     }
   }, []);
+  // Done, or the 60 s limit: stop listening and send.
+  const finish = useCallback(async () => {
+    setPending(true);
+    await stop();
+  }, [stop]);
   async function open() {
     setOpened(true);
     setLoading(true);
     setError("");
+    setOff(false);
     try {
       await refresh();
     } catch (reason) {
-      setError((reason as Error).message);
+      statusFailed(reason);
     } finally {
       setLoading(false);
     }
   }
+  // The microphone can't be used: say why, by the error's name, and open the text box.
+  function microphoneFailed(message: string) {
+    setError(message);
+    focusNext.current = "text";
+    setMode("text");
+    requestId.current = "";
+  }
   async function record() {
+    // Clearing an error would move focus to the heading; keep it on this button.
+    if (error) focusNext.current = "record";
     setRetryPending(false);
     setError("");
     setAudio(null);
     setSeconds(0);
     setAnswered(false);
+    clearCompletion();
     requestId.current = crypto.randomUUID();
+    if (!navigator.mediaDevices?.getUserMedia) {
+      microphoneFailed(t.micUnsupported);
+      return;
+    }
     try {
-      if (!navigator.mediaDevices?.getUserMedia)
-        throw new Error(
-          "This browser cannot record audio. Try the text option instead.",
-        );
       setLoading(true);
       const active = await startRecorder();
       if (!mounted.current) {
@@ -244,17 +465,26 @@ export default function VoiceDemo() {
       }
       recorder.current = active;
       setRecording(true);
+      setAnnouncement(t.listeningStatus);
+      warned.current = false;
       const started = Date.now();
       timer.current = setInterval(() => {
         const elapsed = Math.min(60, Math.floor((Date.now() - started) / 1000));
         setSeconds(elapsed);
-        if (elapsed >= 60) void stop();
+        if (elapsed >= 50 && !warned.current) {
+          warned.current = true;
+          setAnnouncement(t.tenSecondsLeft);
+        }
+        if (elapsed >= 60) void finish();
       }, 200);
     } catch (reason) {
-      setError(
-        (reason as Error).name === "NotAllowedError"
-          ? "Microphone access was not allowed. You can still use “Type it instead”."
-          : (reason as Error).message,
+      const name = (reason as Error).name;
+      microphoneFailed(
+        name === "NotAllowedError"
+          ? t.micBlocked
+          : name === "NotFoundError"
+            ? t.micMissing
+            : t.micFailed,
       );
     } finally {
       setLoading(false);
@@ -262,12 +492,26 @@ export default function VoiceDemo() {
   }
   async function submit() {
     if (!token || busy || recording) return;
+    setAnnouncement(t.understanding);
     setBusy(true);
     setError("");
     setAnswered(false);
-    setSaved(false);
-    setComplete([]);
+    clearCompletion();
     requestId.current ||= crypto.randomUUID();
+    const current = {
+      controller: new AbortController(),
+      reason: "" as "" | "stop" | "close" | "timeout",
+    };
+    waiting.current = current;
+    // The page's own limit; the model's is 35 s.
+    const timeout = AbortSignal.timeout(40_000);
+    const expire = () => {
+      current.reason ||= "timeout";
+      current.controller.abort();
+    };
+    timeout.addEventListener("abort", expire);
+    let failed: Failure | null = null;
+    let data: Record<string, unknown> | null = null;
     try {
       const response = await fetch("/api/voice/draft/", {
         method: "POST",
@@ -282,65 +526,110 @@ export default function VoiceDemo() {
             : { text }),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
         }),
-        signal: AbortSignal.timeout(55_000),
+        signal: current.controller.signal,
       });
-      const data = await response.json();
-      if (!response.ok) {
-        setRetryPending(data.code === "processing" || response.status === 503);
-        if (response.status === 422) requestId.current = "";
-        throw new Error(
-          data.error || "The draft could not be created. Please try again.",
+      data = await readJson(response);
+      if (!response.ok || !Array.isArray(data?.tasks))
+        failed = failureFor(t, response.ok ? undefined : data?.code);
+    } catch (reason) {
+      failed = {
+        message:
+          (reason as Error).name === "TypeError"
+            ? t.errors.offline
+            : t.errors.notAnswering,
+        retry: true,
+      };
+    } finally {
+      timeout.removeEventListener("abort", expire);
+      waiting.current = null;
+    }
+    // Stopped: by the page's limit, by Stop waiting (the still-understanding message:
+    // the server carries on, and Try again resends it without another try), or by Close demo.
+    const { reason } = current;
+    if (reason)
+      failed = {
+        message:
+          reason === "timeout" ? t.errors.timeout : t.errors.processing,
+        retry: true,
+      };
+    // The result heading or the error alert takes focus and speaks for itself.
+    setAnnouncement("");
+    setBusy(false);
+    setToken("");
+    setGeneration((value) => value + 1);
+    void refresh().catch(() => {});
+    if (reason === "close") return;
+    if (failed) {
+      if (failed.triesUsed) {
+        const retryAt = data?.retryAt;
+        setStatus(
+          (value) =>
+            value && {
+              ...value,
+              remaining: 0,
+              resetAt: typeof retryAt === "number" ? retryAt : value.resetAt,
+            },
         );
       }
-      setRetryPending(false);
-      setTasks(data.tasks);
-      setTranscript(data.transcript);
-      setAnswered(true);
-      setStatus(
-        (value) =>
-          value && {
-            ...value,
-            remaining: data.remaining,
-            resetAt: data.resetAt,
-            testingUntil: data.testingUntil,
-          },
-      );
-    } catch (reason) {
-      if (["TimeoutError", "TypeError"].includes((reason as Error).name))
-        setRetryPending(true);
-      setError(
-        (reason as Error).name === "TimeoutError"
-          ? "This is taking longer than expected. Try again to retrieve this request without another AI call."
-          : (reason as Error).message,
-      );
-    } finally {
-      setBusy(false);
-      setToken("");
-      setGeneration((value) => value + 1);
-      void refresh().catch(() => {});
+      setRetryPending(!!failed.retry);
+      // Anything that can't be resent starts a new request next time; a refused
+      // recording can't be sent again, so only Tap to talk remains.
+      if (!failed.retry) {
+        requestId.current = "";
+        if (mode === "voice") setAudio(null);
+      }
+      setOff(!!failed.off);
+      // The API refused the security check's token: no try used; its Try again resends.
+      setCheckRefused(!!failed.check);
+      setError(failed.message);
+      return;
     }
-  }
-  function edit(index: number, key: keyof Draft, value: string) {
-    setTasks((items) =>
-      items.map((task, i) =>
-        i === index
-          ? {
-              ...task,
-              [key]:
-                value ||
-                (["date", "time", "question"].includes(key) ? null : ""),
-              ...(key === "date" && !value ? { time: null } : {}),
-            }
-          : task,
-      ),
+    const answer = data as {
+      tasks: Draft[];
+      transcript: string;
+      remaining: number;
+      resetAt: number | null;
+      testingUntil?: number | null;
+    };
+    setRetryPending(false);
+    clearCompletion();
+    setTasks(answer.tasks);
+    setTranscript(answer.transcript);
+    setAnswered(true);
+    setStatus(
+      (value) =>
+        value && {
+          ...value,
+          remaining: answer.remaining,
+          resetAt: answer.resetAt,
+          testingUntil: answer.testingUntil,
+        },
     );
   }
+  // Stop waiting, or Close demo while waiting: abort the request. Stop waiting keeps the
+  // recording or the text, to send again with Try again.
+  function stopWaiting(reason: "stop" | "close") {
+    const current = waiting.current;
+    if (!current) return;
+    current.reason = reason;
+    current.controller.abort();
+  }
+  // The security check's Try again: load it again if it has no token; a request the API
+  // refused for it is resent as soon as there is one.
+  function retryCheck() {
+    checkRetried.current = checkFailed;
+    if (!token) setGeneration((value) => value + 1);
+    if (checkRefused) {
+      setCheckRefused(false);
+      setPending(true);
+    }
+  }
+  // Close demo: back to the closed card, with nothing kept.
   function startAgain() {
     setAnswered(false);
-    setSaved(false);
+    clearCompletion();
     setTasks([]);
     setTranscript("");
-    setComplete([]);
     setText("");
     setAudio(null);
     setSeconds(0);
@@ -348,53 +637,104 @@ export default function VoiceDemo() {
     setError("");
     setRetryPending(false);
     setToken("");
+    setPending(false);
+    setAnnouncement("");
+    setOff(false);
+    setNeedsTap(false);
+    setCheckFailed(false);
+    setCheckFailures(0);
+    setCheckRefused(false);
     requestId.current = "";
   }
-  const developerActive = (status?.testingUntil || 0) > now;
-  const allowanceUsed = status?.remaining === 0 && !developerActive;
+  // Done sends once the recording has stopped and the security check has passed.
+  const sendNow = pending && !!token && !recording && !busy;
+  useEffect(() => {
+    if (!sendNow) return;
+    setPending(false);
+    // submit reads this render's recording or text; sendNow is what starts it.
+    if (mode === "voice" ? audio : text.trim().length >= 3) void submit();
+  }, [sendNow]);
+  function switchMode(next: "voice" | "text") {
+    focusNext.current = next === "text" ? "text" : "record";
+    setMode(next);
+    setRetryPending(false);
+    requestId.current = "";
+  }
   const testingSeconds = Math.max(
     0,
     Math.ceil(((status?.testingUntil || 0) - now) / 1000),
   );
-  const unavailable =
-    busy || loading || recording || (allowanceUsed && !retryPending);
+  const unavailable = busy || loading || recording || pending;
+  // The security check waits for a tap, or failed: nothing can be sent until it passes.
+  const checkBlocked = (!token && (needsTap || checkFailed)) || checkRefused;
+  const checkMessage = (checkFailed && !token) || checkRefused;
+  // The record button is the Done button from the first tap until the recording is
+  // sent, except while a recording is being resent with Try again.
+  const listening = recording || (pending && mode === "voice" && !retryPending);
+  const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  const number = new Intl.NumberFormat(language);
+  const formats = dateFormats(language);
+  const resetAt = status?.resetAt ? new Date(status.resetAt) : null;
+  // ‘Today’ when the tries come back on the visitor's date; Spanish and Catalan say
+  // «a la 1:30», not «a las/les», when the hour shown is 1.
+  const resetToday = resetAt?.toDateString() === new Date().toDateString();
+  const resetAtOne = resetAt
+    ? formats.time
+        .formatToParts(resetAt)
+        .some((part) => part.type === "hour" && part.value === "1")
+    : false;
+  const triesUsedLine = resetAt
+    ? t.triesUsed[
+        resetToday
+          ? resetAtOne
+            ? "todayAtOne"
+            : "today"
+          : resetAtOne
+            ? "onDayAtOne"
+            : "onDay"
+      ]
+        .replace("{weekday}", formats.weekday.format(resetAt))
+        .replace("{time}", formats.time.format(resetAt))
+    : t.triesUsedLater;
+  const thingsToAdd = t.thingsToAdd[
+    new Intl.PluralRules(language).select(tasks.length) === "one"
+      ? "one"
+      : "other"
+  ].replace("{n}", number.format(tasks.length));
+  const alertBox = shownError ? (
+    <p role="alert" className="voice-error" tabIndex={-1} ref={errorMessage}>
+      {shownError}
+    </p>
+  ) : null;
   return (
     <section
       id="voice"
+      lang={language}
       className="voice-section section-space"
       aria-labelledby="voice-title"
     >
       <div className="container">
         <div className="voice-heading">
-          <div>
-            <p className="eyebrow">YOUR WORDS. YOUR NEXT STEP.</p>
-            <h2 id="voice-title">Say it. See it take shape.</h2>
-            <p>
-              Try real voice-to-task, right here. One thought or a few plans —
-              turn them into a little clarity.
-            </p>
-          </div>
-          <span className="voice-trial-badge">3 free tries · no account</span>
+          <h2 id="voice-title">{t.title}</h2>
+          <p>{t.intro}</p>
+          <span className="voice-trial-badge">{t.badge}</span>
         </div>
         <div className="voice-panel" ref={panel} data-stage={stage}>
           {!opened ? (
             <div className="voice-intro">
-              <span className="voice-mic-orb">
-                <Icon name="mic" size={32} />
-              </span>
-              <h3>A minute is plenty.</h3>
-              <p>
-                Speak in English, Spanish, or Catalan. Review the transcript,
-                then make the drafts your own.
-              </p>
-              <button className="button" onClick={open} ref={openButton}>
-                Try the live demo <Icon name="arrow" />
+              <p>{t.speak}</p>
+              <button
+                className="button"
+                onClick={open}
+                ref={openButton}
+                disabled={!ready}
+              >
+                {t.start} <Icon name="arrow" />
               </button>
-              <p className="voice-fine">
-                Up to 60 seconds. Audio or text is sent to Google for AI
-                processing only when you choose “Create drafts”.{" "}
-                <a href="/privacy/">How we protect your data</a>
-              </p>
+              <noscript>
+                <p className="voice-noscript">{t.noscript}</p>
+              </noscript>
+              <VoiceExample language={language} />
             </div>
           ) : (
             <>
@@ -402,44 +742,46 @@ export default function VoiceDemo() {
                 <span className="voice-trial-badge">
                   {developerActive
                     ? `Developer testing · ${Math.floor(testingSeconds / 60)}:${String(testingSeconds % 60).padStart(2, "0")} left`
-                    : status
-                      ? `${status.remaining} of 3 tries left`
-                      : "Live demo"}
+                    : status && stage !== "off" && stage !== "unverified"
+                      ? t.triesLeft.replace("{n}", String(status.remaining))
+                      : t.liveDemo}
                 </span>
                 <button
                   className="text-link"
-                  disabled={busy || recording || loading}
+                  disabled={recording || loading}
                   onClick={() => {
+                    stopWaiting("close");
                     startAgain();
                     setOpened(false);
                     requestAnimationFrame(() => openButton.current?.focus());
                   }}
                 >
-                  Close demo
+                  {t.close}
                 </button>
               </div>
-              {error && (
-                <p
-                  role="alert"
-                  className="voice-error"
-                  tabIndex={-1}
-                  ref={errorMessage}
-                >
-                  {error}
-                </p>
+              <p role="status" aria-atomic="true" className="voice-status">
+                {allComplete
+                  ? `${t.completionTitle} ${t.completionBody}`
+                  : announcement}
+              </p>
+              {stage !== "off" && stage !== "unverified" && alertBox}
+              {/* The live demo is off: the static example, with the message under it. */}
+              {stage === "off" && (
+                <div className="voice-off voice-stage">
+                  <VoiceExample language={language} />
+                  {alertBox}
+                </div>
               )}
-              {!status && (
+              {/* Opening failed: the message above, and Try again. */}
+              {stage === "connecting" && (
                 <div className="voice-connecting">
-                  <h3 ref={stageHeading} tabIndex={-1}>
-                    {loading
-                      ? "Getting your demo ready…"
-                      : "Let’s try that again."}
-                  </h3>
                   {loading ? (
-                    <p role="status">Checking your allowance…</p>
+                    <h3 ref={stageHeading} tabIndex={-1}>
+                      {t.starting}
+                    </h3>
                   ) : (
-                    <button className="text-link" onClick={open}>
-                      Try connecting again
+                    <button className="button voice-again" onClick={open}>
+                      {t.tryAgain}
                     </button>
                   )}
                 </div>
@@ -450,120 +792,90 @@ export default function VoiceDemo() {
                     <Icon name="spark" size={30} />
                   </span>
                   <h3 ref={stageHeading} tabIndex={-1}>
-                    Making a little clarity…
+                    {t.understanding}
                   </h3>
-                  <p role="status">
-                    Finding the tasks, dates, and details in your words.
-                  </p>
                   <div className="voice-processing-preview" aria-hidden="true">
                     <span />
                     <span />
                     <span />
                   </div>
-                  <p className="voice-fine">
-                    Your drafts will appear right here. You’ll have the final
-                    say.
-                  </p>
+                  {waitedLong && (
+                    <>
+                      <p className="voice-waiting-long">
+                        {t.stillUnderstanding}
+                      </p>
+                      <button
+                        className="text-link voice-stop"
+                        onClick={() => stopWaiting("stop")}
+                      >
+                        {t.stopWaiting}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
-              {status && !busy && !answered && (
+              {status && stage === "capture" && (
                 <div className="voice-stage">
                   <div className="voice-stage-heading voice-capture-heading">
                     <h3 ref={stageHeading} tabIndex={-1}>
-                      {audio && mode === "voice"
-                        ? "Ready when you are."
-                        : "What’s on your mind?"}
+                      {t.heading}
                     </h3>
-                    <p>
-                      {audio && mode === "voice"
-                        ? "Listen back, or turn your words into tasks."
-                        : "Say a little. We’ll help you make a plan."}
-                    </p>
-                  </div>
-                  <div className="voice-modes" aria-label="Choose input">
-                    <button
-                      aria-pressed={mode === "voice"}
-                      disabled={busy || recording || loading}
-                      onClick={() => {
-                        setMode("voice");
-                        setRetryPending(false);
-                        requestId.current = "";
-                      }}
-                    >
-                      {" "}
-                      <Icon name="mic" size={18} /> Record a thought
-                    </button>
-                    <button
-                      aria-pressed={mode === "text"}
-                      disabled={busy || recording || loading}
-                      onClick={() => {
-                        setMode("text");
-                        setRetryPending(false);
-                        requestId.current = "";
-                      }}
-                    >
-                      Type it instead
-                    </button>
                   </div>
                   {mode === "voice" ? (
                     <div className="voice-recorder">
-                      {!audio && (
-                        <>
-                          <p className="voice-prompt">
-                            “On Friday at 5 p.m., I have a doctor’s appointment.
-                            Remind me to bring my test results.”
-                          </p>
-                          <button
-                            className={`voice-record-button ${recording ? "is-recording" : ""}`}
-                            aria-label={
-                              recording ? "Stop recording" : "Start recording"
-                            }
-                            disabled={!recording && unavailable}
-                            onClick={recording ? stop : record}
-                          >
-                            {recording ? (
-                              <span className="voice-stop-icon" />
-                            ) : (
-                              <Icon name="mic" size={28} />
-                            )}
-                          </button>
-                        </>
+                      <p className="voice-prompt">{t.example.quote}</p>
+                      <button
+                        id="voice-record"
+                        ref={recordButton}
+                        className={
+                          listening
+                            ? "button voice-record-button is-recording"
+                            : "voice-record-button"
+                        }
+                        aria-labelledby={
+                          listening ? undefined : "voice-record-label"
+                        }
+                        disabled={
+                          listening ? pending : unavailable || checkBlocked
+                        }
+                        onClick={listening ? finish : record}
+                      >
+                        {listening ? t.done : <Icon name="mic" size={32} />}
+                      </button>
+                      {!listening && (
+                        <label
+                          id="voice-record-label"
+                          htmlFor="voice-record"
+                          className="voice-record-label"
+                        >
+                          {t.talk}
+                        </label>
                       )}
-                      <p aria-live="polite">
+                      <p className="voice-hint">
                         {loading
-                          ? "Getting your microphone ready…"
-                          : recording
-                            ? `Recording · ${seconds}s / 60s`
-                            : audio
-                              ? "Recording ready. Listen before sending."
-                              : "Tap to record · up to 60 seconds"}
+                          ? t.micWaiting
+                          : pending
+                            ? t.starting
+                            : recording
+                              ? t.listening.replace("{time}", clock) +
+                                (seconds >= 50 ? ` · ${t.tenSecondsLeft}` : "")
+                              : t.micHint}
                       </p>
-                      {audioUrl && (
-                        <>
-                          <audio
-                            controls
-                            src={audioUrl}
-                            aria-label="Your recording"
-                          />
-                          <button
-                            className="text-link"
-                            onClick={record}
-                            disabled={unavailable}
-                          >
-                            Record again
-                          </button>
-                        </>
-                      )}
                     </div>
                   ) : (
-                    <label className="voice-text-label">
-                      What is on your mind?
+                    <div className="voice-text">
+                      <label className="voice-text-label" htmlFor="voice-text">
+                        {t.textLabel}
+                      </label>
                       <textarea
+                        id="voice-text"
+                        ref={textBox}
+                        aria-describedby="voice-text-count"
                         maxLength={1500}
                         rows={4}
                         value={text}
                         disabled={busy}
-                        placeholder="On Friday at 5 p.m. I have a doctor’s appointment. Bring last month’s test results. Also buy coffee sometime."
+                        placeholder={t.textPlaceholder}
                         onChange={(event) => {
                           setText(event.target.value);
                           setRetryPending(false);
@@ -571,262 +883,207 @@ export default function VoiceDemo() {
                           setAnswered(false);
                         }}
                       />
-                      <span>{text.length} / 1,500 characters</span>
-                    </label>
+                      <p id="voice-text-count" className="voice-text-count">
+                        {t.textCount
+                          .replace("{n}", number.format(text.length))
+                          .replace("{max}", number.format(1500))}
+                      </p>
+                      <p className="voice-text-pro">{t.textPro}</p>
+                    </div>
                   )}
-                  {(!allowanceUsed || retryPending) && (
-                    <Verification
-                      siteKey={status.siteKey}
-                      onToken={receiveToken}
-                      onError={receiveError}
-                      generation={generation}
-                    />
+                  <p className="voice-privacy">
+                    {t.privacy}{" "}
+                    <a href={`${homePath(language)}privacy/#website`}>
+                      {t.privacyLink}
+                    </a>
+                  </p>
+                  <Verification
+                    siteKey={status.siteKey}
+                    onToken={receiveToken}
+                    onError={receiveCheckError}
+                    onTap={receiveTap}
+                    generation={generation}
+                  />
+                  {needsTap && !token && !checkMessage && (
+                    <p className="voice-hint voice-check-line">{t.checkTap}</p>
+                  )}
+                  {checkMessage && (
+                    <>
+                      <p role="alert" className="voice-error voice-check-error">
+                        {t.checkFailed}
+                      </p>
+                      <button
+                        className="button voice-check-retry"
+                        onClick={retryCheck}
+                      >
+                        {t.tryAgain}
+                      </button>
+                    </>
+                  )}
+                  {mode === "text" && (
+                    <>
+                      {pending && <p className="voice-hint">{t.starting}</p>}
+                      {/* A request still to be retrieved is sent again with Try again,
+                          without using another try. */}
+                      <button
+                        className="button voice-submit"
+                        disabled={
+                          unavailable || checkBlocked || text.trim().length < 3
+                        }
+                        onClick={() => setPending(true)}
+                      >
+                        {retryPending && !checkBlocked ? t.tryAgain : t.done}
+                      </button>
+                    </>
+                  )}
+                  {/* A recording whose request is still to be retrieved: send it again
+                      without using another try. */}
+                  {mode === "voice" &&
+                    retryPending &&
+                    audio &&
+                    !recording &&
+                    !checkBlocked && (
+                    <button
+                      className="button voice-retry"
+                      // While it waits for the security check, it keeps keyboard focus:
+                      // aria-disabled, not disabled, which would drop focus to the page.
+                      disabled={unavailable && !pending}
+                      aria-disabled={pending || undefined}
+                      onClick={() => {
+                        if (!pending) setPending(true);
+                      }}
+                    >
+                      {t.tryAgain}
+                    </button>
                   )}
                   <button
-                    className="button voice-submit"
-                    disabled={
-                      unavailable ||
-                      !token ||
-                      (mode === "voice" ? !audio : text.trim().length < 3)
+                    className="text-link voice-mode-link"
+                    disabled={busy || recording || loading || pending}
+                    onClick={() =>
+                      switchMode(mode === "voice" ? "text" : "voice")
                     }
-                    onClick={submit}
                   >
-                    Create drafts
-                    <Icon name="arrow" />
+                    {mode === "voice" ? t.typeInstead : t.talkInstead}
                   </button>
                   <p className="voice-fine">
-                    {developerActive
-                      ? "Temporary developer access for this browser. Daily allowances resume when the timer ends. "
-                      : "Three submissions in a rolling 24 hours. Recording and editing do not use a try. Shared-network limits also apply. "}
-                    AI can make mistakes; check every draft. These preview tasks
-                    stay on this page and do not sync to the app.
+                    {developerActive &&
+                      "Temporary developer access for this browser. Daily allowances resume when the timer ends. "}
+                    {t.fine}
                   </p>
                 </div>
               )}
-              {answered && !busy && (
+              {stage === "review" && (
                 <div className="voice-results voice-stage">
-                  <div className="voice-stage-heading">
-                    <p className="voice-result-label">
-                      <Icon name="check" size={16} />
-                      {saved
-                        ? "A LITTLE LIGHTER"
-                        : tasks.length
-                          ? "READY TO REVIEW"
-                          : "NO TASKS YET"}
-                    </p>
-                    <h3 ref={stageHeading} tabIndex={-1}>
-                      {saved
-                        ? "Your preview list"
-                        : tasks.length
-                          ? `${tasks.length} ${tasks.length === 1 ? "draft" : "drafts"}, ready for you.`
-                          : "Let’s give that another go."}
-                    </h3>
-                    <p>
-                      {saved
-                        ? "Try checking one off. That’s one less thing on your mind."
-                        : "A little structure for your thoughts. Check the details or edit anything."}
-                    </p>
-                  </div>
-                  {!tasks.length && (
-                    <p>
-                      No tasks were found. Try describing something you want to
-                      do.
-                    </p>
-                  )}
-                  {saved ? (
-                    tasks.map((task, index) => (
-                      <button
-                        className={`voice-saved-task ${complete.includes(index) ? "is-complete" : ""}`}
-                        key={index}
-                        onClick={() =>
-                          setComplete((values) =>
-                            values.includes(index)
-                              ? values.filter((value) => value !== index)
-                              : [...values, index],
-                          )
-                        }
-                        aria-pressed={complete.includes(index)}
+                  {tasks.length ? (
+                    <>
+                      <h3
+                        className="voice-result-heading"
+                        ref={stageHeading}
+                        tabIndex={-1}
                       >
-                        <span className="voice-task-circle">
-                          {complete.includes(index) && (
-                            <Icon name="check" size={14} />
-                          )}
-                        </span>
-                        <span>
-                          <strong>{task.title}</strong>
-                          <small>{scheduleLabel(task)}</small>
-                          {task.notes && <small>{task.notes}</small>}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <form
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        setSaved(true);
-                      }}
-                    >
-                      <div className="voice-drafts">
+                        {thingsToAdd}
+                      </h3>
+                      <ul className="voice-drafts">
                         {tasks.map((task, index) => (
-                          <div className="voice-task-card" key={index}>
-                            <div className="voice-task-card-topline">
-                              <span>Task {index + 1}</span>
-                              <span
-                                className={`voice-priority voice-priority-${task.priority}`}
-                              >
-                                {task.priority} priority
-                              </span>
-                            </div>
-                            <h4>{task.title || "Untitled task"}</h4>
+                          <li className="voice-task-card" key={index}>
+                            <h4>
+                              <label className="voice-task-toggle">
+                                <input
+                                  type="checkbox"
+                                  checked={checkedTasks.includes(index)}
+                                  onChange={(event) =>
+                                    toggleTask(index, event.target.checked)
+                                  }
+                                />
+                                <span>{task.title}</span>
+                              </label>
+                            </h4>
+                            {allComplete && completionAt === index && (
+                              <div className="voice-completion">
+                                <p className="voice-completion-title">
+                                  <Icon name="leaf" size={24} />
+                                  <span>{t.completionTitle}</span>
+                                </p>
+                                <p className="voice-completion-body">
+                                  {t.completionBody}
+                                </p>
+                              </div>
+                            )}
                             <p className="voice-task-schedule">
-                              <Icon
-                                name={task.date ? "calendar" : "leaf"}
-                                size={16}
-                              />
-                              {scheduleLabel(task)}
+                              <Icon name="calendar" size={16} />
+                              {dateLine(task, formats, t.noDate)}
                             </p>
                             {task.notes && (
                               <p className="voice-task-notes">{task.notes}</p>
                             )}
                             {task.question && (
                               <p className="voice-question">
-                                Check this: {task.question}
+                                {t.checkDetail.replace(
+                                  "{question}",
+                                  task.question,
+                                )}
                               </p>
                             )}
-                            <details className="voice-task-edit">
-                              <summary>Edit task {index + 1}</summary>
-                              <fieldset className="voice-draft">
-                                <legend>Task {index + 1} details</legend>
-                                <label>
-                                  Title
-                                  <input
-                                    required
-                                    onInvalid={(event) => {
-                                      const details =
-                                        event.currentTarget.closest("details");
-                                      if (details) details.open = true;
-                                    }}
-                                    maxLength={120}
-                                    value={task.title}
-                                    onChange={(event) =>
-                                      edit(index, "title", event.target.value)
-                                    }
-                                  />
-                                </label>
-                                <div className="voice-draft-row">
-                                  <label>
-                                    Date <small>optional</small>
-                                    <input
-                                      type="date"
-                                      value={task.date || ""}
-                                      onChange={(event) =>
-                                        edit(index, "date", event.target.value)
-                                      }
-                                    />
-                                  </label>
-                                  <label>
-                                    Time <small>optional</small>
-                                    <input
-                                      type="time"
-                                      disabled={!task.date}
-                                      value={task.time || ""}
-                                      onChange={(event) =>
-                                        edit(index, "time", event.target.value)
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                                <label>
-                                  Priority
-                                  <select
-                                    value={task.priority}
-                                    onChange={(event) =>
-                                      edit(
-                                        index,
-                                        "priority",
-                                        event.target.value,
-                                      )
-                                    }
-                                  >
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                  </select>
-                                </label>
-                                <label>
-                                  Notes
-                                  <textarea
-                                    rows={2}
-                                    maxLength={1500}
-                                    value={task.notes}
-                                    onChange={(event) =>
-                                      edit(index, "notes", event.target.value)
-                                    }
-                                  />
-                                </label>
-                              </fieldset>
-                            </details>
-                          </div>
+                          </li>
                         ))}
-                      </div>
-                      {!!tasks.length && (
-                        <button className="button voice-submit" type="submit">
-                          Add to preview list <Icon name="check" />
-                        </button>
-                      )}
-                    </form>
-                  )}
-                  <div className="voice-result-actions">
-                    {saved ? (
-                      <button
-                        className="text-link"
-                        onClick={() => setSaved(false)}
-                      >
-                        Edit drafts
-                      </button>
-                    ) : (
-                      <button
-                        className="text-link"
-                        disabled={allowanceUsed}
-                        onClick={() => {
-                          setAnswered(false);
-                          setError("");
-                          setRetryPending(false);
-                        }}
-                      >
-                        Edit original thought
-                      </button>
-                    )}
-                    <button
-                      className="text-link"
-                      disabled={allowanceUsed}
-                      onClick={startAgain}
+                      </ul>
+                      <p className="voice-handover">{t.handOver}</p>
+                    </>
+                  ) : (
+                    <h3
+                      className="voice-result-heading voice-message"
+                      ref={stageHeading}
+                      tabIndex={-1}
                     >
-                      Try a new thought <Icon name="arrow" size={16} />
+                      {t.noTasks}
+                    </h3>
+                  )}
+                  {allowanceUsed ? (
+                    <p className="voice-again-later">{triesUsedLine}</p>
+                  ) : mode === "voice" ? (
+                    <button className="button voice-again" onClick={record}>
+                      {t.sayAgain}
                     </button>
-                  </div>
+                  ) : (
+                    <button
+                      className="button voice-again"
+                      onClick={() => {
+                        focusNext.current = "text";
+                        setAnswered(false);
+                        clearCompletion();
+                        setError("");
+                        setRetryPending(false);
+                      }}
+                    >
+                      {t.changeText}
+                    </button>
+                  )}
                   <details className="voice-transcript">
-                    <summary>Your transcript</summary>
+                    <summary>{t.seeWhatISaid}</summary>
                     <p>{transcript}</p>
                   </details>
-                  <p className="voice-fine">
-                    AI can make mistakes. These preview tasks stay on this page
-                    and do not sync to the app.
-                  </p>
+                  <p className="voice-fine">{t.fine}</p>
                 </div>
               )}
-              {allowanceUsed && !busy && (
-                <p className="voice-fine" role="status">
-                  Your allowance returns{" "}
-                  {status.resetAt
-                    ? new Date(status.resetAt).toLocaleString(undefined, {
-                        weekday: "short",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })
-                    : "tomorrow"}
-                  . The sample walkthrough below is always available.
-                </p>
+              {stage === "tries-used" && (
+                <div className="voice-stage">
+                  <h3
+                    className="voice-result-heading voice-message"
+                    ref={stageHeading}
+                    tabIndex={-1}
+                  >
+                    {triesUsedLine}
+                  </h3>
+                  <p className="voice-handover">{t.handOver}</p>
+                </div>
+              )}
+              {/* The security check failed twice: what TaskFlow does, why, and the hand-over. */}
+              {stage === "unverified" && (
+                <div className="voice-off voice-stage">
+                  <VoiceExample language={language} />
+                  {alertBox}
+                  <p className="voice-handover">{t.handOver}</p>
+                </div>
               )}
               {developerTools && status?.developerCode && (
                 <details className="voice-developer-tools">
@@ -842,9 +1099,7 @@ export default function VoiceDemo() {
                     className="text-link"
                     disabled={busy || recording || loading}
                     onClick={() =>
-                      void refresh().catch((reason) =>
-                        setError((reason as Error).message),
-                      )
+                      void refresh().catch(statusFailed)
                     }
                   >
                     Check developer access
@@ -854,6 +1109,8 @@ export default function VoiceDemo() {
             </>
           )}
         </div>
+        {/* WD2's free-plan line, in the closing card's words, under the card in every state. */}
+        <p className="voice-plans">{copy[language].closing.plans}</p>
       </div>
     </section>
   );

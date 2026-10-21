@@ -1,15 +1,28 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SkipLink from "../components/SkipLink";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { copy } from "../content/site";
 import "../styles/global.css";
 import "../styles/voice.css";
+import "../styles/legal.css";
+
+// Manrope (public/fonts, SIL OFL 1.1) cut to Latin and Latin-1 plus the site's
+// punctuation, keeping its weight axis. next/font names the family after this
+// constant. Family names ignore case, so a constant called `manrope` would join
+// global.css's @font-face "Manrope" and fetch its TTF as well.
+const manropeSubset = localFont({
+  src: "./fonts/Manrope-latin.woff2",
+  weight: "200 800",
+  display: "swap",
+});
 
 const site = process.env.SITE_URL ? new URL(process.env.SITE_URL) : undefined;
-const title = "TaskFlow — Make room for a clearer day";
-const description =
-  "A little focus. A little flow. Meet the calm task planner that brings your calendar, priorities, and voice-to-task capture together.";
+// The English home's; every page sets its own.
+const { title, description } = copy.en.meta;
 export const metadata: Metadata = {
   title,
   description,
@@ -18,43 +31,36 @@ export const metadata: Metadata = {
       ? { index: true, follow: true }
       : { index: false, follow: false },
   metadataBase: site || new URL("http://localhost:3000"),
-  alternates: site ? { canonical: "/" } : undefined,
   icons: { icon: "/favicon.svg" },
   openGraph: {
     type: "website",
     siteName: "TaskFlow",
     title,
     description,
-    ...(site ? { url: site } : {}),
   },
   twitter: { card: "summary_large_image", title, description },
 };
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f7f8f2",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f8f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#121c18" },
+  ],
   colorScheme: "light dark",
 };
-const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme')}catch(e){}var dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'dark':'light';})();`;
+// Before first paint: the theme, and the page's language from its path.
+const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme')}catch(e){}var dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'dark':'light';var l=location.pathname.split('/')[1];document.documentElement.lang=l==='es'||l==='ca'?l:'en';})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
-          rel="preload"
-          href="/fonts/Manrope.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body>
+      <body className={manropeSubset.className}>
         <ThemeProvider>
-          <a className="skip-link" href="#main-content">
-            Skip to content
-          </a>
+          <SkipLink />
           <Header />
           <main id="main-content">{children}</main>
           <Footer />

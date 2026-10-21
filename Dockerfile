@@ -9,7 +9,7 @@ ARG SITE_URL
 ARG SITE_INDEXABLE=false
 ENV SITE_URL=$SITE_URL SITE_INDEXABLE=$SITE_INDEXABLE
 COPY . .
-RUN npm run build
+RUN npm run legal:check && npm run build
 
 FROM node:26.11.1-bookworm-slim AS runtime
 WORKDIR /app

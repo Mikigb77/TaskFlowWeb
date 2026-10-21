@@ -1,0 +1,25 @@
+name: taskflow-web
+services:
+  web:
+    build:
+      context: .
+      args:
+        SITE_URL: "http://localhost:${TASKFLOW_WEB_PORT:-3000}"
+        SITE_INDEXABLE: "false"
+        COMMIT_SHA: local
+    ports:
+      - "127.0.0.1:${TASKFLOW_WEB_PORT:-3000}:8080"
+    environment:
+      # Local UI preview; no Cloud credentials or paid AI calls are enabled.
+      VOICE_DEMO_ENABLED: "false"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health/').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped

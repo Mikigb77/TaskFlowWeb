@@ -4,6 +4,26 @@ TaskFlow’s marketing website and the foundation for a future browser app. Buil
 
 ## Run locally
 
+Root `scripts/` contains only two deployment commands, each in PowerShell and Bash:
+
+| Operation | PowerShell 7.2+ | Bash / WSL |
+| --- | --- | --- |
+| Local Docker website | `./scripts/deploy-local.ps1` | `bash scripts/deploy-local.sh` |
+| Website on Cloud Run | `./scripts/deploy-cloud.ps1` | `bash scripts/deploy-cloud.sh` |
+
+Other helpers (edge publishing, voice setup, usage reports and legal checks) live in `scripts/dev/`. The cloud implementation is there too, behind the public `deploy-cloud` command. Paths resolve from the script location, so absolute script paths also work from another directory.
+
+For a production-style local preview using Docker Desktop, with WSL integration enabled:
+
+```bash
+bash scripts/deploy-local.sh --plan  # Print the command; don't start containers
+bash scripts/deploy-local.sh        # Build the current working tree and wait for health
+```
+
+The PowerShell equivalents are `./scripts/deploy-local.ps1 -Plan` and `./scripts/deploy-local.ps1`. Open **http://localhost:3000**. Set `TASKFLOW_WEB_PORT` in your shell to choose another port, for example `TASKFLOW_WEB_PORT=3001 bash scripts/deploy-local.sh`, or `$env:TASKFLOW_WEB_PORT = '3001'` before the PowerShell command. The container binds only to localhost, disables the paid live AI demo and requires no Cloud credentials. Stop it with `docker compose down` from this repository. Local deployment does not affect Cloud Run or the Cloudflare edge.
+
+For development with hot reload, use the existing Node setup instead:
+
 Use Node 22.12 or newer (the existing WSL installation uses Node 26). In WSL:
 
 ```bash
@@ -31,10 +51,17 @@ Dependencies are local to this repository. If you switch between Windows and WSL
 - Theme selection saved in local storage; the initial default follows the operating system.
 - An interactive, editable walkthrough with three sample tasks, completion, and reset.
 - Accessible mobile navigation, keyboard focus styles, native FAQ accordions, reduced-motion support, and a custom 404.
-- Page metadata, generated social preview image, privacy notice for this website, robots.txt, and sitemap.
+- Page metadata, generated social preview image, robots.txt, and sitemap.
+- Privacy, terms, company notice and account-deletion instructions in English, Spanish and Catalan, effective 16 October 2026.
 - Locally bundled Manrope font; its SIL Open Font License is in `public/fonts/OFL.txt`.
 
 The sample walkthrough remains a simulation with a fixed example week. A separate, optional live demo accepts up to 60 seconds of recorded audio or 1,500 characters of text and returns editable task drafts. It supports English, Spanish, and Catalan, multiple tasks, and optional dates/times. Preview edits stay in page memory; nothing syncs to an app account. There is no public app download or paid website plan.
+
+## Legal pages
+
+The current legal documents are at `/privacy/`, `/terms/`, `/legal/` and `/delete-account/`, or their `/es/` and `/ca/` equivalents. They use the supplied company details and an adults-only initial audience. General enquiries use `taskflow@garbar.tech`; support, privacy and account deletion use `taskflow.support@garbar.tech`. These Google Workspace aliases are configured and active. The deletion page explains the app's **Settings → Account → Delete account** flow and offers a translated email request for people who cannot access the app or need help with provider-held data. It describes shared-content handovers, file removal, separate store cancellation and retention exceptions. See [legal document maintenance](docs/LEGAL_RELEASE.md) for implementation evidence and publication instructions.
+
+`npm run legal:check` deliberately fails while required facts or operational reviews are incomplete. Local builds remain available for review; Docker/deployment checks prevent accidentally replacing the public notice with unfinished policies. Passing this check is not legal certification.
 
 ## Browser verification
 
@@ -55,11 +82,23 @@ Run the deployment script from PowerShell **7.2+**, with Git, `tar` and the Goog
 gcloud auth login tech.garbar@gmail.com --no-activate
 
 # Inspect the target and the exact main commit without creating cloud resources.
-pwsh -File scripts/deploy-cloud-run.ps1 -Plan
+pwsh -File scripts/deploy-cloud.ps1 -Plan
 
 # Build and deploy the latest origin/main, then check its public health endpoint.
-pwsh -File scripts/deploy-cloud-run.ps1
+pwsh -File scripts/deploy-cloud.ps1
 ```
+
+From WSL, use the matching Bash entry point:
+
+```bash
+bash scripts/deploy-cloud.sh --help  # Offline help; no Cloud access
+bash scripts/deploy-cloud.sh --plan # Fetch main and check Cloud access; no deployment
+bash scripts/deploy-cloud.sh
+```
+
+The Bash command delegates to the same PowerShell implementation. In WSL it prefers Windows PowerShell 7 and its existing Git/Cloud SDK login, including the standard PowerShell installation when `pwsh.exe` is not on WSL's PATH. Keep Windows interoperability enabled. Native `pwsh` is also supported if Git, tar and the authenticated Cloud SDK are installed in that environment. Failures propagate as nonzero exit codes. Bash options include `--project`, `--account`, `--region`, `--service`, `--site-url`, `--disable-voice` and `--turnstile-site-key`; use `--help` for the full list.
+
+Cloud deployment **enables the live voice demo by default**, using `https://taskflow.garbar.tech`, its configured public Turnstile site key and the existing Secret Manager references. No enable flag or extra options are needed. To intentionally disable the demo, use `./scripts/deploy-cloud.ps1 -DisableVoice` or `bash scripts/deploy-cloud.sh --disable-voice`. The plan prints the selected state before deploying. A different public origin requires explicitly disabling voice, so the protected demo cannot accidentally be exposed on an unprotected preview URL. Local Docker previews continue to keep live AI disabled.
 
 The script always fetches **`origin/main`** and builds a temporary Git archive of that commit. It can be invoked from `dev`: local edits and other branches are never uploaded. Merge the website PR into `main` before deploying. Builds are tagged with the full commit, deployed by immutable image digest, and verified against `/health/`. A failure stops the script; a failed build does not replace the running service.
 
@@ -93,20 +132,28 @@ The custom origin is **https://taskflow.garbar.tech**. A Cloudflare Worker creat
 
 ```powershell
 # One-time infrastructure and free Turnstile widget. Run Wrangler login in WSL first.
-pwsh -File scripts/setup-voice.ps1
-pwsh -File scripts/setup-ai-spend-cap.ps1
+pwsh -File scripts/dev/setup-voice.ps1
+pwsh -File scripts/dev/setup-ai-spend-cap.ps1
 
-# Merge dev into main first. This builds only origin/main.
-pwsh -File scripts/deploy-cloud-run.ps1 -EnableVoice `
-  -SiteUrl https://taskflow.garbar.tech `
-  -TurnstileSiteKey 0x4AAAAAAFSOD8PvA-Wh35pV
+# Merge dev into main first. This builds only origin/main; voice is on by default.
+pwsh -File scripts/deploy-cloud.ps1
 
 # Clean checkout at the same main commit; publishes edge and syncs its secret.
-pwsh -File scripts/deploy-edge.ps1
+pwsh -File scripts/dev/deploy-edge.ps1
 
 # Owner-only usage report using your existing Google Cloud sign-in.
-pwsh -File scripts/voice-stats.ps1
+pwsh -File scripts/dev/voice-stats.ps1
 ```
+
+The same Cloud Run deployment from WSL is:
+
+```bash
+bash scripts/deploy-cloud.sh
+# Only when deliberately turning the demo off:
+bash scripts/deploy-cloud.sh --disable-voice
+```
+
+The default public widget key is `0x4AAAAAAFSOD8PvA-Wh35pV`; override it with `-TurnstileSiteKey` / `--turnstile-site-key` if it changes. The private Turnstile secret stays in Secret Manager. Edge publishing and one-time infrastructure setup remain separate maintenance operations under `scripts/dev/` and are not run automatically by either deployment entry point. To invoke a PowerShell maintenance helper from WSL with the existing Windows login, use `bash scripts/dev/invoke-powershell.sh "$(pwd)/scripts/dev/<helper>.ps1"` followed by its PowerShell arguments.
 
 The site key is public by design. **There is no Gemini API key**: the Node server uses its Cloud Run service identity with Google Application Default Credentials. The three private values (`VOICE_APP_SECRET`, `VOICE_EDGE_SECRET`, and `TURNSTILE_SECRET_KEY`) live in Google Secret Manager; only the origin secret is also stored as a Cloudflare Worker secret. Never put them in `NEXT_PUBLIC_*`, browser code, build arguments, Git, or deployment output.
 
@@ -140,9 +187,9 @@ The public demo stays at **three AI submissions per signed browser per rolling 2
 To test beyond those daily limits, open **https://taskflow.garbar.tech/?developer=1#voice**, open the live demo, and expand **Developer testing** to get that browser's testing code. From an account with Firestore write access in this project:
 
 ```powershell
-pwsh -File scripts/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Minutes 30
+pwsh -File scripts/dev/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Minutes 30
 # End a window early:
-pwsh -File scripts/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Revoke
+pwsh -File scripts/dev/voice-dev-window.ps1 -BrowserCode <browser-testing-code> -Revoke
 ```
 
 Click **Check developer access** in that browser. Its countdown shows the active window. The grant is bound to the signed browser cookie and expires on the server automatically (maximum one hour); changing the URL or knowing the code does not grant access. An owner can grant another browser separately, including a friend's, if needed. The public link requires no developer parameter.

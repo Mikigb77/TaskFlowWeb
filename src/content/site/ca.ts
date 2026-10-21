@@ -133,4 +133,109 @@ export const ca: SiteCopy = {
     plans:
       "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit. TaskFlow Pro, una subscripció mensual: dictats i espai per a fitxers sense límit.",
   },
+  voice: {
+    title: "Prova-ho amb la teva veu",
+    intro:
+      "Digues algunes coses que hagis de fer i quan. Veuràs les tasques que TaskFlow afegiria.",
+    badge: "Aquesta demo: 3 intents al dia, sense registrar-te",
+    speak: "Parla en català, castellà o anglès, fins a un minut.",
+    start: "Prova la demo en directe",
+    noscript: "Activa JavaScript per provar-ho amb la teva veu.",
+    example: {
+      label: "Per exemple, digues:",
+      quote: "«Demà, trucar al dentista i comprar pa.»",
+      heading: "2 coses per afegir",
+      tasks: [
+        { title: "Trucar al dentista", date: "Demà" },
+        { title: "Comprar pa", date: "Demà" },
+      ],
+    },
+    privacy:
+      "El que dius o escrius va a Google només quan toques Fet. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
+    privacyLink: "Com fem servir les teves dades",
+    fine: "Es pot equivocar amb les dates: revisa-les. Res d’això es desa a l’aplicació.",
+    starting: "Un moment…",
+    triesLeft: "{n} de 3 intents disponibles",
+    liveDemo: "Demo en directe",
+    close: "Tanca la demo",
+    heading: "Què t’agradaria recordar?",
+    talk: "Toca per parlar",
+    micHint:
+      "Fins a un minut. El navegador et demanarà fer servir el micròfon.",
+    micWaiting: "Esperant el micròfon…",
+    done: "Fet",
+    tryAgain: "Torna-ho a provar",
+    listening: "S’està escoltant · {time}",
+    listeningStatus: "S’està escoltant",
+    tenSecondsLeft: "Queden 10 segons",
+    understanding: "Entenent…",
+    typeInstead: "Escriu",
+    talkInstead: "Parla",
+    textLabel: "Escriu el que has de fer",
+    textPlaceholder: "Demà, trucar al dentista i comprar pa.",
+    textCount: "{n} / {max} caràcters",
+    textPro:
+      "A l’aplicació, convertir frases escrites en tasques forma part de TaskFlow Pro. Sense Pro, les dius, o afegeixes cada tasca amb un formulari senzill.",
+    micBlocked:
+      "El micròfon està desactivat per a aquesta pàgina. Activa’l a la configuració del navegador per a aquest lloc o escriu.",
+    micMissing:
+      "No trobem cap micròfon en aquest dispositiu. Pots escriure.",
+    micFailed:
+      "El micròfon no respon. Tanca altres aplicacions que el puguin estar fent servir i torna-ho a provar, o escriu.",
+    micUnsupported:
+      "Aquest navegador no pot gravar la teva veu. Pots escriure.",
+    thingsToAdd: { one: "1 cosa per afegir", other: "{n} coses per afegir" },
+    noDate: "Sense data",
+    checkDetail: "Revisa aquesta dada: {question}",
+    completionTitle: "Tot fet. Respira.",
+    completionBody: "Imagina una mica més de calma en el teu dia.",
+    handOver:
+      "A l’aplicació: toca Afegeix una tasca, digues-ho, toca Fet i afegeix-ho al calendari. Molt aviat a Google Play.",
+    sayAgain: "Torna-ho a dir",
+    changeText: "Canvia el text",
+    seeWhatISaid: "Mostra què he dit",
+    noTasks:
+      "No s’ha trobat cap tasca. Les teves paraules es conserven. Ha comptat com un intent.",
+    triesUsed: {
+      onDay:
+        "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar {weekday} a les {time}.",
+      onDayAtOne:
+        "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar {weekday} a la {time}.",
+      today:
+        "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar avui a les {time}.",
+      todayAtOne:
+        "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar avui a la {time}.",
+    },
+    triesUsedLater:
+      "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar més tard.",
+    stillUnderstanding:
+      "Encara ho estic entenent. Pot trigar fins a mig minut.",
+    stopWaiting: "Deixa d’esperar",
+    checkTap: "Toca la comprovació de seguretat de dalt per continuar.",
+    checkFailed:
+      "La comprovació de seguretat no s’ha carregat. Revisa la connexió i toca Torna-ho a provar.",
+    errors: {
+      offline:
+        "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. El que has dit es conserva i tornar-ho a provar no et costarà cap altre intent.",
+      offlineOpening:
+        "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar.",
+      notAnswering:
+        "La demo no respon ara mateix. Torna-ho a provar d’aquí a uns minuts.",
+      timeout:
+        "Està trigant massa. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
+      networkLimit:
+        "Molta gent d’aquesta xarxa ha provat la demo. Torna-ho a provar més tard o des d’una altra connexió.",
+      off: "La demo en directe està aturada de moment. L’exemple de dalt mostra què fa TaskFlow.",
+      unverified:
+        "La comprovació de seguretat no s’ha carregat, així que la demo en directe no pot funcionar aquí. L’exemple de dalt mostra què fa TaskFlow.",
+      invalidDraft:
+        "No ho hem pogut convertir en tasques i ha comptat com un intent. Digues què has de fer i quan.",
+      recording:
+        "No hem pogut sentir l’enregistrament. Torna’l a gravar; no ha comptat com un intent.",
+      processing:
+        "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
+      sayAgain: "Alguna cosa ha fallat. Torna-ho a dir.",
+      empty: "Primer digues o escriu què has de fer.",
+    },
+  },
 };

@@ -596,8 +596,11 @@ h1 {
   grid-row: span 2;
   background: var(--mint);
   padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 .calendar-illustration {
+  flex-grow: 1;
   background: var(--surface);
   padding: 23px 24px 15px;
   border: 1px solid var(--line);

@@ -58,7 +58,7 @@ export const es: SiteCopy = {
     title: "Qué hace TaskFlow",
     calendar: {
       title: "Tu día en un calendario",
-      body: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha: te lo pregunta una vez, la primera vez que añades una.",
+      body: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha: te lo pregunta una sola vez.",
       header: "Esta semana",
       weekdays: ["L", "M", "X", "J", "V", "S", "D"],
       events: [
@@ -68,7 +68,7 @@ export const es: SiteCopy = {
     },
     voice: {
       title: "Di varias cosas a la vez",
-      body: "TaskFlow crea una tarea por cada cosa que dices, con su día y su hora. Revísalas y añádelas todas con un toque.",
+      body: "TaskFlow crea una tarea por cada cosa que dices, con su día y su hora. Revísalas y añádelas todas con un toque. En la app, también puedes mover con la voz todas las tareas de ayer a mañana, o completar muchas a la vez.",
       link: "Pruébalo con tu voz",
     },
     details: {
@@ -101,7 +101,7 @@ export const es: SiteCopy = {
       {
         question: "¿Cómo añado tareas hablando?",
         answer:
-          "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar o eliminar una tarea hablando: TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google para convertirlas en tareas.",
+          "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
       },
       {
         question: "¿Puedo usarla sin conexión?",
@@ -117,6 +117,11 @@ export const es: SiteCopy = {
         question: "¿Puedo guardar notas además de tareas?",
         answer:
           "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+      },
+      {
+        question: "¿Puedo añadir tareas desde la pantalla de inicio o desde WhatsApp?",
+        answer:
+          "Sí. Usa el widget o el acceso directo Dictar una tarea, o comparte un mensaje con TaskFlow desde otra app, como WhatsApp.",
       },
     ],
   },

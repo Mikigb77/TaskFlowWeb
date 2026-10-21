@@ -6,11 +6,16 @@ import type { Page } from "@playwright/test";
 import {
   axeViolations,
   contrast,
+  doubleTextSize,
   expect,
   hexColor,
   homeUrl,
+  hydrated,
+  type Language,
   LANGUAGES,
   parseColor,
+  rootFontSize,
+  scrollsSideways,
   smallestText,
   test,
   THEMES,
@@ -539,7 +544,7 @@ test("WEB-111: the FAQ's heading is ‘Questions’ in the page's language, with
   }
 });
 
-test("WEB-105, WEB-107, WEB-109, WEB-110: the seven questions come in order, and the voice, offline, sharing and notes answers are the app's words", async ({
+test("WEB-105, WEB-107, WEB-109, WEB-110: the eight questions come in order, and the voice, offline, sharing and notes answers are the app's words", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
@@ -626,5 +631,290 @@ for (const theme of THEMES) {
         expect(await axeViolations(page), homeUrl(language)).toEqual([]);
       }
     });
+  });
+}
+
+// ---- Run 2026-10-21-changes, round 1: WP53 (WEB-1001, WEB-1003) and WP57 (WEB-1004, WEB-1005) ----
+// These checks are about the wording itself, so the plan's exact copy is written here.
+
+type Copy = Record<Language, string>;
+
+// WP53: the fourth question is unchanged; its answer names completing and changing many tasks.
+const VOICE_QUESTION: Copy = {
+  en: "How do I add tasks by voice?",
+  es: "¿Cómo añado tareas hablando?",
+  ca: "Com afegeixo tasques parlant?",
+};
+const VOICE_ANSWER: Copy = {
+  en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
+  es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
+  ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
+};
+// WP53: the calendar card's paragraph, without ‘the first time you add one’.
+const CALENDAR_TITLE: Copy = {
+  en: "Your day on one calendar",
+  es: "Tu día en un calendario",
+  ca: "El teu dia en un calendari",
+};
+const CALENDAR_BODY: Copy = {
+  en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date: it asks you once.",
+  es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha: te lo pregunta una sola vez.",
+  ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data: t’ho pregunta una sola vegada.",
+};
+// WP57: the voice card's paragraph gains one sentence; the FAQ gains an eighth item.
+const VOICE_CARD_TITLE: Copy = {
+  en: "Say several things at once",
+  es: "Di varias cosas a la vez",
+  ca: "Digues diverses coses alhora",
+};
+const VOICE_CARD_BODY: Copy = {
+  en: "TaskFlow makes one task for each thing you say, with its day and time. Check them, then add them all with one tap. In the app, you can also move all of yesterday’s tasks to tomorrow by voice, or complete many at once.",
+  es: "TaskFlow crea una tarea por cada cosa que dices, con su día y su hora. Revísalas y añádelas todas con un toque. En la app, también puedes mover con la voz todas las tareas de ayer a mañana, o completar muchas a la vez.",
+  ca: "TaskFlow crea una tasca per cada cosa que dius, amb el dia i l’hora. Revisa-les i afegeix-les totes amb un toc. A l’aplicació, també pots moure amb la veu totes les tasques d’ahir a demà, o completar-ne moltes alhora.",
+};
+const VOICE_CARD_LINK: Copy = {
+  en: "Try it with your voice",
+  es: "Pruébalo con tu voz",
+  ca: "Prova-ho amb la teva veu",
+};
+const WAYS_IN_QUESTION: Copy = {
+  en: "Can I add tasks from my home screen or from WhatsApp?",
+  es: "¿Puedo añadir tareas desde la pantalla de inicio o desde WhatsApp?",
+  ca: "Puc afegir tasques des de la pantalla d’inici o des de WhatsApp?",
+};
+const WAYS_IN_ANSWER: Copy = {
+  en: "Yes. Use the Dictate a task widget or shortcut, or share a message to TaskFlow from another app, such as WhatsApp.",
+  es: "Sí. Usa el widget o el acceso directo Dictar una tarea, o comparte un mensaje con TaskFlow desde otra app, como WhatsApp.",
+  ca: "Sí. Fes servir el giny o la drecera Dicta una tasca, o comparteix un missatge amb TaskFlow des d’una altra aplicació, com WhatsApp.",
+};
+// Wording the round removes, and the app's bulk card, which no home may quote.
+const OLD_VOICE_ANSWER = [
+  "move, change or delete a task",
+  "to be turned into tasks",
+  "mover, cambiar o eliminar una tarea",
+  "para convertirlas en tareas",
+  "moure, canviar o suprimir una tasca",
+  "per convertir-les en tasques",
+];
+const OLD_CALENDAR = ["the first time you add one", "la primera vez que añades una", "la primera vegada que n’afegeixes una"];
+const BULK_CARD = [/Move \d+ tasks/i, /Mover \d+ tareas/i, /como hechas/i, /Mou \d+ tasques/i];
+
+const VOICE_INDEX = 3; // The fourth question.
+const WAYS_IN_INDEX = 7; // The eighth question.
+
+// Sentences end at . ? !; words split on spaces (the plan's rule).
+const sentences = (text: string) =>
+  text
+    .split(/(?<=[.?!])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+const words = (text: string) => text.split(/\s+/).filter(Boolean);
+const longestSentence = (text: string) => Math.max(...sentences(text).map((sentence) => words(sentence).length));
+
+const featureCard = (page: Page, title: string) =>
+  page.locator("#features article", { has: page.getByRole("heading", { level: 3, name: title, exact: true }) });
+
+async function openAnswer(page: Page, index: number) {
+  const item = page.locator("#questions details").nth(index);
+  await item.locator("summary").click();
+  await expect(item).toHaveAttribute("open", "");
+  return item;
+}
+
+// The visible text of the home with every answer open.
+async function homeTextAllOpen(page: Page) {
+  await page.locator("#questions details").evaluateAll((items) => items.forEach((item) => item.setAttribute("open", "")));
+  return page.locator("body").innerText();
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP53 WP57`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1001: the fourth question is unchanged, and its answer names completing and changing tasks, even all of yesterday’s at once (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = page.locator("#questions details").nth(VOICE_INDEX);
+        await expect(item.locator("summary"), homeUrl(language)).toHaveText(VOICE_QUESTION[language]);
+        await openAnswer(page, VOICE_INDEX);
+        const answer = item.locator("p");
+        await expect(answer, homeUrl(language)).toBeVisible();
+        await expect(answer, homeUrl(language)).toHaveText(VOICE_ANSWER[language]);
+      }
+    });
+
+    test(`WEB-1003: the calendar card's paragraph says TaskFlow asks once, not ‘the first time you add one’ (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(featureCard(page, CALENDAR_TITLE[language]).locator("p"), homeUrl(language)).toHaveText([
+          CALENDAR_BODY[language],
+        ]);
+      }
+    });
+
+    test(`WEB-1004: the voice card's paragraph ends with moving all of yesterday’s tasks or completing many, with no quotation marks and its one link to the demo below it (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const voiceCard = featureCard(page, VOICE_CARD_TITLE[language]);
+        const paragraph = voiceCard.locator("p");
+        await expect(paragraph, homeUrl(language)).toHaveText([VOICE_CARD_BODY[language]]);
+        expect(await paragraph.innerText(), `${homeUrl(language)}: quotation marks`).not.toMatch(/[“”«»"]/);
+        const link = voiceCard.getByRole("link");
+        await expect(link, homeUrl(language)).toHaveCount(1);
+        await expect(link, homeUrl(language)).toHaveAccessibleName(VOICE_CARD_LINK[language]);
+        expect(await link.getAttribute("href"), homeUrl(language)).toMatch(/#voice$/);
+        const text = (await paragraph.boundingBox())!;
+        const below = (await link.boundingBox())!;
+        expect(below.y, `${homeUrl(language)}: the link is below the paragraph`).toBeGreaterThanOrEqual(
+          text.y + text.height - 1,
+        );
+      }
+    });
+
+    test(`WEB-1001, WEB-1005: axe reports no violations on the three homes with the fourth and eighth answers open (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await openAnswer(page, VOICE_INDEX);
+        await openAnswer(page, WAYS_IN_INDEX);
+        await expect(page.locator("#questions details[open]")).toHaveCount(2);
+        expect(await axeViolations(page), `${homeUrl(language)} in ${theme}`).toEqual([]);
+      }
+    });
+  });
+}
+
+test("WEB-1001: in the voice answer no sentence runs over 24 words, and the English answer is 85 words or fewer", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const item = await openAnswer(page, VOICE_INDEX);
+    const answer = (await item.locator("p").innerText()).trim();
+    expect(answer, homeUrl(language)).toBe(VOICE_ANSWER[language]);
+    expect(longestSentence(answer), `${homeUrl(language)}: the longest sentence`).toBeLessThanOrEqual(24);
+    if (language === "en") expect(words(answer).length, "the English answer's words").toBeLessThanOrEqual(85);
+  }
+});
+
+test("WEB-1004, WEB-1005: no sentence in the voice card's paragraph or the eighth answer runs over 24 words", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const paragraph = (await featureCard(page, VOICE_CARD_TITLE[language]).locator("p").innerText()).trim();
+    expect(longestSentence(paragraph), `${homeUrl(language)}: the voice card`).toBeLessThanOrEqual(24);
+    const item = await openAnswer(page, WAYS_IN_INDEX);
+    const answer = (await item.locator("p").innerText()).trim();
+    expect(answer, homeUrl(language)).toBe(WAYS_IN_ANSWER[language]);
+    expect(longestSentence(answer), `${homeUrl(language)}: the eighth answer`).toBeLessThanOrEqual(24);
+  }
+});
+
+test("WEB-1001, WEB-1003, WEB-1004: with every answer open, no home has the old voice answer, the old reminder clause or the app's bulk-card wording", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const text = await homeTextAllOpen(page);
+    await expect(page.locator("#questions details[open]")).toHaveCount(8);
+    for (const phrase of [...OLD_VOICE_ANSWER, ...OLD_CALENDAR])
+      expect(text, `${homeUrl(language)}: “${phrase}”`).not.toContain(phrase);
+    for (const pattern of BULK_CARD) expect(text, `${homeUrl(language)}: ${pattern}`).not.toMatch(pattern);
+  }
+});
+
+test("WEB-1005: the FAQ has eight questions, the first seven as before, and the eighth names the home screen and WhatsApp; its answer is 16 px or more", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const summaries = page.locator("#questions details summary");
+    await expect(summaries, homeUrl(language)).toHaveCount(8);
+    await expect(summaries, homeUrl(language)).toHaveText([
+      ...FAQ_ALL.slice(0, 7).map((item) => item.question[language]),
+      WAYS_IN_QUESTION[language],
+    ]);
+    await expect(summaries.nth(VOICE_INDEX), homeUrl(language)).toHaveText(VOICE_QUESTION[language]);
+    const item = await openAnswer(page, WAYS_IN_INDEX);
+    const answer = item.locator("p");
+    await expect(answer, homeUrl(language)).toBeVisible();
+    await expect(answer, homeUrl(language)).toHaveText(WAYS_IN_ANSWER[language]);
+    const size = await answer.evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
+    expect(size, `${homeUrl(language)}: the eighth answer's size`).toBeGreaterThanOrEqual(16);
+  }
+});
+
+// WP57's layout change: the calendar card's drawing reaches the card's bottom edge.
+test("WEB-1004: at 1440, 1000 and 720 px, and at 1440 px with the browser's text doubled, the calendar drawing ends on the card's bottom edge", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Desktop layouts.");
+  const found: string[] = [];
+  for (const { width, text200 } of [
+    { width: 1440, text200: false },
+    { width: 1000, text200: false },
+    { width: 720, text200: false },
+    { width: 1440, text200: true },
+  ]) {
+    await page.setViewportSize({ width, height: 1000 });
+    if (text200) await doubleTextSize(page);
+    for (const language of LANGUAGES) {
+      await page.goto(homeUrl(language));
+      await page.evaluate(() => document.fonts.ready);
+      if (text200) expect(await rootFontSize(page), "the root at 200%").toBe(32);
+      const edge = await page.locator("#features .feature-calendar").evaluate((article) => {
+        const drawing = article.querySelector(".calendar-illustration");
+        return drawing ? article.getBoundingClientRect().bottom - drawing.getBoundingClientRect().bottom : null;
+      });
+      const where = `${homeUrl(language)} at ${width} px${text200 ? ", text 200%" : ""}`;
+      if (edge === null) found.push(`${where}: no calendar drawing`);
+      else if (Math.abs(edge) > 1) found.push(`${where}: the drawing ends ${Math.round(edge)} px above the card's bottom`);
+    }
+  }
+  expect(found).toEqual([]);
+});
+
+// The answers' fit at the narrowest width and with doubled text (the renders open only the first).
+for (const [finding, index, name] of [
+  ["WEB-1001", VOICE_INDEX, "fourth"],
+  ["WEB-1005", WAYS_IN_INDEX, "eighth"],
+] as const) {
+  test(`${finding}: with the ${name} answer open, /es/ and /ca/ don't scroll sideways at 320 × 800`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const language of ["es", "ca"] as const) {
+      await page.goto(homeUrl(language));
+      const item = await openAnswer(page, index);
+      await expect(item.locator("p")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      expect(await scrollsSideways(page), `${homeUrl(language)} at 320 px`).toBe(false);
+    }
+  });
+
+  test(`${finding}: on the phone with the browser's text doubled and the ${name} answer open, no home scrolls sideways`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "The phone (390 × 664).");
+    await doubleTextSize(page);
+    for (const language of LANGUAGES) {
+      await page.goto(homeUrl(language));
+      expect(await rootFontSize(page), `${homeUrl(language)}: the root at 200%`).toBe(32);
+      const item = await openAnswer(page, index);
+      await expect(item.locator("p")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      expect(await scrollsSideways(page), `${homeUrl(language)} at 200% text`).toBe(false);
+    }
   });
 }

@@ -160,32 +160,34 @@ plain("WEB-2: the redirects of the bare address stay on the request's own origin
   }
 });
 
-test("WEB-707: on /es/ and /ca/ the still-English live demo is marked English, and the rest of the home keeps the page's language", async ({
+test("WEB-707: on each home the live demo takes the page's language, with no English mark around it, like the rest of the home", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
     await page.goto(homeUrl(language));
-    const marks = await page.evaluate(() => {
+    const marks = await page.evaluate((pageLanguage) => {
       const closest = (selector: string) =>
         document.querySelector(selector)?.parentElement?.closest("[lang]") ?? null;
       const voice = document.querySelector("#voice");
-      const demoMark = voice?.parentElement?.closest("[lang]") ?? null;
+      // Every element between #voice and <body> that carries lang="en".
+      const englishAround: string[] = [];
+      for (let node = voice?.parentElement ?? null; node && node !== document.body; node = node.parentElement) {
+        if (node.getAttribute("lang") === "en") englishAround.push(node.tagName.toLowerCase());
+      }
       return {
-        voice: demoMark?.getAttribute("lang") ?? null,
-        // The element that marks the demo draws no box of its own (it was a plain section of the page).
-        voiceWrapperDisplay:
-          demoMark && demoMark !== document.documentElement && demoMark.contains(voice)
-            ? getComputedStyle(demoMark).display
-            : null,
+        voice: voice?.getAttribute("lang") ?? null,
+        voiceAncestor: voice?.parentElement?.closest("[lang]")?.getAttribute("lang") ?? null,
+        englishAround: pageLanguage === "en" ? [] : englishAround,
         hero: closest(".hero h1")?.getAttribute("lang") ?? null,
         features: document.querySelector("#features")?.closest("[lang]")?.getAttribute("lang") ?? null,
         questions: document.querySelector("#questions")?.closest("[lang]")?.getAttribute("lang") ?? null,
         closing: document.querySelector("#get-taskflow")?.closest("[lang]")?.getAttribute("lang") ?? null,
       };
-    });
+    }, language);
     expect(marks, homeUrl(language)).toEqual({
-      voice: "en",
-      voiceWrapperDisplay: "contents",
+      voice: language,
+      voiceAncestor: language,
+      englishAround: [],
       hero: language,
       features: language,
       questions: language,
@@ -1293,3 +1295,40 @@ for (const theme of THEMES) {
     });
   });
 }
+
+// ---- Run 2026-10-21-changes, round 1: WP55 (WEB-707's follow-up), the demo's English wrapper is gone ----
+
+test("WEB-707: without JavaScript, the server's HTML for each home marks #voice and everything around it in the page's language, with no lang=\"en\" between #voice and <body>", async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const origin = new URL(baseURL!).origin;
+  await context.route("**/*", (route) =>
+    new URL(route.request().url()).origin === origin ? route.continue() : route.abort(),
+  );
+  const page = await context.newPage();
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    const marks = await page.evaluate(() => {
+      const voice = document.querySelector("#voice");
+      const around: { tag: string; lang: string }[] = [];
+      for (let node = voice?.parentElement ?? null; node && node !== document.body; node = node.parentElement) {
+        const lang = node.getAttribute("lang");
+        if (lang !== null) around.push({ tag: node.tagName.toLowerCase(), lang });
+      }
+      return {
+        voice: voice?.getAttribute("lang") ?? null,
+        english: around.filter(({ lang }) => lang === "en").map(({ tag }) => tag),
+        nearest: around[0]?.lang ?? document.documentElement.getAttribute("lang"),
+      };
+    });
+    expect(marks, url).toEqual({
+      voice: language,
+      english: language === "en" ? marks.english : [],
+      nearest: language,
+    });
+  }
+  await context.close();
+});

@@ -3,6 +3,7 @@
 // the live demo moves under the hero), WP16 (the hero) and WP33 (the header and main half of
 // WEB-6; the held half is in ux-web-frame, ux-web-voice and ux-web-legal). See
 // tests/support/ux-web.ts.
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import {
@@ -155,6 +156,33 @@ for (const theme of THEMES) {
     });
   });
 }
+
+// WEB-5 (run 2026-10-21-changes, WP56): the hero images were rendered from the app again after
+// it dropped the "· 0 completed" count and the "Any time" line under untimed tasks. What the
+// new images show is a render check (home.*.fold.png, opengraph-image*.png); this keeps the
+// files from going back to the 2026-10-19 render that showed those rows. A later re-render
+// from the app (WEB-114, WD13) passes, as long as it keeps the app's 390-point, 2x size.
+const STALE_HERO_SHA256: Record<string, string> = {
+  "en-light": "e47331559943fba13266ecffee9595e85ed6835dfb871f57b3bc86feea9b9923",
+  "en-dark": "45e5ba072b0ad1ee3fcf5c354ea0688246085b57595f51ac9e67e6da6b7ffe0b",
+  "es-light": "3b6cfca584af7d289ecc7ef67189d3285bc8a326076dc11c84912d989fa70579",
+  "es-dark": "8b597c7b9ea8b4325fb330172bae2b5d7ea04d2c28ea1e291f0244508a4acee0",
+  "ca-light": "3d88e7e864c613aa4854cee4771b3798089988a67e800a3ee20cb0e963356c35",
+  "ca-dark": "60706f15605948c6e20316c24063ae3304cafc554b3f86f41a4ca8f14e6c394c",
+};
+
+test("WEB-5: every hero image is a 780 × 1688 app render, not the 2026-10-19 one that showed rows the app removed", async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "a file check: once is enough");
+  for (const language of LANGUAGES)
+    for (const theme of THEMES) {
+      const name = `${language}-${theme}`;
+      const bytes = readFileSync(path.join(ROOT, "public", "images", `hero-calendar-${name}.png`));
+      expect(bytes.subarray(1, 4).toString("latin1"), `${name}: a PNG`).toBe("PNG");
+      expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)], `${name}: size`).toEqual([780, 1688]);
+      const sha = createHash("sha256").update(bytes).digest("hex");
+      expect(sha, `${name}: still the 2026-10-19 render`).not.toBe(STALE_HERO_SHA256[name]);
+    }
+});
 
 // The footer and /privacy/ half of this check proves a held change (WP33, Footer.tsx): it
 // lives in tests/ux-web-frame.spec.ts, so this committed file depends on no held work.

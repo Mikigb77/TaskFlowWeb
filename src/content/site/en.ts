@@ -58,7 +58,7 @@ export const en: SiteCopy = {
     title: "What TaskFlow does",
     calendar: {
       title: "Your day on one calendar",
-      body: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date: it asks you once.",
+      body: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date.",
       header: "This week",
       weekdays: ["M", "T", "W", "T", "F", "S", "S"],
       events: [

@@ -2,6 +2,8 @@
 // loop, run 2026-10-18-site: WP17 (plain headings and true cards), WP18 (the closing card
 // and the first FAQ answers) WP35 (round 2), WP36 (round 3) and WP19 (the FAQ in the app's
 // words). See tests/support/ux-web.ts.
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import type { Page } from "@playwright/test";
 import {
   axeViolations,
@@ -12,6 +14,7 @@ import {
   homeUrl,
   hydrated,
   type Language,
+  ROOT,
   LANGUAGES,
   parseColor,
   rootFontSize,
@@ -650,16 +653,16 @@ const VOICE_ANSWER: Copy = {
   es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
   ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
 };
-// WP53: the calendar card's paragraph, without ‘the first time you add one’.
+// WP53, WP59: the calendar card's paragraph, without ‘the first time you add one’ or ‘it asks you once’.
 const CALENDAR_TITLE: Copy = {
   en: "Your day on one calendar",
   es: "Tu día en un calendario",
   ca: "El teu dia en un calendari",
 };
 const CALENDAR_BODY: Copy = {
-  en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date: it asks you once.",
-  es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha: te lo pregunta una sola vez.",
-  ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data: t’ho pregunta una sola vegada.",
+  en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date.",
+  es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha.",
+  ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data.",
 };
 // WP57: the voice card's paragraph gains one sentence; the FAQ gains an eighth item.
 const VOICE_CARD_TITLE: Copy = {
@@ -696,7 +699,14 @@ const OLD_VOICE_ANSWER = [
   "moure, canviar o suprimir una tasca",
   "per convertir-les en tasques",
 ];
-const OLD_CALENDAR = ["the first time you add one", "la primera vez que añades una", "la primera vegada que n’afegeixes una"];
+// WP59 (WEB-1102): ‘it asks you once’ goes too; reminder plans ask again for tasks two weeks or more away.
+const OLD_ASKS_ONCE = ["it asks you once", "te lo pregunta una sola vez", "t’ho pregunta una sola vegada"];
+const OLD_CALENDAR = [
+  "the first time you add one",
+  "la primera vez que añades una",
+  "la primera vegada que n’afegeixes una",
+  ...OLD_ASKS_ONCE,
+];
 const BULK_CARD = [/Move \d+ tasks/i, /Mover \d+ tareas/i, /como hechas/i, /Mou \d+ tasques/i];
 
 const VOICE_INDEX = 3; // The fourth question.
@@ -746,7 +756,7 @@ for (const theme of THEMES) {
       }
     });
 
-    test(`WEB-1003: the calendar card's paragraph says TaskFlow asks once, not ‘the first time you add one’ (${theme})`, async ({
+    test(`WEB-1003, WEB-1102: the calendar card's paragraph says TaskFlow can remind you of tasks with a date, with no ‘the first time you add one’ and no ‘it asks you once’ (${theme})`, async ({
       page,
     }) => {
       for (const language of LANGUAGES) {
@@ -916,5 +926,83 @@ for (const [finding, index, name] of [
       await page.evaluate(() => document.fonts.ready);
       expect(await scrollsSideways(page), `${homeUrl(language)} at 200% text`).toBe(false);
     }
+  });
+}
+
+// ---- Run 2026-10-22-changes, round 1: WP59 (WEB-1102) ----
+// The calendar card's paragraph is CALENDAR_BODY above, pinned in both themes by
+// "WEB-1003, WEB-1102: the calendar card's paragraph says …" and by "each feature card says what
+// the app does"; "with every answer open, no home has … the old reminder clause" covers
+// OLD_ASKS_ONCE through OLD_CALENDAR. The card layout is pinned by the WEB-705 and WEB-1004 tests.
+
+test("WEB-1102: no file under src/ says the app asks about reminders only once", () => {
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(file);
+      else if (/\.(tsx?|jsx?|css|json|mdx?)$/.test(entry.name)) {
+        const text = readFileSync(file, "utf8");
+        for (const phrase of OLD_ASKS_ONCE)
+          if (text.includes(phrase)) found.push(`${path.relative(ROOT, file)}: “${phrase}”`);
+      }
+    }
+  };
+  walk(path.join(ROOT, "src"));
+  expect(found).toEqual([]);
+});
+
+test("WEB-1102: the calendar card's paragraph ends at ‘with a date.’, with nothing after it, in every language", async ({
+  page,
+}) => {
+  const ENDS: Copy = {
+    en: "TaskFlow can remind you of tasks with a date.",
+    es: "TaskFlow puede recordarte las tareas con fecha.",
+    ca: "TaskFlow et pot recordar les tasques amb data.",
+  };
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    const paragraph = (await featureCard(page, CALENDAR_TITLE[language]).locator("p").innerText()).trim();
+    expect(paragraph.endsWith(ENDS[language]), `${homeUrl(language)}: “${paragraph}”`).toBe(true);
+    expect(paragraph, homeUrl(language)).not.toContain(":");
+    if (language === "en") expect(words(paragraph).length, "the English paragraph's words").toBe(27);
+  }
+});
+
+test("WEB-1102: /es/ and /ca/ don't scroll sideways at 320 × 800", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of ["es", "ca"] as const) {
+    await page.goto(homeUrl(language));
+    await featureCard(page, CALENDAR_TITLE[language]).scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), `${homeUrl(language)} at 320 px`).toBe(false);
+  }
+});
+
+test("WEB-1102: on the phone with the browser's text doubled, no home scrolls sideways", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone (390 × 664).");
+  await doubleTextSize(page);
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    expect(await rootFontSize(page), `${homeUrl(language)}: the root at 200%`).toBe(32);
+    await featureCard(page, CALENDAR_TITLE[language]).scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), `${homeUrl(language)} at 200% text`).toBe(false);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP59`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1102: axe reports no violations on the three homes (${theme})`, async ({ page }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(featureCard(page, CALENDAR_TITLE[language]).locator("p")).toHaveText([CALENDAR_BODY[language]]);
+        expect(await axeViolations(page), `${homeUrl(language)} in ${theme}`).toEqual([]);
+      }
+    });
   });
 }

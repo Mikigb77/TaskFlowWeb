@@ -653,16 +653,16 @@ const VOICE_ANSWER: Copy = {
   es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
   ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
 };
-// WP53, WP59: the calendar card's paragraph, without ‘the first time you add one’ or ‘it asks you once’.
+// WP53, WP59, WP60: the calendar card's paragraph, without ‘the first time you add one’ or ‘it asks you once’, and with reminders that come more and more often.
 const CALENDAR_TITLE: Copy = {
   en: "Your day on one calendar",
   es: "Tu día en un calendario",
   ca: "El teu dia en un calendari",
 };
 const CALENDAR_BODY: Copy = {
-  en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date.",
-  es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha.",
-  ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data.",
+  en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
+  es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
+  ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
 };
 // WP57: the voice card's paragraph gains one sentence; the FAQ gains an eighth item.
 const VOICE_CARD_TITLE: Copy = {
@@ -756,7 +756,7 @@ for (const theme of THEMES) {
       }
     });
 
-    test(`WEB-1003, WEB-1102: the calendar card's paragraph says TaskFlow can remind you of tasks with a date, with no ‘the first time you add one’ and no ‘it asks you once’ (${theme})`, async ({
+    test(`WEB-1003, WEB-1102, WEB-1103: the calendar card's paragraph says TaskFlow can remind you of tasks with a date, more and more often as the day gets closer, with no ‘the first time you add one’ and no ‘it asks you once’ (${theme})`, async ({
       page,
     }) => {
       for (const language of LANGUAGES) {
@@ -952,20 +952,20 @@ test("WEB-1102: no file under src/ says the app asks about reminders only once",
   expect(found).toEqual([]);
 });
 
-test("WEB-1102: the calendar card's paragraph ends at ‘with a date.’, with nothing after it, in every language", async ({
+test("WEB-1102, WEB-1103: the calendar card's paragraph ends with reminders that come more and more often as the day gets closer, with no colon, in every language", async ({
   page,
 }) => {
   const ENDS: Copy = {
-    en: "TaskFlow can remind you of tasks with a date.",
-    es: "TaskFlow puede recordarte las tareas con fecha.",
-    ca: "TaskFlow et pot recordar les tasques amb data.",
+    en: "TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
+    es: "TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
+    ca: "TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
   };
   for (const language of LANGUAGES) {
     await page.goto(homeUrl(language));
     const paragraph = (await featureCard(page, CALENDAR_TITLE[language]).locator("p").innerText()).trim();
     expect(paragraph.endsWith(ENDS[language]), `${homeUrl(language)}: “${paragraph}”`).toBe(true);
     expect(paragraph, homeUrl(language)).not.toContain(":");
-    if (language === "en") expect(words(paragraph).length, "the English paragraph's words").toBe(27);
+    if (language === "en") expect(words(paragraph).length, "the English paragraph's words").toBe(36);
   }
 });
 
@@ -1006,3 +1006,280 @@ for (const theme of THEMES) {
     });
   });
 }
+
+// ---- Run 2026-10-22-changes, plan 2: WP60 (WEB-1103, WEB-1104) ----
+// These checks are about the wording itself, so the brief's exact copy is written here.
+// WEB-1103's paragraph is CALENDAR_BODY above, pinned in both themes by "WEB-1003, WEB-1102,
+// WEB-1103: the calendar card's paragraph says …", by "each feature card says what the app does"
+// and, for its ending, its lack of a colon and its 36 English words, by "WEB-1102, WEB-1103: … ends
+// with reminders". The card layout stays pinned by the WEB-705 and WEB-1004 tests, and WD2's line by
+// "the closing card says it's coming soon …" and tests/ux-web-voice.spec.ts.
+
+const FREE_INDEX = 1; // The second question, ‘Is TaskFlow free?’.
+const FREE_QUESTION: Copy = {
+  en: "Is TaskFlow free?",
+  es: "¿TaskFlow es gratis?",
+  ca: "TaskFlow és gratuït?",
+};
+const FREE_ANSWER: Copy = {
+  en: "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+  es: "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+  ca: "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+};
+const FREE_REMINDERS: Copy = {
+  en: "Reminders are free too, even the ones that come more and more often as the day gets closer.",
+  es: "Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
+  ca: "Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
+};
+const PRO_SECOND: Copy = {
+  en: "It also turns sentences you type into tasks, and lets you ask for reminders in your own words.",
+  es: "Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras.",
+  ca: "A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules.",
+};
+const UNLIMITED: Copy = {
+  en: "unlimited dictation and file space",
+  es: "dictado y espacio para archivos ilimitados",
+  ca: "dictat i espai per a fitxers il·limitats",
+};
+const OWN_WORDS: Copy = {
+  en: "reminders in your own words",
+  es: "los recordatorios con tus palabras",
+  ca: "els recordatoris amb les teves paraules",
+};
+const PRICE: Copy = {
+  en: "Its price isn’t set yet.",
+  es: "Su precio aún no está decidido.",
+  ca: "El preu encara no està decidit.",
+};
+// The Pro sentence was 38, 42 and 44 words; no sentence of the answer may now pass 30, 33 or 34.
+const LONGEST_SENTENCE: Record<Language, number> = { en: 30, es: 33, ca: 34 };
+// The app's reminder-sheet names, which the site mustn't quote while the app's D1–D7 round runs.
+const SHEET_NAMES = [
+  "Your way",
+  "A tu manera",
+  "A la teva manera",
+  "Until the deadline",
+  "Hasta la fecha límite",
+  "Fins al termini",
+  "Gentle",
+  "Intense",
+  "Suave",
+  "Intenso",
+  "Suau",
+  "Intens",
+];
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP60`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1104: ‘Is TaskFlow free?’ is still the second question, and its answer says reminders are free and Pro adds reminders in your own words (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        const where = homeUrl(language);
+        await page.goto(where);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = page.locator("#questions details").nth(FREE_INDEX);
+        await expect(item.locator("summary"), where).toHaveText(FREE_QUESTION[language]);
+        await openAnswer(page, FREE_INDEX);
+        const answer = item.locator("p");
+        await expect(answer, where).toBeVisible();
+        await expect(answer, where).toHaveText(FREE_ANSWER[language]);
+        const text = (await answer.innerText()).trim();
+        const free = text.indexOf(FREE_REMINDERS[language]);
+        const pro = text.indexOf("TaskFlow Pro");
+        expect(free, `${where}: the free reminders sentence`).toBeGreaterThan(-1);
+        expect(free, `${where}: free reminders come before the first ‘TaskFlow Pro’`).toBeLessThan(pro);
+        // WD14's parenthesis directly follows the unlimited clause, and ends the Pro sentence.
+        const parenthesis = text.indexOf(`${UNLIMITED[language]} (`);
+        expect(parenthesis, `${where}: “${UNLIMITED[language]} (”`).toBeGreaterThan(pro);
+        const closes = text.indexOf(")", parenthesis);
+        expect(text.slice(closes, closes + 2), `${where}: the Pro sentence ends at the parenthesis`).toBe(").");
+        const ownWords = text.indexOf(OWN_WORDS[language]);
+        expect(ownWords, `${where}: “${OWN_WORDS[language]}” after the parenthesis`).toBeGreaterThan(closes);
+        expect(sentences(text), `${where}: Pro's second sentence`).toContain(PRO_SECOND[language]);
+        expect(text.endsWith(PRICE[language]), `${where}: ends with the price sentence`).toBe(true);
+      }
+    });
+
+    test(`WEB-1104: axe reports no violations on the three homes with the second answer open (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = await openAnswer(page, FREE_INDEX);
+        await expect(item.locator("p")).toHaveText(FREE_ANSWER[language]);
+        await expect(page.locator("#questions details[open]")).toHaveCount(1);
+        expect(await axeViolations(page), `${homeUrl(language)} in ${theme}`).toEqual([]);
+      }
+    });
+  });
+}
+
+test("WEB-1104: no sentence of the free answer passes the old Pro sentence's limit, and its two new sentences are 24 words or fewer", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const item = await openAnswer(page, FREE_INDEX);
+    const answer = (await item.locator("p").innerText()).trim();
+    expect(answer, where).toBe(FREE_ANSWER[language]);
+    expect(longestSentence(answer), `${where}: the longest sentence`).toBeLessThanOrEqual(LONGEST_SENTENCE[language]);
+    for (const added of [FREE_REMINDERS[language], PRO_SECOND[language]]) {
+      expect(sentences(answer), `${where}: “${added}” is a sentence of its own`).toContain(added);
+      expect(words(added).length, `${where}: “${added}”`).toBeLessThanOrEqual(24);
+    }
+  }
+});
+
+test("WEB-1103, WEB-1104: with every answer open, outside the live demo, no home quotes the app's reminder-sheet names, and WD2's line has no reminders", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    await page
+      .locator("#questions details")
+      .evaluateAll((items) => items.forEach((item) => item.setAttribute("open", "")));
+    await expect(page.locator("#questions details:not([open])")).toHaveCount(0);
+    const found = await page.locator("body").evaluate((body) => {
+      const voice = body.querySelector("#voice");
+      const outside = (node: Node) => !voice || !voice.contains(node);
+      const texts: string[] = [];
+      const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const parent = node.parentElement;
+        if (parent && /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE)$/.test(parent.tagName)) continue;
+        if (outside(node) && node.textContent?.trim()) texts.push(node.textContent);
+      }
+      for (const element of Array.from(body.querySelectorAll("[alt], [aria-label], [title], [placeholder]")))
+        if (outside(element))
+          for (const name of ["alt", "aria-label", "title", "placeholder"]) {
+            const value = element.getAttribute(name);
+            if (value) texts.push(value);
+          }
+      return texts.join(" \n ");
+    });
+    for (const name of SHEET_NAMES) expect(found, `${where}: “${name}”`).not.toContain(name);
+    await expect(page.locator("#get-taskflow").getByText(CLOSING.plans[language], { exact: true }), where).toBeVisible();
+    expect(CLOSING.plans[language], `${where}: WD2's line`).not.toMatch(/remind|recordator/i);
+  }
+});
+
+test("WEB-1104: with the second answer open, /es/ and /ca/ don't scroll sideways at 320 × 800", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of ["es", "ca"] as const) {
+    await page.goto(homeUrl(language));
+    const item = await openAnswer(page, FREE_INDEX);
+    await expect(item.locator("p")).toHaveText(FREE_ANSWER[language]);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), `${homeUrl(language)} at 320 px`).toBe(false);
+  }
+});
+
+test("WEB-1104: on the phone with the browser's text doubled and the second answer open, no home scrolls sideways", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone (390 × 664).");
+  await doubleTextSize(page);
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    expect(await rootFontSize(page), `${homeUrl(language)}: the root at 200%`).toBe(32);
+    const item = await openAnswer(page, FREE_INDEX);
+    await expect(item.locator("p")).toHaveText(FREE_ANSWER[language]);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), `${homeUrl(language)} at 200% text`).toBe(false);
+  }
+});
+
+// ---- Run 2026-10-22-changes, plan 2, round 2: WP61 (WEB-1105) ----
+// The calendar card's paragraph is CALENDAR_BODY above, pinned word for word by WP60's tests; its
+// layout stays pinned by the WEB-705 and WEB-1004 tests. Here: its last line holds two words or
+// more, and the four cards' paragraphs wrap with text-wrap: pretty at the same size as before.
+
+// The words on a paragraph's last line: each word's box measured with a Range, counted when its
+// top is within 2 px of the last word's top.
+async function lastLineWords(page: Page, title: string) {
+  return featureCard(page, title)
+    .locator("p")
+    .evaluate((paragraph) => {
+      const boxes: { word: string; top: number }[] = [];
+      const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent ?? "";
+        for (const match of text.matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          const rects = [...range.getClientRects()].filter((rect) => rect.width > 0);
+          if (rects.length) boxes.push({ word: match[0], top: rects[rects.length - 1].top });
+        }
+      }
+      const last = boxes[boxes.length - 1];
+      return boxes.filter((box) => Math.abs(box.top - last.top) <= 2).map((box) => box.word);
+    });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP61`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1105: the calendar card's paragraph ends on a line of two words or more, in every language (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page.evaluate(() => document.fonts.ready);
+        const paragraph = featureCard(page, CALENDAR_TITLE[language]).locator("p");
+        await expect(paragraph).toHaveText([CALENDAR_BODY[language]]);
+        const words = await lastLineWords(page, CALENDAR_TITLE[language]);
+        expect(
+          words.length,
+          `${homeUrl(language)} on ${testInfo.project.name} (${page.viewportSize()?.width} px): last line «${words.join(" ")}»`,
+        ).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
+}
+
+// The paragraphs' widths before this round: the calendar card's 24rem from `.feature-card p`, and the
+// other cards' own limits, which WP61 doesn't touch (voice 21rem, details 26rem, offline 32rem, or
+// 26rem at 800 px and below).
+const CARD_TEXT_WIDTH = {
+  desktop: ["384px", "336px", "416px", "512px"],
+  mobile: ["384px", "336px", "416px", "416px"],
+};
+
+test("WEB-1105: the four feature cards' paragraphs wrap with text-wrap: pretty, at 16 px and line height 1.7, with their widths unchanged", async ({
+  page,
+}, testInfo) => {
+  const widths = CARD_TEXT_WIDTH[testInfo.project.name as keyof typeof CARD_TEXT_WIDTH];
+  for (const language of LANGUAGES) {
+    await page.goto(homeUrl(language));
+    await page.evaluate(() => document.fonts.ready);
+    const styles = await page.locator("#features article p").evaluateAll((paragraphs) =>
+      paragraphs.map((paragraph) => {
+        const style = getComputedStyle(paragraph);
+        return {
+          wrap: style.getPropertyValue("text-wrap-style") || style.getPropertyValue("text-wrap"),
+          fontSize: style.fontSize,
+          lineHeight: style.lineHeight,
+          maxWidth: style.maxWidth,
+        };
+      }),
+    );
+    expect(styles, `${homeUrl(language)}: one paragraph per card`).toHaveLength(4);
+    for (const [index, style] of styles.entries()) {
+      const where = `${homeUrl(language)} ${FEATURES.cards[index].title[language]}`;
+      expect(style.wrap, `${where}: text-wrap`).toContain("pretty");
+      expect(style.fontSize, `${where}: font size`).toBe("16px");
+      expect(parseFloat(style.lineHeight), `${where}: line height`).toBeCloseTo(16 * 1.7, 1);
+      expect(style.maxWidth, `${where}: max-width`).toBe(widths[index]);
+    }
+  }
+});

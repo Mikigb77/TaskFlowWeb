@@ -281,7 +281,7 @@ function writeIndex() {
     "",
     hasWebkit
       ? "`<page>.<language>.mobile-webkit.<light|dark>.fold.png`: the first viewport of every page in Playwright's WebKit with the iPhone 13 profile (390 × 664 at 3×). It's Safari's engine, built for Linux, not Safari on an iPhone, so iOS's own scrolling, toolbars and fonts are still a device check."
-      : "No WebKit renders: Playwright's WebKit isn't installed in WSL. `npx playwright install webkit` would add them to the next run, once WebKit's system libraries are installed too (on Ubuntu, `sudo npx playwright install-deps webkit`; WSL here runs Kali, where they have to be installed by hand). Safari on a real iPhone stays a device check either way.",
+      : "No WebKit renders from WSL: Playwright's WebKit can't run in this Kali WSL. They're made from Windows instead, after this run: `webkit/` holds every page in WebKit (iPhone 13 and desktop, light and dark), with its own `webkit/INDEX.md` (`.claude/skills/ux-web/scripts/webkit_renders.py`, the skill's §4). Safari on a real iPhone stays a device check either way.",
     "",
     "## The audit",
     "",

@@ -14,3 +14,9 @@ playwright-report
 .dev.vars*
 .wrangler
 !.env.example
+# The coding agents' setup and the UX loop's records: not part of the site.
+.claude
+.agents
+.codex
+AGENTS.md
+CLAUDE.md

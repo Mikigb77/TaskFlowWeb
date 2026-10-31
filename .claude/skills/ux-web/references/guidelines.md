@@ -1,6 +1,6 @@
 # TaskFlow website UX guidelines
 
-The evidence base for `web-ux-reviewer`. It turns research, standards and platform rules into short rules you can check on a render or in the website's code (`../TaskFlowWeb`). The app's equivalent is `../TaskFlow/.claude/ux-review/GUIDELINES.md`; where both cite the same source, the keys match.
+The evidence base for `web-ux-reviewer`. It turns research, standards and platform rules into short rules you can check on a render or in the website's code (this repo). The app's equivalent is `../TaskFlow/.claude/skills/ux/references/guidelines.md`; where both cite the same source, the keys match.
 
 - **Verified:** 2026-10-18. Sources were fetched that day unless an entry is marked. Platform rules and laws change; re-check one before quoting it in a policy or legal question.
 - **The bar:** the Newcomer — 60 or older, Spanish or Catalan, on an Android phone, arriving from a link shared on WhatsApp, non-technical, wary of being tricked into paying or giving data away. In October 2026 the owner's father couldn't create a task in the app.

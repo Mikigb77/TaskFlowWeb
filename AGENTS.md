@@ -37,7 +37,7 @@ Record lasting owner decisions about the site in `.claude/ux-web/DECISIONS.md`. 
 ## Layout
 
 - `src/app/` — the pages: the home, the legal pages and the account-deletion page, in each language; `src/app/api/` and `health/` are the server's own.
-- `src/components/` — the page parts, the header and footer, and both demos (`TaskDemo.tsx`, `VoiceDemo.tsx`).
+- `src/components/` — the page parts: the home page (`HomePage.tsx`, which `src/app/` renders in each language), the header and footer, and the live voice demo (`VoiceDemo.tsx`, with its static `VoiceExample.tsx` where it can't run).
 - `src/content/` — all the copy: `site/` and `legal/`, per language.
 - `src/styles/`, `public/` (images, fonts), `src/lib/voice/` (the live demo's limits and recording).
 - `tests/` — Playwright and unit tests. `ux-web-*.spec.ts` are the loop's; `ux-renders.spec.ts` writes `artifacts/ux-web/` with `UX_RENDERS=1`.

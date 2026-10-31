@@ -1,5 +1,5 @@
 // Renders and the measured audit for TaskFlow's UX web loop (/ux-web); see
-// TaskFlow/.claude/ux-web/README.md.
+// .claude/skills/ux-web/references/loop.md.
 //
 // Off unless UX_RENDERS=1, so `npm test` only lists one skipped placeholder per project.
 // Run from the repo root in WSL, after a build: the Playwright config serves the last

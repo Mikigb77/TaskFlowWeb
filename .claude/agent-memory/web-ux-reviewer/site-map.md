@@ -12,7 +12,7 @@ Snapshot 2026-10-22 (after run 2026-10-21-changes; 2026-10-22-changes changed on
 - `#features` (cards: voice, calendar/reminders — `.feature-calendar` is a flex column and `.calendar-illustration` grows to the card bottom (WEB-1004; at desktop text200 the week panel shows ~460 px blank, accepted), notes/checklist/files, offline as a full-width card)
 - live voice demo `#voice` (`VoiceDemo.tsx`, static fallback `VoiceExample.tsx`; plans block `.voice-plans` inside the section; `?developer=1` shows English-only developer text, not visitor-facing)
 - FAQ `#questions` (8 items: download yet, free, account, voice, offline, family, notes, home screen/WhatsApp); closing `#get-taskflow` (lime button → `#voice`)
-- `TaskDemo.tsx` (sample walkthrough) no longer exists; the agent prompt still names it.
+- `TaskDemo.tsx` (the sample walkthrough) was removed in 2026-10-18-site.
 - Other components: `Header`, `Footer` (back-to-top → `#main-content`, company name GARBAR), `LanguageSwitch` (cookie `taskflow-lang`, 1 year), `SkipLink`, `NotFoundPage`, `useSiteLanguage`. Language routing in `src/proxy.ts` (cookie, then Accept-Language).
 - Hero screenshots: `public/images/hero-calendar-{en,es,ca}-{light,dark}.png` (one per language and theme), copied from the app's renders (see [[site-patterns]]); also drawn in `opengraph-image.<lang>.png`.
 

@@ -57,8 +57,8 @@ Map the named pages, journeys or areas to areas with the table. The scope is tho
 
 ### site
 Use all four areas, with the full scope from the table. The largest, H, gets two reviewers (owner, 2026-10-21), so five review side by side:
-- **H1 · The pitch:** the hero, the "at a glance" bar, the appearance section, the closing call to action, and every call to action and where it leads.
-- **H2 · The demos:** both demos in every state (idle, recording, microphone denied, waiting, result, error, allowance used, no JavaScript).
+- **H1 · The pitch:** the hero, the closing call to action, and every call to action and where it leads.
+- **H2 · The demo:** the live demo in every state (idle, recording, microphone denied, waiting, result, error, allowance used), and its static example (no JavaScript).
 - **F**, **L** and **G** as in the table.
 
 Packages still take the letter H; the workflow tells the organizer.
@@ -67,14 +67,15 @@ Packages still take the letter H; the workflow tells the organizer.
 
 | Area | Name | Files | Journeys to walk (site mode) |
 |---|---|---|---|
-| H | Home and hero, the value proposition, demos and calls to action | `src/app/page.tsx` (hero, the "at a glance" bar, the demo sections, appearance, closing call to action), `src/components/TaskDemo.tsx`, `VoiceDemo.tsx`, `Phone.tsx`, `src/styles/voice.css`, `src/lib/voice/policy.ts` and `recorder.ts` (the limits and recording a visitor feels), `public/images/`, `public/audio-capture.js` | first visit to wanting it, on a phone in Spanish and on desktop in English; both demos in every state (idle, recording, microphone denied, waiting, result, error, allowance used, no JavaScript); every call to action and where it leads |
-| F | Features and faithfulness, the funnel to download and Pro, pricing | `src/app/page.tsx` (features, FAQ, and anything about downloading, pricing or Pro), `src/components/Phone.tsx` and `public/images/` (the app as shown), checked against the app-side sources (`ux-web.sh app` lists the ones that changed) | from wanting it to getting it, honestly, while Google Play isn't published; free and Pro against the app; the claims inventory for the whole site; app features the site doesn't tell |
+| H | Home and hero, the value proposition, demos and calls to action | `src/components/HomePage.tsx` (the hero, the live demo and the closing call to action), `VoiceDemo.tsx` and `VoiceExample.tsx` (its static example, shown without JavaScript and wherever the live demo can't run), `Phone.tsx`, `src/styles/voice.css`, `src/lib/voice/policy.ts` and `recorder.ts` (the limits and recording a visitor feels), `public/images/`, `public/audio-capture.js` | first visit to wanting it, on a phone in Spanish and on desktop in English; the live demo in every state (idle, recording, microphone denied, waiting, result, error, allowance used) and its static example (no JavaScript); every call to action and where it leads |
+| F | Features and faithfulness, the funnel to download and Pro, pricing | `src/components/HomePage.tsx` (the features, the questions, and anything about downloading, pricing or Pro), `src/components/Phone.tsx` and `public/images/` (the app as shown), checked against the app-side sources (`ux-web.sh app` lists the ones that changed) | from wanting it to getting it, honestly, while Google Play isn't published; free and Pro against the app; the claims inventory for the whole site; app features the site doesn't tell |
 | L | Legal, privacy, terms, delete-account and trust | `src/app/{privacy,terms,legal,delete-account}/page.tsx`, `src/app/[language]/[document]/page.tsx`, `src/components/LegalPage.tsx`, `src/content/legal/`, `src/styles/legal.css` | trust: who runs TaskFlow, privacy, terms and contact, from the home page and from the app's links; deleting an account from Google Play's link, a search and the app, in each language; the legal pages' claims against the app and `../TaskFlow/Backend/docs/ACCOUNT_DELETION.md` |
 | G | Global: navigation, header and footer, language switching, performance, accessibility, SEO and meta, light and dark | `src/app/layout.tsx`, `not-found.tsx`, `opengraph-image.tsx`, `robots.ts`, `sitemap.ts`, `src/components/Header.tsx`, `Footer.tsx`, `ThemeProvider.tsx`, `Icon.tsx`, `src/styles/global.css` (tokens, base, header, footer, buttons), `public/fonts/`, `public/favicon.svg`, `next.config.ts` | a wrong URL, a language switch and the way back; navigation on phone and desktop; every page at 320 px and at text 200%, by keyboard and screen reader, in light and dark; titles, descriptions, link previews, `lang` and `hreflang` for every page and language |
 
 Shared files:
-- `src/app/page.tsx` belongs to H for the hero, the demo sections, the appearance section and the closing call to action, and to F for the features and the FAQ. When a diff touches both, both.
-- `src/styles/global.css` belongs to the area of the selectors the diff touches (`.hero`, `.demo-`, `.voice-`, `.appearance-`, `.closing-` → H; `.feature-`, `.faq-` → F; tokens, base, `.site-header`, `.site-footer`, `.button` → G). If unclear, G.
+- `src/components/HomePage.tsx` belongs to H for the hero, the live demo and the closing call to action, and to F for the features and the questions. When a diff touches both, both. `src/app/page.tsx` and `src/app/[language]/page.tsx` only render it, with the home's metadata: G.
+- `src/content/site/{en,es,ca}.ts` belongs to the areas of the keys the diff touches: `hero`, `voice` and `closing` → H; `features` and `faq` → F; `frame`, `meta` and `notFound` → G. `src/content/legal/` is L.
+- `src/styles/global.css` belongs to the area of the selectors the diff touches (`.hero`, `.closing-` → H; `.feature-`, `.faq-` → F; tokens, base, `.site-header`, `.site-footer`, `.button`, `.appearance-` (the theme switch) → G). If unclear, G.
 - `src/components/Phone.tsx` and `public/images/` belong to H and F.
 - `src/app/layout.tsx`, `Header.tsx` and `Footer.tsx` show on every page: G, plus L when the legal pages' language or trust links are affected.
 - A new file belongs to the area it fits by what it shows.
@@ -98,7 +99,7 @@ WSL: rm -rf artifacts/ux-web && UX_RENDERS=1 npx playwright test tests/ux-render
 - Everything lands in `artifacts/ux-web/` (git ignores `artifacts/`), and its `INDEX.md` explains every file:
   - every public page, in each language it exists in, on desktop (1440 × 1000) and mobile (iPhone 13 in Chromium, 390 × 664), in light and dark: a first-viewport PNG and a full-page PNG with a magenta line at the fold;
   - the same pages with the browser's text size doubled (`text200`), at 200% zoom (`zoom200`) and 320 px wide (`w320`);
-  - every state of both demos on the home page, with the voice API stubbed and never called: recording, microphone refused, waiting, the timeout, results, every error the API sends, the sample walkthrough, and more;
+  - every state of the live demo on the home page, with the voice API stubbed and never called: recording, microphone refused, waiting, the timeout, results, every error the API sends, and more;
   - the home without JavaScript, the phone menu open, an FAQ answer open;
   - `AUDIT.md` and `audit.json`, the measured audit: axe, target sizes, text sizes, contrast, what a screen reader gets (with `aria/`), the keyboard path (with `focus/`), headings, metadata, overflow, and lab performance;
   - the link preview.

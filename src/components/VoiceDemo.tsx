@@ -227,7 +227,6 @@ export default function VoiceDemo() {
     [answered, setAnswered] = useState(false);
   // Completion belongs only to the current demo result, never an account.
   const [checkedTasks, setCheckedTasks] = useState<number[]>([]);
-  const [completionAt, setCompletionAt] = useState<number | null>(null);
   // From 10 s of waiting: the line and Stop waiting.
   const [waitedLong, setWaitedLong] = useState(false);
   // The live demo is off: the static example and the message replace the form.
@@ -251,6 +250,9 @@ export default function VoiceDemo() {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const mounted = useRef(true);
   const panel = useRef<HTMLDivElement>(null);
+  const completionBanner = useRef<HTMLDivElement>(null);
+  const taskPointer = useRef<number | null>(null);
+  const revealCompletion = useRef(false);
   const stageHeading = useRef<HTMLHeadingElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
@@ -295,21 +297,47 @@ export default function VoiceDemo() {
     tasks.every((_, index) => checkedTasks.includes(index));
   function clearCompletion() {
     setCheckedTasks([]);
-    setCompletionAt(null);
+    taskPointer.current = null;
+    revealCompletion.current = false;
   }
   function toggleTask(index: number, checked: boolean) {
     const next = checked
       ? [...checkedTasks, index]
       : checkedTasks.filter((value) => value !== index);
     setCheckedTasks(next);
-    // Show the reward next to the checkbox that completed the list, even when
-    // tasks are checked out of order or the result has long notes on a phone.
-    setCompletionAt(
-      checked && tasks.every((_, taskIndex) => next.includes(taskIndex))
-        ? index
-        : null,
-    );
+    revealCompletion.current =
+      !allComplete &&
+      checked &&
+      taskPointer.current === index &&
+      tasks.every((_, taskIndex) => next.includes(taskIndex));
+    taskPointer.current = null;
   }
+  useEffect(() => {
+    const reveal = revealCompletion.current;
+    revealCompletion.current = false;
+    if (!allComplete || !reveal || !completionBanner.current) return;
+    // Finish the native label/checkbox activation before measuring and revealing
+    // the result. Undo, reset or unmount cancels this pending frame.
+    const frame = window.requestAnimationFrame(() => {
+      const banner = completionBanner.current;
+      if (!banner) return;
+      const bounds = banner.getBoundingClientRect();
+      const headerBottom =
+        document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+      const clearance = Math.max(0, headerBottom) + 12;
+      const alreadyVisible =
+        bounds.top >= clearance && bounds.bottom <= window.innerHeight;
+      // Only a final pointer/touch action reveals an offscreen reward. Keyboard
+      // completion keeps its checkbox context and uses the existing live status.
+      // Even when visible, stop any pending native checkbox-focus scroll so it
+      // cannot carry the banner out of view after this effect has finished.
+      window.scrollBy({
+        top: alreadyVisible ? 0 : bounds.top - clearance,
+        behavior: "instant",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [allComplete]);
   const receiveToken = useCallback((value: string) => {
     setToken(value);
     if (!value) return;
@@ -983,11 +1011,35 @@ export default function VoiceDemo() {
                       >
                         {thingsToAdd}
                       </h3>
+                      {allComplete && (
+                        <div className="voice-completion" ref={completionBanner}>
+                          <p className="voice-completion-title">
+                            <Icon name="leaf" size={24} />
+                            <span>{t.completionTitle}</span>
+                          </p>
+                          <p className="voice-completion-body">
+                            {t.completionBody}
+                          </p>
+                        </div>
+                      )}
                       <ul className="voice-drafts">
                         {tasks.map((task, index) => (
                           <li className="voice-task-card" key={index}>
                             <h4>
-                              <label className="voice-task-toggle">
+                              <label
+                                className="voice-task-toggle"
+                                onClickCapture={(event) => {
+                                  // Capture the actual pointer/touch click,
+                                  // including a title-label click before its
+                                  // forwarded detail-0 checkbox activation.
+                                  // toggleTask consumes the origin immediately.
+                                  if (event.detail > 0)
+                                    taskPointer.current = index;
+                                }}
+                                onKeyDownCapture={() => {
+                                  taskPointer.current = null;
+                                }}
+                              >
                                 <input
                                   type="checkbox"
                                   checked={checkedTasks.includes(index)}
@@ -998,17 +1050,6 @@ export default function VoiceDemo() {
                                 <span>{task.title}</span>
                               </label>
                             </h4>
-                            {allComplete && completionAt === index && (
-                              <div className="voice-completion">
-                                <p className="voice-completion-title">
-                                  <Icon name="leaf" size={24} />
-                                  <span>{t.completionTitle}</span>
-                                </p>
-                                <p className="voice-completion-body">
-                                  {t.completionBody}
-                                </p>
-                              </div>
-                            )}
                             <p className="voice-task-schedule">
                               <Icon name="calendar" size={16} />
                               {dateLine(task, formats, t.noDate)}

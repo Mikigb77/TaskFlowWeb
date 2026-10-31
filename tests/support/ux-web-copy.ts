@@ -45,9 +45,9 @@ export const FEATURES = {
         ca: "El teu dia en un calendari",
       },
       body: {
-        en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date: it asks once, the first time you add one.",
-        es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha: te lo pregunta una vez, la primera vez que añades una.",
-        ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data: t’ho pregunta una vegada, la primera vegada que n’afegeixes una.",
+        en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
+        es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
+        ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
       },
     },
     {
@@ -57,9 +57,9 @@ export const FEATURES = {
         ca: "Digues diverses coses alhora",
       },
       body: {
-        en: "TaskFlow makes one task for each thing you say, with its day and time. Check them, then add them all with one tap.",
-        es: "TaskFlow crea una tarea por cada cosa que dices, con su día y su hora. Revísalas y añádelas todas con un toque.",
-        ca: "TaskFlow crea una tasca per cada cosa que dius, amb el dia i l’hora. Revisa-les i afegeix-les totes amb un toc.",
+        en: "TaskFlow makes one task for each thing you say, with its day and time. Check them, then add them all with one tap. In the app, you can also move all of yesterday’s tasks to tomorrow by voice, or complete many at once.",
+        es: "TaskFlow crea una tarea por cada cosa que dices, con su día y su hora. Revísalas y añádelas todas con un toque. En la app, también puedes mover con la voz todas las tareas de ayer a mañana, o completar muchas a la vez.",
+        ca: "TaskFlow crea una tasca per cada cosa que dius, amb el dia i l’hora. Revisa-les i afegeix-les totes amb un toc. A l’aplicació, també pots moure amb la veu totes les tasques d’ahir a demà, o completar-ne moltes alhora.",
       },
     },
     {
@@ -111,6 +111,7 @@ export const CLOSING = {
 
 // The FAQ's first three items (WP18). The pricing answer carries WD14's safety-limit
 // clause (decided 2026-10-19, after the plan) right after "unlimited dictation and file space".
+// WP60 adds the free reminders and Pro's reminders in your own words, and ends the Pro sentence after that clause.
 export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
   {
     question: {
@@ -131,9 +132,9 @@ export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
       ca: "TaskFlow és gratuït?",
     },
     answer: {
-      en: "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day), and also turns sentences you type into tasks. Its price isn’t set yet.",
-      es: "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día), y además convierte en tareas las frases que escribes. Su precio aún no está decidido.",
-      ca: "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia), i a més converteix en tasques les frases que escrius. El preu encara no està decidit.",
+      en: "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+      es: "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+      ca: "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
     },
   },
   {
@@ -150,7 +151,7 @@ export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
   },
 ];
 
-// WP19: the FAQ's heading, and its last four items in the order the plan gives.
+// WP19: the FAQ's heading, and its last five items in the order the plan gives.
 export const FAQ_TITLE: Copy = { en: "Questions", es: "Preguntas", ca: "Preguntes" };
 export const FAQ_REST: { question: Copy; answer: Copy }[] = [
   {
@@ -160,9 +161,9 @@ export const FAQ_REST: { question: Copy; answer: Copy }[] = [
       ca: "Com afegeixo tasques parlant?",
     },
     answer: {
-      en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change or delete a task by voice: TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google to be turned into tasks.",
-      es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar o eliminar una tarea hablando: TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google para convertirlas en tareas.",
-      ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar o suprimir una tasca parlant: TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google per convertir-les en tasques.",
+      en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
+      es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
+      ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
     },
   },
   {
@@ -199,6 +200,18 @@ export const FAQ_REST: { question: Copy; answer: Copy }[] = [
       en: "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
       es: "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
       ca: "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com la contrasenya del wifi. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+    },
+  },
+  {
+    question: {
+      en: "Can I add tasks from my home screen or from WhatsApp?",
+      es: "¿Puedo añadir tareas desde la pantalla de inicio o desde WhatsApp?",
+      ca: "Puc afegir tasques des de la pantalla d’inici o des de WhatsApp?",
+    },
+    answer: {
+      en: "Yes. Use the Dictate a task widget or shortcut, or share a message to TaskFlow from another app, such as WhatsApp.",
+      es: "Sí. Usa el widget o el acceso directo Dictar una tarea, o comparte un mensaje con TaskFlow desde otra app, como WhatsApp.",
+      ca: "Sí. Fes servir el giny o la drecera Dicta una tasca, o comparteix un missatge amb TaskFlow des d’una altra aplicació, com WhatsApp.",
     },
   },
 ];

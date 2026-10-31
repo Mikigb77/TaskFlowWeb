@@ -49,10 +49,7 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
         </div>
       </section>
 
-      {/* The demo is English until WP26–WP29 translate it; then remove this wrapper. */}
-      <div lang="en" style={{ display: "contents" }}>
-        <VoiceDemo />
-      </div>
+      <VoiceDemo />
 
       <section
         id="features"

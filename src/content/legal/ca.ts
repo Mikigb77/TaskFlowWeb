@@ -7,7 +7,7 @@ export const ca: LegalCopy = {
       "Política de privacitat de l’app i el web de TaskFlow: compte, tasques, veu, fitxers i drets.",
     summary: [
       "No venem les teves dades ni et mostrem anuncis.",
-      "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les converteixi en tasques.",
+      "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques.",
       "Pots demanar una còpia de les teves dades o suprimir-les quan vulguis.",
     ],
     sections: [
@@ -30,7 +30,7 @@ export const ca: LegalCopy = {
           "Organització: tasques, notes, dates, prioritats, passos, repeticions, historial de finalització, projectes, grups, assignacions i canvis de sincronització. L’app desa còpies locals i sincronitza el contingut del compte amb el servidor.",
           "Fitxers: documents o imatges que selecciones, nom, mida, un codi de control que detecta fitxers malmesos, titularitat i tasca relacionada. Es pugen quan utilitzes la còpia al núvol o la compartició. Poden contenir dades personals o metadades incrustades.",
           "Col·laboració: membres, rols, correus d’invitació, remitents i acceptació. Si algú et convida abans de registrar-te, aquesta persona és la font de les dades de la invitació. Les utilitzem per tramitar-la, no per enviar publicitat.",
-          "Veu i IA: àudio o text enviat, el text del que has dit, tasques suggerides, idioma, zona horària, data de referència i noms pertinents de projectes/membres. També comptadors d’ús i estat per aplicar límits.",
+          "Veu i IA: àudio o text enviat, el text del que has dit, tasques i canvis suggerits, idioma, zona horària, data de referència i noms pertinents de projectes/membres. També comptadors d’ús i estat per aplicar límits.",
           "Subscripció: identificador de facturació opac, producte, compra, renovació, caducitat, referències i estat d’accés. RevenueCat i la botiga tracten la informació de subscripció. No rebem les dades completes de la targeta.",
           "Operació i suport: IP/connexió, registres de peticions/errors, la versió del telèfon i de l’app que necessiten els components dels nostres proveïdors, comptadors de seguretat i missatges que ens envies. El diagnòstic de captura conté comptadors i temps locals, no àudio ni text de tasques.",
         ],
@@ -52,8 +52,8 @@ export const ca: LegalCopy = {
         id: "voice",
         title: "4. Veu, intel·ligència artificial i dades sensibles",
         paragraphs: [
-          "El micròfon s’utilitza quan tries gravar i dones permís. L’app pot conservar localment gravacions, text i tasques suggerides pendents per recuperar una captura interrompuda. Es retiren d’aquella captura quan deses o descartes totes les tasques suggerides, o quan descartes la captura. Si el telèfon pot reconèixer la veu tot sol, la veu es converteix en text al mateix telèfon i l’àudio no en surt; només s’envien les paraules per crear les tasques. Si no pot, la gravació s’envia per convertir-la en text en línia en acabar. Amb Pro, el que escrius per a la IA s’envia igual. El formulari de tasques no envia mai res a la IA.",
-          "Google processa l’àudio/text i el context pertinent per retornar tasques suggerides i, si és una gravació, el text del que has dit. L’app pot fer servir Gemini API de Google, amb Vertex AI de Google Cloud com a alternativa; la demo web utilitza Vertex AI. Google ho pot processar fora de la UE. El servidor no arxiva gravacions, però això no vol dir que Google no conservi dades de processament o seguretat.",
+          "El micròfon s’utilitza quan tries gravar i dones permís. L’app pot conservar localment gravacions, text i tasques suggerides pendents per recuperar una captura interrompuda. Es retiren d’aquella captura quan deses o descartes totes les tasques suggerides, o quan descartes la captura. Si el telèfon pot reconèixer la veu tot sol, la veu es converteix en text al mateix telèfon i l’àudio no en surt; només s’envien les paraules. Si no pot, la gravació s’envia per convertir-la en text en línia en acabar. Amb Pro, el que escrius per a la IA s’envia igual. Sense Pro, el formulari de tasques no envia mai res a la IA.",
+          "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit. L’app pot fer servir Gemini API de Google, amb Vertex AI de Google Cloud com a alternativa; la demo web utilitza Vertex AI. Google ho pot processar fora de la UE. El servidor no arxiva gravacions, però això no vol dir que Google no conservi dades de processament o seguretat.",
           "El tractament contractual de Google depèn del servei i nivell de compte. Les condicions de pagament de Gemini API i les disposicions per a l’EEE exclouen l’ús d’entrades/respostes per millorar productes de Google; els serveis gratuïts fora d’aquestes disposicions poden implicar millora de models i revisió humana. Continuen aplicant-se retenció de seguretat i processament internacional. No prometem retenció zero ni tractament exclusiu a la UE.",
           "TaskFlow és una eina d’organització, no un historial clínic ni un assessor professional. Evita enviar informes mèdics, contrasenyes, documents d’identitat o altres dades especialment sensibles a la IA. No gravis tercers ni pugis les seves dades sense base legítima. Pots escriure tasques manualment. Revisa dates, hores, assignacions i notes abans de desar.",
         ],

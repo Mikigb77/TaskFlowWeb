@@ -58,7 +58,7 @@ export const ca: SiteCopy = {
     title: "Què fa TaskFlow",
     calendar: {
       title: "El teu dia en un calendari",
-      body: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data: t’ho pregunta una vegada, la primera vegada que n’afegeixes una.",
+      body: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
       header: "Aquesta setmana",
       weekdays: ["dl", "dt", "dc", "dj", "dv", "ds", "dg"],
       events: [
@@ -74,7 +74,7 @@ export const ca: SiteCopy = {
     },
     voice: {
       title: "Digues diverses coses alhora",
-      body: "TaskFlow crea una tasca per cada cosa que dius, amb el dia i l’hora. Revisa-les i afegeix-les totes amb un toc.",
+      body: "TaskFlow crea una tasca per cada cosa que dius, amb el dia i l’hora. Revisa-les i afegeix-les totes amb un toc. A l’aplicació, també pots moure amb la veu totes les tasques d’ahir a demà, o completar-ne moltes alhora.",
       link: "Prova-ho amb la teva veu",
     },
     details: {
@@ -97,7 +97,7 @@ export const ca: SiteCopy = {
       {
         question: "TaskFlow és gratuït?",
         answer:
-          "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia), i a més converteix en tasques les frases que escrius. El preu encara no està decidit.",
+          "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
       },
       {
         question: "Necessito un compte?",
@@ -107,7 +107,7 @@ export const ca: SiteCopy = {
       {
         question: "Com afegeixo tasques parlant?",
         answer:
-          "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar o suprimir una tasca parlant: TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google per convertir-les en tasques.",
+          "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
       },
       {
         question: "La puc fer servir sense connexió?",
@@ -123,6 +123,11 @@ export const ca: SiteCopy = {
         question: "Puc desar notes a més de tasques?",
         answer:
           "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com la contrasenya del wifi. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+      },
+      {
+        question: "Puc afegir tasques des de la pantalla d’inici o des de WhatsApp?",
+        answer:
+          "Sí. Fes servir el giny o la drecera Dicta una tasca, o comparteix un missatge amb TaskFlow des d’una altra aplicació, com WhatsApp.",
       },
     ],
   },

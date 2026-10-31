@@ -32,7 +32,7 @@ test("legal documents are readable without login or JavaScript in all three lang
       await expect(page.locator(".legal-draft")).toHaveCount(0);
       await expect(page.locator(".legal-version time")).toHaveAttribute(
         "datetime",
-        "2026-10-20",
+        "2026-10-22",
       );
       expect(
         await page

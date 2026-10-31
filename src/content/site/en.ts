@@ -58,7 +58,7 @@ export const en: SiteCopy = {
     title: "What TaskFlow does",
     calendar: {
       title: "Your day on one calendar",
-      body: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date: it asks once, the first time you add one.",
+      body: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
       header: "This week",
       weekdays: ["M", "T", "W", "T", "F", "S", "S"],
       events: [
@@ -68,7 +68,7 @@ export const en: SiteCopy = {
     },
     voice: {
       title: "Say several things at once",
-      body: "TaskFlow makes one task for each thing you say, with its day and time. Check them, then add them all with one tap.",
+      body: "TaskFlow makes one task for each thing you say, with its day and time. Check them, then add them all with one tap. In the app, you can also move all of yesterday’s tasks to tomorrow by voice, or complete many at once.",
       link: "Try it with your voice",
     },
     details: {
@@ -91,7 +91,7 @@ export const en: SiteCopy = {
       {
         question: "Is TaskFlow free?",
         answer:
-          "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day), and also turns sentences you type into tasks. Its price isn’t set yet.",
+          "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
       },
       {
         question: "Do I need an account?",
@@ -101,7 +101,7 @@ export const en: SiteCopy = {
       {
         question: "How do I add tasks by voice?",
         answer:
-          "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change or delete a task by voice: TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google to be turned into tasks.",
+          "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
       },
       {
         question: "Can I use it offline?",
@@ -117,6 +117,11 @@ export const en: SiteCopy = {
         question: "Can I keep notes as well as tasks?",
         answer:
           "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
+      },
+      {
+        question: "Can I add tasks from my home screen or from WhatsApp?",
+        answer:
+          "Yes. Use the Dictate a task widget or shortcut, or share a message to TaskFlow from another app, such as WhatsApp.",
       },
     ],
   },

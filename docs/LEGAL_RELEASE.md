@@ -1,6 +1,6 @@
 # TaskFlow legal documents
 
-The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **20 October 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
+The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **22 October 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
 
 ## Edit and publish
 

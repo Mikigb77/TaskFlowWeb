@@ -581,6 +581,7 @@ h1 {
   margin-top: 18px;
 }
 .feature-card p {
+  text-wrap: pretty;
   font-size: 1rem;
   line-height: 1.7;
   margin-top: 10px;
@@ -596,8 +597,11 @@ h1 {
   grid-row: span 2;
   background: var(--mint);
   padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 .calendar-illustration {
+  flex-grow: 1;
   background: var(--surface);
   padding: 23px 24px 15px;
   border: 1px solid var(--line);

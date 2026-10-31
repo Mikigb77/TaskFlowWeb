@@ -7,7 +7,7 @@
 // the app and the site do today) and WP32 (the delete page). Batch 5 adds WP47 (suggested
 // tasks and limits, not drafts, allowances or transcripts). See tests/support/ux-web.ts.
 import { test as plain, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import path from "node:path";
 import { ca as siteCa } from "../src/content/site/ca";
@@ -301,6 +301,8 @@ for (const theme of THEMES) {
   test.describe(`${theme} legal pages axe`, () => {
     test.use({ colorScheme: theme });
     test(`WEB-2, WEB-208, WEB-8, WEB-203, WEB-205, WEB-212, WEB-113, WEB-202, WEB-206: axe reports no violations on the 12 legal pages (${theme})`, async ({ page }) => {
+      // Twelve pages and twelve axe runs take about 17 s alone, and more beside other workers.
+      test.slow();
       for (const { url } of LEGAL_PAGES) {
         await page.goto(url);
         await hydrated(page);
@@ -670,13 +672,13 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the day WP47 ran").toBe("2026-10-20");
-  // The plan's examples for 2026-10-20. The brief asks for Intl's long date; for Catalan, ICU
-  // writes «20 d’octubre del 2026» where the plan's example has «de 2026»: either is the long date.
+  expect(COMPANY.version, "company.json's version: the day WP58 ran").toBe("2026-10-22");
+  // The plan's examples for 2026-10-22. The brief asks for Intl's long date; for Catalan, ICU
+  // writes «22 d’octubre del 2026» where the plan's example has «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
-    en: /^20 October 2026$/,
-    es: /^20 de octubre de 2026$/,
-    ca: /^20 d’octubre del? 2026$/,
+    en: /^22 October 2026$/,
+    es: /^22 de octubre de 2026$/,
+    ca: /^22 d’octubre del? 2026$/,
   };
   for (const { language, url } of LEGAL_PAGES) {
     await page.goto(url);
@@ -1374,9 +1376,9 @@ test("WEB-109, WEB-729: the privacy and terms pages say no draft, allowance, tra
 // The plan's exact copy (WP47).
 const WP47_PRIVACY = {
   data: {
-    en: "the text of what you said, suggested tasks",
-    es: "el texto de lo que dijiste, tareas sugeridas",
-    ca: "el text del que has dit, tasques suggerides",
+    en: "the text of what you said, suggested tasks and changes",
+    es: "el texto de lo que dijiste, tareas y cambios sugeridos",
+    ca: "el text del que has dit, tasques i canvis suggerits",
   } as Copy,
   route: {
     en: "The app can use Google’s Gemini API, with Google Cloud’s Vertex AI as a fallback; the website demonstration uses Vertex AI.",
@@ -1439,4 +1441,247 @@ plain("WEB-109, WEB-729: docs/LEGAL_RELEASE.md names company.json's version as t
     new Date(`${COMPANY.version}T00:00:00Z`),
   );
   expect(release).toContain(`effective **${day}**`);
+});
+
+// ---- Run 2026-10-21-changes, round 1: WP54 (WEB-1002), your words go to Google to add, find or change tasks ----
+// The plan's exact copy: the check is about the wording.
+
+const SUMMARY_02: Copy = {
+  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks.",
+  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas.",
+  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques.",
+};
+const WP54_DATA: Copy = {
+  en: "the text of what you said, suggested tasks and changes",
+  es: "el texto de lo que dijiste, tareas y cambios sugeridos",
+  ca: "el text del que has dit, tasques i canvis suggerits",
+};
+// §4's first paragraph, where its purpose clause was cut, and the second paragraph's new first sentence.
+const WP54_ONLY_WORDS: Copy = {
+  en: "no audio leaves it; only the words are sent. Otherwise",
+  es: "el audio no sale de él; solo se envían las palabras. Si no puede",
+  ca: "l’àudio no en surt; només s’envien les paraules. Si no pot",
+};
+const WP54_GOOGLE: Copy = {
+  en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said.",
+  es: "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste.",
+  ca: "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit.",
+};
+const WP54_GONE = [
+  "turn them into tasks",
+  "to become tasks",
+  "las convierta en tareas",
+  "para crear las tareas",
+  "les converteixi en tasques",
+  "per crear les tasques",
+];
+// §3, which WP54 leaves alone.
+const WP54_PURPOSES: Record<Language, string[]> = {
+  en: ["the suggested tasks you ask for", "The AI suggests titles, dates and priorities for your review"],
+  es: ["las tareas sugeridas que pides", "La IA propone títulos, fechas y prioridades para tu revisión"],
+  ca: ["les tasques suggerides que demanes", "La IA proposa títols, dates i prioritats perquè els revisis"],
+};
+const summary02 = (page: Page) => page.locator(".legal-summary li").nth(1);
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP54 privacy`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1002: the privacy summary's second item says your words go to Google only to add, find or change tasks (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(page.locator(".legal-summary li"), url).toHaveCount(3);
+        await expect(summary02(page).locator("p"), url).toHaveText(SUMMARY_02[language]);
+        await expect(summary02(page), url).toBeVisible();
+      }
+    });
+  });
+}
+
+test("WEB-1002: privacy §2 lists suggested tasks and changes, §4 sends only the words and Google returns suggested tasks and changes, its third paragraph unchanged", async ({
+  page,
+}) => {
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    expect(await sectionText(page, "data"), `${url} #data`).toContain(WP54_DATA[language]);
+    const paragraphs = page.locator(".legal-body section#voice > p");
+    expect(flat(await paragraphs.nth(0).innerText()), `${url} #voice: the first paragraph`).toContain(
+      WP54_ONLY_WORDS[language],
+    );
+    const second = flat(await paragraphs.nth(1).innerText());
+    expect(second.startsWith(WP54_GOOGLE[language]), `${url} #voice: the second paragraph begins “${second.slice(0, 90)}…”`).toBe(
+      true,
+    );
+    // The second paragraph's next sentences stay as they were.
+    expect(second, `${url} #voice: the route`).toContain(WP47_PRIVACY.route[language]);
+    await expect(paragraphs.nth(2), `${url} #voice: the third paragraph`).toHaveText(WP47_PRIVACY.third[language]);
+  }
+});
+
+test("WEB-1002: no legal page says words are sent to become tasks, and privacy §3 keeps its suggested tasks and its review line", async ({
+  page,
+}) => {
+  for (const { language, document, url } of LEGAL_PAGES) {
+    await page.goto(url);
+    const text = flat(await page.locator("body").innerText());
+    for (const phrase of WP54_GONE) expect(text, `${url}: “${phrase}”`).not.toContain(phrase);
+    if (document === "privacy") {
+      const purposes = await sectionText(page, "purposes");
+      for (const line of WP54_PURPOSES[language]) expect(purposes, `${url} #purposes`).toContain(line);
+    }
+  }
+});
+
+test("WEB-1002: on /es/privacy/ and /ca/privacy/ at 390 × 664, summary 02 starts inside the first screen", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "A phone's first screen.");
+  await page.setViewportSize({ width: 390, height: 664 });
+  for (const language of ["es", "ca"] as const) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    await expect(summary02(page).locator("p"), url).toHaveText(SUMMARY_02[language]);
+    const box = (await summary02(page).boundingBox())!;
+    expect(box.y, `${url}: summary 02's top`).toBeGreaterThanOrEqual(0);
+    expect(box.y, `${url}: summary 02's top`).toBeLessThan(664);
+  }
+});
+
+test("WEB-1002: at 1440 × 1000, summary 02 is wholly inside the first viewport on each privacy page", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Measured at 1440 × 1000.");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    await expect(summary02(page), url).toBeInViewport({ ratio: 1 });
+  }
+});
+
+test("WEB-1002: at 320 × 800, no privacy page scrolls sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    expect(await scrollsSideways(page), `${url} at 320 px`).toBe(false);
+  }
+});
+
+test("WEB-1002: on the phone with the browser's text doubled, no privacy page scrolls sideways", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone (390 × 664).");
+  await doubleTextSize(page);
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    expect(await rootFontSize(page), `${url}: the root at 200%`).toBe(32);
+    expect(await scrollsSideways(page), `${url} at 200% text`).toBe(false);
+  }
+});
+
+// ---- Run 2026-10-22-changes, round 1: WP58 (WEB-1101), privacy §4's task form sentence is
+// narrowed to accounts without Pro ----
+// The plan's exact copy: the check is about the wording.
+
+// §4's first paragraph ends with these two sentences.
+const WP58_ENDING: Copy = {
+  en: "With Pro, words you type for the AI are sent the same way. Without Pro, the task form never sends anything to the AI.",
+  es: "Con Pro, lo que escribes para la IA se envía igual. Sin Pro, el formulario de tareas nunca envía nada a la IA.",
+  ca: "Amb Pro, el que escrius per a la IA s’envia igual. Sense Pro, el formulari de tasques no envia mai res a la IA.",
+};
+// The absolute that is gone: no sentence on a legal page begins with these words.
+const WP58_GONE_START = ["The task form", "El formulario de tareas", "El formulari de tasques"];
+// The same check in the source: the old sentence after another one.
+const WP58_GONE_SOURCE = [
+  ". The task form never",
+  ". El formulario de tareas nunca",
+  ". El formulari de tasques no envia mai",
+];
+// §4's fourth paragraph still offers manual entry.
+const WP58_MANUAL: Copy = {
+  en: "You can use manual task entry instead of AI.",
+  es: "Puedes escribir tareas manualmente.",
+  ca: "Pots escriure tasques manualment.",
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP58 privacy`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1101: privacy §4's first paragraph ends ‘Without Pro, the task form never sends anything to the AI.’ and still sends only the words, in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const first = page.locator(".legal-body section#voice > p").first();
+        await expect(first, url).toBeVisible();
+        const text = flat(await first.innerText());
+        expect(text.endsWith(WP58_ENDING[language]), `${url} #voice: the first paragraph ends “…${text.slice(-140)}”`).toBe(
+          true,
+        );
+        expect(text, `${url} #voice: WP54's only the words`).toContain(WP54_ONLY_WORDS[language]);
+      }
+    });
+  });
+}
+
+test("WEB-1101: no legal page has a sentence that begins ‘The task form’, ‘El formulario de tareas’ or ‘El formulari de tasques’", async ({
+  page,
+}) => {
+  for (const { url } of LEGAL_PAGES) {
+    await page.goto(url);
+    // Each line of the page's text starts a block: a paragraph, item or heading.
+    const lines = (await page.locator("body").innerText()).split("\n").map(flat).filter(Boolean);
+    expect(lines.length, `${url}: the page's text`).toBeGreaterThan(10);
+    for (const line of lines)
+      for (const start of WP58_GONE_START) {
+        expect(line.startsWith(start), `${url}: a paragraph begins “${start}”`).toBe(false);
+        expect(line, `${url}: a sentence begins “${start}”`).not.toContain(`. ${start}`);
+      }
+  }
+});
+
+plain("WEB-1101: no line in src/content/legal/ says the task form never sends anything, after another sentence", () => {
+  const found: string[] = [];
+  const folder = path.join(ROOT, "src", "content", "legal");
+  const files = readdirSync(folder);
+  expect(files).toEqual(expect.arrayContaining(["en.ts", "es.ts", "ca.ts"]));
+  for (const file of files) {
+    readFileSync(path.join(folder, file), "utf8")
+      .split("\n")
+      .forEach((line, index) => {
+        for (const words of WP58_GONE_SOURCE)
+          if (line.includes(words)) found.push(`${file}:${index + 1}: “${words}”`);
+      });
+  }
+  expect(found).toEqual([]);
+});
+
+test("WEB-1101: privacy §4's fourth paragraph still offers manual task entry, and §4 has four paragraphs, in each language", async ({
+  page,
+}) => {
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    const paragraphs = page.locator(".legal-body section#voice > p");
+    await expect(paragraphs, `${url} #voice`).toHaveCount(4);
+    expect(flat(await paragraphs.nth(3).innerText()), `${url} #voice: the fourth paragraph`).toContain(
+      WP58_MANUAL[language],
+    );
+  }
 });

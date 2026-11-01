@@ -346,7 +346,8 @@ function standIn(mode: "pass" | "interactive" | "error" | "hold" | "hold-next") 
 
 type Microphone = "pending" | "denied" | "missing" | "busy" | "unsupported";
 
-// Replaces getUserMedia, with Chromium's own error names and wording.
+// Replaces getUserMedia, with Chromium's own error names and wording. Denied is a blocked
+// microphone: the permission reads "denied" (WP64: a dismissed prompt reads "prompt").
 async function microphone(page: Page, mode: Microphone) {
   await page.addInitScript((mode: Microphone) => {
     if (mode === "unsupported") {
@@ -365,6 +366,9 @@ async function microphone(page: Page, mode: Microphone) {
       mode === "pending"
         ? new Promise<MediaStream>(() => {})
         : Promise.reject(new DOMException(errors[mode][1], errors[mode][0]));
+    if (mode === "denied")
+      navigator.permissions.query = () =>
+        Promise.resolve({ state: "denied" } as PermissionStatus);
   }, mode);
 }
 
@@ -670,7 +674,10 @@ export function scenarios(
         await expect(timer).toHaveText(new RegExp(`^${listening("0:0[4-6]")}$`));
         await capture("voice-recording");
         await at(50.5);
-        await expect(timer).toHaveText(new RegExp(`^${listening("0:5[01]")} · ${escape(t.tenSecondsLeft)}$`));
+        const left = (n: number) => escape(t.secondsLeft.other.replace("{n}", String(n)));
+        await expect(timer).toHaveText(
+          new RegExp(`^(?:${listening("0:50")} · ${left(10)}|${listening("0:51")} · ${left(9)})$`),
+        );
         await capture("voice-recording-50s");
       },
     },

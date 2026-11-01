@@ -14,12 +14,18 @@ export async function startRecorder() {
     source.connect(node).connect(silent).connect(context.destination);
     const chunks: Float32Array[] = [];
     let samples = 0;
+    // The latest chunk's loudness, 0 (silence) to 1 (a loud voice), for the listening halo.
+    let level = 0;
     let flushed: (() => void) | undefined;
     node.port.onmessage = (
       event: MessageEvent<Float32Array | { samples: Float32Array; done: true }>,
     ) => {
       const chunk =
         event.data instanceof Float32Array ? event.data : event.data.samples;
+      let sum = 0;
+      for (const sample of chunk) sum += sample * sample;
+      const rms = chunk.length ? Math.sqrt(sum / chunk.length) : 0;
+      level = Math.min(1, Math.sqrt(rms) * 2);
       if (samples < context!.sampleRate * 60) {
         chunks.push(chunk);
         samples += chunk.length;
@@ -29,6 +35,9 @@ export async function startRecorder() {
     await context.resume();
     let stopped = false;
     return {
+      level() {
+        return stopped ? 0 : level;
+      },
       async stop() {
         if (stopped) return null;
         stopped = true;

@@ -32,11 +32,11 @@ import {
 // The exact first paragraph of §8 the plan gives (WP33): today's sentences, words removed.
 const FIRST_PARAGRAPH = {
   "/privacy/":
-    "Live demo: we don’t keep your recording. The text and the tasks found in it are kept encrypted for up to 24 hours, so trying again doesn’t use another try, and are then deleted automatically. The live demo sends your recording or text to Google only when you tap Done. Nothing from it is saved to an app account.",
+    "Live demo: we don’t keep your recording. The text and the tasks found in it are kept encrypted for up to 24 hours, so trying again doesn’t use another try, and are then deleted automatically. The live demo sends your recording or text to Google only when you tap Done, or when a recording reaches its one-minute limit. Nothing from it is saved to an app account.",
   "/es/privacy/":
-    "Demo en directo: no guardamos tu grabación. El texto y las tareas encontradas se guardan cifrados hasta 24 horas, para que volver a probar no gaste otro intento, y después se borran automáticamente. La demo en directo envía tu grabación o tu texto a Google solo cuando tocas Listo. Nada de ella se guarda en una cuenta de la app.",
+    "Demo en directo: no guardamos tu grabación. El texto y las tareas encontradas se guardan cifrados hasta 24 horas, para que volver a probar no gaste otro intento, y después se borran automáticamente. La demo en directo envía tu grabación o tu texto a Google solo cuando tocas Listo, o cuando una grabación llega a su límite de un minuto. Nada de ella se guarda en una cuenta de la app.",
   "/ca/privacy/":
-    "Demo en directe: no desem la gravació. El text i les tasques trobades es desen xifrats fins a 24 hores, perquè tornar-ho a provar no gasti un altre intent, i després s’esborren automàticament. La demo en directe envia la gravació o el text a Google només quan toques Fet. Res d’ella es desa en un compte de l’app.",
+    "Demo en directe: no desem la gravació. El text i les tasques trobades es desen xifrats fins a 24 hores, perquè tornar-ho a provar no gasti un altre intent, i després s’esborren automàticament. La demo en directe envia la gravació o el text a Google només quan toques Fet, o quan una gravació arriba al seu límit d’un minut. Res d’ella es desa en un compte de l’app.",
 };
 const GONE = ["walkthrough", "recorrido", "recorregut", "separate live demo", "en vivo independiente"];
 
@@ -84,11 +84,23 @@ const LEGAL_PAGES = languages.flatMap((language) =>
 );
 const languageSwitch = (page: Page, language: Language) =>
   page.getByRole("main").getByRole("navigation", { name: ui[language].language, exact: true });
+// Run 2026-10-28-site, WP65 (WEB-1504): above the header's phone-menu breakpoint (64em) the
+// page's pill is hidden, the header's switch being the one; at 200% text the desktop header
+// shows Menu and the pill is back. So a test of the pill doubles the desktop's text.
+const showThePill = async (page: Page, project: string) => {
+  if (project === "desktop") await doubleTextSize(page);
+};
 
 test("WEB-2: each legal page's back link goes to the home in the page's language", async ({ page }) => {
-  for (const { language, url } of LEGAL_PAGES) {
+  for (const { language, document, url } of LEGAL_PAGES) {
     await page.goto(url);
     const back = page.getByRole("main").getByRole("link", { name: ui[language].back, exact: true });
+    // WP65 (WEB-1501): the delete page's top row holds the language switch instead; the logo
+    // and the footer lead home.
+    if (document === "delete-account") {
+      await expect(back, url).toHaveCount(0);
+      continue;
+    }
     await expect(back, url).toHaveCount(1);
     expect(new URL((await back.getAttribute("href"))!, page.url()).pathname, url).toBe(homeUrl(language));
     // The arrow is an icon hidden from screen readers, not a ‘←’ glyph.
@@ -113,7 +125,8 @@ for (const theme of THEMES) {
     test.use({ colorScheme: theme });
     test(`WEB-208: on every legal page the switch marks the current language with aria-current, weight 800 and a 3:1 inset ring, and links to the same document (${theme})`, async ({
       page,
-    }) => {
+    }, testInfo) => {
+      await showThePill(page, testInfo.project.name);
       for (const { language, document, url } of LEGAL_PAGES) {
         await page.goto(url);
         await hydrated(page);
@@ -155,7 +168,8 @@ for (const theme of THEMES) {
 test("WEB-2, WEB-208: choosing Català on /privacy/ lands on /ca/privacy/ and remembers it for the bare address", async ({
   page,
   context,
-}) => {
+}, testInfo) => {
+  await showThePill(page, testInfo.project.name);
   await page.goto("/privacy/");
   await hydrated(page);
   await languageSwitch(page, "en").getByRole("link", { name: "Català", exact: true }).click();
@@ -259,14 +273,15 @@ test("WEB-8, WEB-309: on the legal pages the back link and the language switch a
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Once is enough: the CSS is the same on both projects.");
   const before: Record<string, { body: number; links: { text: string; size: number }[] }> = {};
-  for (const { url } of LEGAL_PAGES) {
+  for (const { document, url } of LEGAL_PAGES) {
     await page.goto(url);
     await hydrated(page);
     const links = await frameSizes(page);
     const utility = await page
       .locator("main .legal-utility a")
       .evaluateAll((elements) => elements.map((element) => parseFloat(getComputedStyle(element).fontSize)));
-    expect(utility.length, `${url}: the back link and the switch's links`).toBe(4);
+    // WP65 (WEB-1501): the delete page's top row has the switch's three links and no back link.
+    expect(utility.length, `${url}: the back link and the switch's links`).toBe(document === "delete-account" ? 3 : 4);
     for (const size of utility) expect(size, `${url}: back link or switch text`).toBeGreaterThanOrEqual(12);
     before[url] = { body: parseFloat(await page.locator("body").evaluate((body) => getComputedStyle(body).fontSize)), links };
   }
@@ -318,7 +333,8 @@ for (const theme of THEMES) {
 const WP41_PAGES: { url: string; language: Language }[] = [
   { url: "/privacy/", language: "en" },
   { url: "/es/privacy/", language: "es" },
-  { url: "/ca/delete-account/", language: "ca" },
+  // WP65 (WEB-1501): the delete pages have no back link now.
+  { url: "/ca/terms/", language: "ca" },
 ];
 // The back link's computed font size, and its arrow's rendered size.
 const backArrow = (page: Page, language: Language) =>
@@ -672,13 +688,13 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the day WP58 ran").toBe("2026-10-22");
-  // The plan's examples for 2026-10-22. The brief asks for Intl's long date; for Catalan, ICU
-  // writes «22 d’octubre del 2026» where the plan's example has «de 2026»: either is the long date.
+  expect(COMPANY.version, "company.json's version: the day WP66 ran").toBe("2026-11-01");
+  // The examples for 2026-11-01. The brief asks for Intl's long date; for Catalan, ICU
+  // writes «1 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
-    en: /^22 October 2026$/,
-    es: /^22 de octubre de 2026$/,
-    ca: /^22 d’octubre del? 2026$/,
+    en: /^1 November 2026$/,
+    es: /^1 de noviembre de 2026$/,
+    ca: /^1 de novembre del? 2026$/,
   };
   for (const { language, url } of LEGAL_PAGES) {
     await page.goto(url);
@@ -1212,46 +1228,35 @@ for (const [width, height] of [
   });
 }
 
-test("WEB-204: on the delete pages the language switch comes after the request box and before the summary, in the DOM and on screen, and goes to the delete page in each language; on the other legal pages it stays in the top row, above the h1", async ({
+// WP65 (WEB-1501) moved the delete page's switch from under the request box into its top row,
+// in place of the back link, so a visitor from Google Play finds her language in the first screen.
+test("WEB-204, WEB-1501: on every legal page the language switch is in the top row, above the h1; on the delete pages it comes before the request box, in the DOM and on screen, and goes to the delete page in each language", async ({
   page,
-}) => {
+}, testInfo) => {
+  await showThePill(page, testInfo.project.name);
   for (const { language, document, url } of LEGAL_PAGES) {
     await page.goto(url);
     await hydrated(page);
     const pill = switchInArticle(page);
     await expect(pill, url).toHaveCount(1);
     await expect(pill, url).toBeVisible();
+    expect(await pill.evaluate((element) => !!element.closest(".legal-utility")), `${url}: the switch in the top row`).toBe(true);
+    const [at, h1] = [(await pill.boundingBox())!, (await page.getByRole("heading", { level: 1 }).boundingBox())!];
+    expect(at.y + at.height, `${url}: the switch above the h1`).toBeLessThanOrEqual(h1.y + 1);
     if (document === "delete-account") {
-      const order = await pill.evaluate((element) => {
+      const beforeBox = await pill.evaluate((element) => {
         const box = element.ownerDocument.querySelector("article.legal-page .legal-request")!;
-        const summary = element.ownerDocument.querySelector("article.legal-page .legal-summary")!;
-        return {
-          afterBox: !!(box.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING),
-          beforeSummary: !!(summary.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_PRECEDING),
-          inTopRow: !!element.closest(".legal-utility:not(.legal-utility--languages)"),
-        };
+        return !!(box.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_PRECEDING);
       });
-      expect(order, `${url}: where the switch is in the DOM`).toEqual({ afterBox: true, beforeSummary: true, inTopRow: false });
-      const [box, at, summary] = [
-        (await article(page).locator(".legal-request").boundingBox())!,
-        (await pill.boundingBox())!,
-        (await article(page).locator(".legal-summary").boundingBox())!,
-      ];
-      expect(at.y, `${url}: the switch under the request box`).toBeGreaterThanOrEqual(box.y + box.height - 1);
-      expect(at.y + at.height, `${url}: the switch above the summary`).toBeLessThanOrEqual(summary.y + 1);
+      expect(beforeBox, `${url}: the switch before the request box in the DOM`).toBe(true);
+      const box = (await article(page).locator(".legal-request").boundingBox())!;
+      expect(at.y + at.height, `${url}: the switch above the request box`).toBeLessThanOrEqual(box.y + 1);
       const targets = await pill
         .getByRole("link")
         .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).pathname));
       for (const other of languages.filter((other) => other !== language))
         expect(targets, `${url}: a link to the ${other} delete page`).toContain(deletePath(other));
       expect(targets.every((target) => target.endsWith("/delete-account/")), `${url}: ${targets.join(", ")}`).toBe(true);
-    } else {
-      expect(
-        await pill.evaluate((element) => !!element.closest(".legal-utility:not(.legal-utility--languages)")),
-        `${url}: the switch in the top row`,
-      ).toBe(true);
-      const [at, h1] = [(await pill.boundingBox())!, (await page.getByRole("heading", { level: 1 }).boundingBox())!];
-      expect(at.y + at.height, `${url}: the switch above the h1`).toBeLessThanOrEqual(h1.y + 1);
     }
   }
 });
@@ -1262,7 +1267,7 @@ for (const width of [390, 320] as const) {
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "Phone widths.");
     await page.setViewportSize({ width, height: width === 320 ? 568 : 664 });
-    for (const { language, url } of LEGAL_PAGES) {
+    for (const { language, document, url } of LEGAL_PAGES) {
       await page.goto(url);
       await fontsReady(page);
       const date = new Intl.DateTimeFormat(DATE_LOCALE[language], { dateStyle: "long", timeZone: "UTC" }).format(
@@ -1273,6 +1278,13 @@ for (const width of [390, 320] as const) {
       const text = flat(await version.textContent());
       expect(text, `${url}: a dot`).not.toContain("·");
       expect(text, `${url}: the company`).not.toContain("GARBAR");
+      // WP65 (WEB-1501): under 360 px the delete page hides its version line, so the email
+      // button fits the first screen under the language switch.
+      if (document === "delete-account" && width === 320) {
+        await expect(version, `${url}: the version line at 320 px`).toBeHidden();
+        await expect(page.locator("footer"), `${url}: the footer`).toContainText("GARBAR, IN-TEC, S.L.");
+        continue;
+      }
       // Each rendered line's top: one line has one.
       const lines = await version.evaluate((element) => {
         const range = element.ownerDocument.createRange();
@@ -1447,9 +1459,9 @@ plain("WEB-109, WEB-729: docs/LEGAL_RELEASE.md names company.json's version as t
 // The plan's exact copy: the check is about the wording.
 
 const SUMMARY_02: Copy = {
-  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks.",
-  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas.",
-  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques.",
+  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.",
+  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, o para pedir recordatorios con tus palabras.",
+  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, o per demanar recordatoris amb les teves paraules.",
 };
 const WP54_DATA: Copy = {
   en: "the text of what you said, suggested tasks and changes",
@@ -1599,9 +1611,9 @@ test("WEB-1002: on the phone with the browser's text doubled, no privacy page sc
 
 // §4's first paragraph ends with these two sentences.
 const WP58_ENDING: Copy = {
-  en: "With Pro, words you type for the AI are sent the same way. Without Pro, the task form never sends anything to the AI.",
-  es: "Con Pro, lo que escribes para la IA se envía igual. Sin Pro, el formulario de tareas nunca envía nada a la IA.",
-  ca: "Amb Pro, el que escrius per a la IA s’envia igual. Sense Pro, el formulari de tasques no envia mai res a la IA.",
+  en: "With Pro, words you type for the AI, and reminders you ask for in your own words, are sent the same way. Without Pro, the task form never sends anything to the AI.",
+  es: "Con Pro, lo que escribes para la IA y los recordatorios que pides con tus palabras se envían igual. Sin Pro, el formulario de tareas nunca envía nada a la IA.",
+  ca: "Amb Pro, el que escrius per a la IA i els recordatoris que demanes amb les teves paraules s’envien igual. Sense Pro, el formulari de tasques no envia mai res a la IA.",
 };
 // The absolute that is gone: no sentence on a legal page begins with these words.
 const WP58_GONE_START = ["The task form", "El formulario de tareas", "El formulari de tasques"];
@@ -1683,5 +1695,455 @@ test("WEB-1101: privacy §4's fourth paragraph still offers manual task entry, a
     expect(flat(await paragraphs.nth(3).innerText()), `${url} #voice: the fourth paragraph`).toContain(
       WP58_MANUAL[language],
     );
+  }
+});
+
+// ---- Run 2026-10-28-site: WP65 (WEB-1501, WEB-1504, WEB-1505) ----
+// The delete page's language switch in the first screen, one language switch on desktop
+// legal pages, legal headings without hyphens. Already proved elsewhere in this file:
+// WEB-204's email button in the first screen at 320 × 568 and 390 × 664, light and dark
+// (‘WP44 delete button’); axe on the 12 legal pages, light and dark, phone and desktop
+// (‘legal pages axe’); no sideways scroll at 320 px and at 200% text (WEB-208, WEB-309).
+
+const DOCUMENT_PAGES = LEGAL_PAGES.filter(({ document }) => document !== "delete-account");
+// The visible language switches on the page, wherever they are: header, main or footer.
+const visibleSwitches = (page: Page) =>
+  page.locator("nav.language-switch").evaluateAll((navs) =>
+    navs
+      .filter((nav) => nav.checkVisibility())
+      .map((nav) => ({
+        where: nav.closest("header.site-header") ? "header" : nav.closest("footer") ? "footer" : nav.closest("main") ? "main" : "other",
+        label: nav.getAttribute("aria-label") ?? "",
+      })),
+  );
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP65 delete page switch`, () => {
+    test.use({ colorScheme: theme });
+    for (const [width, height] of [
+      [390, 664],
+      [320, 568],
+    ] as const) {
+      test(`WEB-1501: at ${width} × ${height}, each delete page's ‘Document language’ navigation is in the first screen, before the request in the DOM, with no back link, and the email button stays in the first screen (${theme})`, async ({
+        page,
+      }, testInfo) => {
+        test.skip(testInfo.project.name !== "mobile", "A phone's first screen.");
+        await page.setViewportSize({ width, height });
+        for (const language of languages) {
+          const url = deletePath(language);
+          await page.goto(url);
+          await hydrated(page);
+          await fontsReady(page);
+          await expect(page.locator("html"), url).toHaveAttribute("data-theme", theme);
+          const nav = languageSwitch(page, language);
+          await expect(nav, url).toHaveCount(1);
+          await expect(nav, url).toBeVisible();
+          const at = (await nav.boundingBox())!;
+          expect(at.y, `${url}: the switch's top`).toBeGreaterThanOrEqual(0);
+          expect(at.y + at.height, `${url}: the switch's bottom at ${width} × ${height}`).toBeLessThanOrEqual(height);
+          // Every language's name is on screen, not cut by the fold.
+          for (const name of ["English", "Español", "Català"])
+            await expect(nav.getByRole("link", { name, exact: true }), `${url}: ${name}`).toBeInViewport({ ratio: 1 });
+          const region = page.getByRole("region", { name: REQUEST_REGION[language], exact: true });
+          await expect(region, url).toHaveCount(1);
+          expect(
+            await nav.evaluate((element) => {
+              const box = element.ownerDocument.querySelector("article.legal-page .legal-request")!;
+              return !!(box.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_PRECEDING);
+            }),
+            `${url}: the switch before the request in the DOM`,
+          ).toBe(true);
+          for (const other of languages)
+            await expect(page.getByRole("link", { name: ui[other].back, exact: true }), `${url}: ‘${ui[other].back}’`).toHaveCount(0);
+          const button = (await region.locator("a.button").boundingBox())!;
+          expect(button.y + button.height, `${url}: the email button's bottom at ${width} × ${height}`).toBeLessThanOrEqual(height);
+        }
+      });
+    }
+  });
+}
+
+test("WEB-1501: on phones, the privacy, terms and legal notice pages keep the back link and the pill in their top row, above the h1, in each language", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phones.");
+  for (const { language, url } of DOCUMENT_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    const row = article(page).locator(".legal-utility");
+    await expect(row, url).toHaveCount(1);
+    const back = row.getByRole("link", { name: ui[language].back, exact: true });
+    const pill = row.getByRole("navigation", { name: ui[language].language, exact: true });
+    await expect(back, url).toBeVisible();
+    await expect(pill, url).toBeVisible();
+    const h1 = (await page.getByRole("heading", { level: 1 }).boundingBox())!;
+    for (const [what, element] of [
+      ["the back link", back],
+      ["the pill", pill],
+    ] as const) {
+      const box = (await element.boundingBox())!;
+      expect(box.y + box.height, `${url}: ${what} above the h1`).toBeLessThanOrEqual(h1.y + 1);
+    }
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP65 one desktop switch`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1504: at 1440 × 1000, every legal page shows one language switch above the footer, the header's, and the delete page's h1 is no lower than the privacy page's (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "The desktop's header.");
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      const h1Top: Record<string, number> = {};
+      for (const { language, url } of LEGAL_PAGES) {
+        await page.goto(url);
+        await hydrated(page);
+        await fontsReady(page);
+        await expect(page.locator("html"), url).toHaveAttribute("data-theme", theme);
+        await expect(article(page).locator(".legal-languages"), url).toBeHidden();
+        await expect(page.getByRole("navigation", { name: ui[language].language, exact: true }), url).toBeHidden();
+        const shown = (await visibleSwitches(page)).filter(({ where }) => where !== "footer");
+        expect(shown, `${url}: the visible language switches outside the footer`).toEqual([
+          { where: "header", label: expect.any(String) },
+        ]);
+        h1Top[url] = (await page.getByRole("heading", { level: 1 }).boundingBox())!.y;
+      }
+      for (const language of languages) {
+        const [deletion, privacy] = [deletePath(language), legalPath("privacy", language)];
+        expect(h1Top[deletion], `${deletion}: the h1's top against ${privacy}'s`).toBeLessThanOrEqual(h1Top[privacy] + 1);
+      }
+    });
+  });
+}
+
+test("WEB-1504: with the desktop's text at 200% the header shows Menu, and every legal page shows its pill", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "The desktop at 200% text; phones are the next test.");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await doubleTextSize(page);
+  for (const { language, url } of LEGAL_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    expect(await rootFontSize(page), `${url}: the root at 200%`).toBe(32);
+    await expect(page.locator("header.site-header .header-menu summary"), `${url}: Menu`).toBeVisible();
+    await expect(languageSwitch(page, language), url).toBeVisible();
+  }
+});
+
+test("WEB-1504: on phones every legal page shows its pill", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phones.");
+  for (const { language, url } of LEGAL_PAGES) {
+    await page.goto(url);
+    await hydrated(page);
+    await expect(languageSwitch(page, language), url).toBeVisible();
+  }
+});
+
+// The h1's rendered lines, from one Range per character, grouped by the character box's top.
+const headingLines = (page: Page) =>
+  page.getByRole("heading", { level: 1 }).evaluate((h1) => {
+    const lines: { top: number; text: string }[] = [];
+    const walker = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent ?? "";
+      for (let index = 0; index < text.length; index++) {
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const rect = [...range.getClientRects()].find((box) => box.width > 0 || box.height > 0);
+        if (!rect) continue;
+        const line = lines.find((entry) => Math.abs(entry.top - rect.top) < rect.height / 2);
+        if (line) line.text += text[index];
+        else lines.push({ top: rect.top, text: text[index] });
+      }
+    }
+    return lines.sort((a, b) => a.top - b.top).map((line) => line.text);
+  });
+
+for (const [width, height] of [
+  [390, 664],
+  [320, 568],
+] as const) {
+  test(`WEB-1505: at ${width} px, no legal h1 hyphenates: its hyphens are manual, and every line ends at a space, never mid-word or on a hyphen, in each language`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "Phone widths.");
+    await page.setViewportSize({ width, height });
+    for (const { url } of LEGAL_PAGES) {
+      await page.goto(url);
+      await fontsReady(page);
+      const h1 = page.getByRole("heading", { level: 1 });
+      await expect(h1, url).toHaveCSS("hyphens", "manual");
+      expect(await h1.textContent(), `${url}: a soft hyphen in the h1`).not.toContain("­");
+      const lines = await headingLines(page);
+      for (let index = 0; index < lines.length - 1; index++) {
+        const [line, next] = [lines[index], lines[index + 1]];
+        const what = `${url}: “${flat(line)}” / “${flat(next)}”`;
+        expect(line.trimEnd(), what).not.toMatch(/[-‐‑]$/);
+        // A break between two letters, with no space, is a word split across lines.
+        expect(/\p{L}$/u.test(line) && /^\p{L}/u.test(next), `${what}: a word split across lines`).toBe(false);
+      }
+    }
+  });
+}
+
+// ---- Run 2026-10-28-site: WP66 (WEB-1502, WEB-1507, WEB-1302, WEB-1503, WEB-1506, WEB-1509),
+// the legal edit: reminders asked for in your own words, files upload on save, the demo's
+// one-minute limit, English terms that match ES and CA, reminders aren't shared ----
+// The plan's exact copy: each check is about the wording. Summary 02 is SUMMARY_02 above,
+// §4's ending WP58_ENDING and §8's first paragraph FIRST_PARAGRAPH, which the package updated.
+
+// WEB-1502: the summaries' old ending, gone in each language.
+const WP66_OLD_SUMMARY_END = ["to add, find or change tasks.", "cambiar tareas.", "canviar tasques."];
+// WEB-1502: §4's new Pro sentence and WEB-1101's last sentence.
+const WP66_PRO: Copy = {
+  en: "With Pro, words you type for the AI, and reminders you ask for in your own words, are sent the same way.",
+  es: "Con Pro, lo que escribes para la IA y los recordatorios que pides con tus palabras se envían igual.",
+  ca: "Amb Pro, el que escrius per a la IA i els recordatoris que demanes amb les teves paraules s’envien igual.",
+};
+const WP66_WITHOUT_PRO: Copy = {
+  en: "Without Pro, the task form never sends anything to the AI.",
+  es: "Sin Pro, el formulario de tareas nunca envía nada a la IA.",
+  ca: "Sense Pro, el formulari de tasques no envia mai res a la IA.",
+};
+// WEB-1502: §2's Organisation list names reminders after dates.
+const WP66_ORGANISATION: Copy = {
+  en: "tasks, notes, dates, reminders, priorities,",
+  es: "tareas, notas, fechas, recordatorios, prioridades,",
+  ca: "tasques, notes, dates, recordatoris, prioritats,",
+};
+const WP66_ORGANISATION_START: Copy = { en: "Organisation:", es: "Organización:", ca: "Organització:" };
+// WEB-1507: §2's Files paragraph, and the old sentence that's gone from the source.
+const WP66_FILES: Copy = {
+  en: "Files you attach upload to your account when you save the task.",
+  es: "Los archivos que adjuntas se suben a tu cuenta al guardar la tarea.",
+  ca: "Els fitxers que adjuntes es pugen al compte en desar la tasca.",
+};
+const WP66_FILES_START: Copy = { en: "Files:", es: "Archivos:", ca: "Fitxers:" };
+const WP66_FILES_GONE = ["cloud backup/sharing", "copia en la nube o el uso compartido", "còpia al núvol o la compartició"];
+// WEB-1302: §8's demo sentence, and the sentence end that's gone from every legal page.
+const WP66_DEMO: Copy = {
+  en: "The live demo sends your recording or text to Google only when you tap Done, or when a recording reaches its one-minute limit.",
+  es: "La demo en directo envía tu grabación o tu texto a Google solo cuando tocas Listo, o cuando una grabación llega a su límite de un minuto.",
+  ca: "La demo en directe envia la gravació o el text a Google només quan toques Fet, o quan una gravació arriba al seu límit d’un minut.",
+};
+const WP66_DEMO_GONE = ["only when you tap Done.", "solo cuando tocas Listo.", "només quan toques Fet."];
+// WEB-1503: the English terms' §3 and §5, the words that are gone, and the Spanish and
+// Catalan paragraphs they now match, unchanged.
+const WP66_TERMS_EN = {
+  service: "TaskFlow provides task/note planning, calendars, reminders, optional AI, synchronisation and shared projects where enabled.",
+  ai: "The AI is optional.",
+};
+const WP66_TERMS_GONE = ["turns what you say into tasks", "AI capture"];
+const WP66_TERMS_KEPT: Record<"es" | "ca", { service: string; ai: string }> = {
+  es: {
+    service:
+      "TaskFlow ofrece organización de tareas/notas, calendarios, recordatorios, IA opcional, sincronización y proyectos compartidos cuando estén habilitados. Las funciones y límites de archivos o IA figuran en la app y la oferta contratada. Una demo o previsión no garantiza una función todavía no disponible.",
+    ai: "La IA es opcional y envía entrada/contexto al proveedor descrito en la política. Puede omitir, interpretar mal o inventar detalles. Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardar o compartir. No es asesoramiento profesional ni garantía de exactitud.",
+  },
+  ca: {
+    service:
+      "TaskFlow ofereix tasques/notes, calendaris, recordatoris, IA opcional, sincronització i projectes compartits quan estiguin habilitats. Funcions i límits consten a l’app i l’oferta. Una demo o previsió no garanteix una funció futura.",
+    ai: "La IA opcional envia entrada/context al proveïdor descrit. Pot ometre, malinterpretar o inventar. Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar/compartir. No és assessorament ni garantia d’exactitud.",
+  },
+};
+// WEB-1506: §5's Cloudflare link, which stays.
+const WP66_CLOUDFLARE: Copy = {
+  en: "Cloudflare privacy notice",
+  es: "Privacidad de Cloudflare",
+  ca: "Privacitat de Cloudflare",
+};
+// WEB-1509: §5's first paragraph before this run, the sentence the new one follows, and the
+// new one. The paragraph must be the old one with only the new sentence put in after its anchor.
+const WP66_SHARING_BEFORE: Copy = {
+  en: "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
+  es: "Tu contenido personal no es público por defecto. Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por») y en las que tienes asignadas; si no has dado un nombre, ven el principio de tu correo. También pueden ver solo las tareas de una persona. Lo que colocas en un proyecto compartido es accesible a sus miembros autorizados según sus roles. Los responsables del grupo administran el acceso. Los miembros pueden descargar copias; abandonar un grupo o eliminar la cuenta no borra remotamente esas copias independientes.",
+  ca: "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per») i a les que tens assignades; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
+};
+const WP66_SHARING_ANCHOR: Copy = {
+  en: "They can also show just one person’s tasks.",
+  es: "También pueden ver solo las tareas de una persona.",
+  ca: "També poden veure només les tasques d’una persona.",
+};
+const WP66_NOT_SHARED: Copy = {
+  en: "Reminders aren’t shared: each person has their own.",
+  es: "Los recordatorios no se comparten: cada persona tiene los suyos.",
+  ca: "Els recordatoris no es comparteixen: cada persona té els seus.",
+};
+const WP66_CREATED_BY: Copy = { en: "“Created by”", es: "«Creada por»", ca: "«Creada per»" };
+
+const privacySection = (page: Page, id: string) => page.locator(`.legal-body section#${id}`);
+const bulletStarting = async (page: Page, id: string, start: string) => {
+  const bullets = (await privacySection(page, id).locator("li").allInnerTexts()).map(flat);
+  return bullets.filter((bullet) => bullet.startsWith(start));
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP66 privacy`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1502: summary 02 says words go to Google's AI also to ask for reminders in your own words, and no summary ends ‘…to add, find or change tasks.’ (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(summary02(page), url).toBeVisible();
+        await expect(summary02(page).locator("p"), url).toHaveText(SUMMARY_02[language]);
+        for (const item of (await page.locator(".legal-summary li").allInnerTexts()).map(flat))
+          for (const end of WP66_OLD_SUMMARY_END)
+            expect(item.endsWith(end), `${url}: a summary ends “…${end}”`).toBe(false);
+      }
+    });
+
+    test(`WEB-1509: privacy §5's first paragraph says reminders aren't shared, right after ‘…just one person’s tasks.’, and nothing else in it changed (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const first = privacySection(page, "sharing").locator("p").first();
+        await expect(first, url).toBeVisible();
+        const before = WP66_SHARING_BEFORE[language];
+        expect(before, `${url}: the anchor sentence`).toContain(WP66_SHARING_ANCHOR[language]);
+        const expected = before.replace(
+          WP66_SHARING_ANCHOR[language],
+          `${WP66_SHARING_ANCHOR[language]} ${WP66_NOT_SHARED[language]}`,
+        );
+        await expect(first, `${url} #sharing: the first paragraph`).toHaveText(expected);
+        expect(flat(await first.innerText()), `${url} #sharing`).toContain(WP66_CREATED_BY[language]);
+      }
+    });
+  });
+}
+
+test("WEB-1502: at 390 × 664, summary 02's last line holds two words or more on /es/privacy/ and /ca/privacy/", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "A 390 px phone.");
+  await page.setViewportSize({ width: 390, height: 664 });
+  for (const language of ["es", "ca"] as const) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    await hydrated(page);
+    await fontsReady(page);
+    const text = summary02(page).locator("p");
+    await expect(text, url).toHaveText(SUMMARY_02[language]);
+    // Each word's top, from a Range over its characters: the last line's words share the largest top.
+    const tops = await text.evaluate((element) => {
+      const result: number[] = [];
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const value = node.textContent ?? "";
+        for (const match of value.matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(node, match.index!);
+          range.setEnd(node, match.index! + match[0].length);
+          const rects = range.getClientRects();
+          result.push(rects[rects.length - 1].top);
+        }
+      }
+      return result;
+    });
+    expect(tops.length, `${url}: summary 02's words`).toBe(SUMMARY_02[language].split(" ").length);
+    const last = Math.max(...tops);
+    const lastLine = tops.filter((top) => Math.abs(top - last) < 2).length;
+    expect(lastLine, `${url}: words on summary 02's last line`).toBeGreaterThanOrEqual(2);
+  }
+});
+
+test("WEB-1502: privacy §4's first paragraph has the Pro sentence with reminders and still ends with WEB-1101's sentence; §2 lists dates, reminders, priorities", async ({
+  page,
+}) => {
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    const first = flat(await privacySection(page, "voice").locator("p").first().innerText());
+    expect(first, `${url} #voice: the Pro sentence`).toContain(WP66_PRO[language]);
+    expect(first.endsWith(WP66_WITHOUT_PRO[language]), `${url} #voice ends “…${first.slice(-90)}”`).toBe(true);
+    const organisation = await bulletStarting(page, "data", WP66_ORGANISATION_START[language]);
+    expect(organisation, `${url} #data: the Organisation item`).toHaveLength(1);
+    expect(organisation[0], `${url} #data: Organisation`).toContain(WP66_ORGANISATION[language]);
+  }
+});
+
+test("WEB-1507: privacy §2's Files item says attached files upload to your account when you save the task, in each language", async ({
+  page,
+}) => {
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    const files = await bulletStarting(page, "data", WP66_FILES_START[language]);
+    expect(files, `${url} #data: the Files item`).toHaveLength(1);
+    expect(files[0], `${url} #data: Files`).toContain(WP66_FILES[language]);
+    for (const words of WP66_FILES_GONE) expect(files[0], `${url} #data: “${words}”`).not.toContain(words);
+  }
+});
+
+plain("WEB-1507, WEB-1503: src/content/legal/ says no ‘cloud backup/sharing’ in any language, and en.ts no ‘turns what you say into tasks’ or ‘AI capture’", () => {
+  const folder = path.join(ROOT, "src", "content", "legal");
+  const files = readdirSync(folder);
+  expect(files).toEqual(expect.arrayContaining(["en.ts", "es.ts", "ca.ts"]));
+  const found: string[] = [];
+  for (const file of files) {
+    const text = readFileSync(path.join(folder, file), "utf8");
+    for (const words of WP66_FILES_GONE) if (text.includes(words)) found.push(`${file}: “${words}”`);
+  }
+  const en = readFileSync(path.join(folder, "en.ts"), "utf8");
+  for (const words of WP66_TERMS_GONE) if (en.includes(words)) found.push(`en.ts: “${words}”`);
+  expect(found).toEqual([]);
+});
+
+test("WEB-1302: privacy §8's first paragraph says the demo also sends a recording that reaches its one-minute limit, and no legal page says ‘only when you tap Done.’", async ({
+  page,
+}) => {
+  for (const { language, document, url } of LEGAL_PAGES) {
+    await page.goto(url);
+    if (document === "privacy") {
+      const first = flat(await privacySection(page, "website").locator("p").first().innerText());
+      expect(first, `${url} #website: the demo sentence`).toContain(WP66_DEMO[language]);
+    }
+    const text = flat(await page.locator("body").innerText());
+    for (const end of WP66_DEMO_GONE) expect(text, `${url}: “${end}”`).not.toContain(end);
+  }
+});
+
+test("WEB-1503: the English terms' §3 offers ‘optional AI’ and §5 begins ‘The AI is optional.’; the Spanish and Catalan §3 and §5 are unchanged", async ({
+  page,
+}) => {
+  await page.goto("/terms/");
+  const service = flat(await page.locator(".legal-body section#service p").first().innerText());
+  expect(service.startsWith(WP66_TERMS_EN.service), `/terms/ #service: “${service.slice(0, 140)}…”`).toBe(true);
+  const ai = flat(await page.locator(".legal-body section#ai p").first().innerText());
+  expect(ai.startsWith(`${WP66_TERMS_EN.ai} `), `/terms/ #ai: “${ai.slice(0, 60)}…”`).toBe(true);
+  const terms = flat(await page.locator(".legal-body").innerText());
+  for (const words of WP66_TERMS_GONE) expect(terms, `/terms/: “${words}”`).not.toContain(words);
+  for (const language of ["es", "ca"] as const) {
+    const url = legalPath("terms", language);
+    await page.goto(url);
+    await expect(page.locator(".legal-body section#service p").first(), `${url} #service`).toHaveText(
+      WP66_TERMS_KEPT[language].service,
+    );
+    await expect(page.locator(".legal-body section#ai p").first(), `${url} #ai`).toHaveText(WP66_TERMS_KEPT[language].ai);
+  }
+});
+
+test("WEB-1506: privacy §8 has no links in any language, and §5 still links Cloudflare's privacy notice", async ({
+  page,
+}) => {
+  for (const language of languages) {
+    const url = legalPath("privacy", language);
+    await page.goto(url);
+    const website = privacySection(page, "website");
+    await expect(website, `${url} #website`).toHaveCount(1);
+    await expect(website.getByRole("link"), `${url} #website: links`).toHaveCount(0);
+    await expect(website.locator(".legal-links"), `${url} #website: a link list`).toHaveCount(0);
+    const cloudflare = privacySection(page, "sharing").getByRole("link", { name: WP66_CLOUDFLARE[language] });
+    await expect(cloudflare, `${url} #sharing: Cloudflare`).toHaveCount(1);
+    await expect(cloudflare, `${url} #sharing: Cloudflare`).toHaveAttribute("href", "https://www.cloudflare.com/privacypolicy/");
   }
 });

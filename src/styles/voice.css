@@ -230,6 +230,12 @@
   margin-bottom: 28px;
   flex-wrap: wrap;
 }
+/* In the open demo's top line, a long badge wraps inside the panel at large text. */
+.voice-topline .voice-trial-badge {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+}
 .voice-developer-tools {
   margin-top: 24px;
   padding-top: 18px;
@@ -297,6 +303,22 @@
 }
 .voice-record-button.is-recording:focus-visible {
   outline-offset: 5px;
+}
+/* While listening: the microphone as a picture above Done, not a control: an outline
+   ring and microphone on the panel, as the app draws it, its halo following the voice
+   from 9 px at silence to 30 px at a loud voice. */
+.voice-level {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  margin: 12px 0;
+  border-radius: 50%;
+  color: var(--green);
+  background: transparent;
+  border: 2px solid var(--green);
+  box-shadow: 0 0 0 calc(9px + var(--level, 0) * 21px) var(--mint);
+  transition: box-shadow 90ms linear;
 }
 .voice-record-label {
   font-size: 1rem;
@@ -367,6 +389,12 @@
 /* Try again waiting on its resend keeps focus: a dimmed fill, not opacity, so its
    focus ring stays at full contrast. */
 .voice-panel .voice-retry[aria-disabled="true"] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--green) 55%, var(--surface));
+}
+/* The record button waiting for the microphone, or as Done waiting to send, keeps
+   focus the same way. */
+.voice-panel .voice-record-button[aria-disabled="true"] {
   opacity: 1;
   background: color-mix(in srgb, var(--green) 55%, var(--surface));
 }
@@ -590,6 +618,12 @@
     min-height: 340px;
   }
 }
+/* On phones the plans line runs to four lines: left-aligned, like the card above it. */
+@media (max-width: 580px) {
+  .voice-plans {
+    text-align: left;
+  }
+}
 @keyframes voice-reveal {
   from {
     opacity: 0;
@@ -610,5 +644,8 @@
   .voice-completion,
   .voice-processing-orb::after {
     animation: none;
+  }
+  .voice-level {
+    transition: none;
   }
 }

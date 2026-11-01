@@ -45,7 +45,7 @@
   letter-spacing: -0.045em;
   text-wrap: balance;
   overflow-wrap: break-word;
-  hyphens: auto;
+  hyphens: manual;
 }
 .legal-version {
   margin-top: 22px;
@@ -337,8 +337,16 @@
   color: var(--muted);
   margin-top: 8px;
 }
-.legal-utility--languages {
-  margin-bottom: 24px;
+/* Above the phone menu's breakpoint (global.css, max-width: 64em) the header shows its own
+   language switch, so the page's pill would be a second one; the delete page's top row then
+   holds nothing. */
+@media (min-width: 64.0625em) {
+  .legal-languages {
+    display: none;
+  }
+  .legal-page--deletion .legal-utility {
+    display: none;
+  }
 }
 @media (max-width: 800px) {
   .legal-request {
@@ -377,9 +385,6 @@
   }
 }
 @media (max-width: 520px) {
-  .legal-page--deletion .legal-utility {
-    gap: 12px;
-  }
   .legal-hero {
     padding-block: 16px;
   }
@@ -444,6 +449,11 @@
 @media (max-width: 360px) {
   .legal-page--deletion {
     padding-top: 16px;
+  }
+  /* WEB-1501: with the language switch in the top row, the Catalan email button only fits a
+     320 × 568 first screen without the version line. */
+  .legal-page--deletion .legal-version {
+    display: none;
   }
   .legal-page--deletion .legal-request {
     padding: 18px;

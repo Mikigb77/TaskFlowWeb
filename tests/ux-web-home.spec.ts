@@ -6,12 +6,17 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import type { Page } from "@playwright/test";
 import {
   axeViolations,
+  doubleTextSize,
   expect,
+  hexColor,
   homeUrl,
   LANGUAGES,
+  parseColor,
   ROOT,
+  rootFontSize,
   scrollsSideways,
   settle,
   test,
@@ -322,5 +327,295 @@ test("WEB-6, WEB-1: no home scrolls sideways at 320 px", async ({ page }) => {
     await page.goto(homeUrl(language));
     await settle(page);
     expect(await scrollsSideways(page), `${homeUrl(language)} at 320 px`).toBe(false);
+  }
+});
+
+// Run 2026-10-28-site: WP67 (WEB-1201, WEB-1203, WEB-1204, WEB-1205). The hero's copy column
+// starts at the top instead of being centred against the art, so its button and status line sit
+// above a laptop's fold; on phones the hero's, the closing card's and the demo's plans
+// paragraphs are left-aligned; the H1's accent is no longer underlined like a link; the phone
+// hero button is 58 px tall, 12 px under its neighbour when they stack. Positions are read
+// by class (the plan names them), so WP68's rewording of the hero never breaks these.
+// axe at 390 × 664 and 1440 × 1000, light and dark, on the three homes: the existing
+// "WEB-6, WEB-19, WEB-707, WEB-705, WEB-706: axe reports no violations on the three homes"
+// above runs on both projects (desktop 1440 × 1000, mobile 390 × 664) in both themes.
+
+type Box = { top: number; bottom: number; left: number; right: number };
+
+async function box(page: Page, selector: string): Promise<Box> {
+  const found = await page.locator(selector).first().evaluate((element) => {
+    const { top, bottom, left, right } = element.getBoundingClientRect();
+    return { top, bottom, left, right };
+  });
+  return found;
+}
+
+// The line boxes of each element `selector` matches, from Range.getClientRects(): for each
+// line, where its text starts and ends; and where the element's content box starts and is
+// centred. Rects on one line are merged.
+async function lines(page: Page, selector: string) {
+  return page.evaluate((selector) => {
+    return Array.from(document.querySelectorAll<HTMLElement>(selector))
+      .filter((element) => element.checkVisibility())
+      .map((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const rects = Array.from(range.getClientRects())
+          .filter((rect) => rect.width > 0.5 && rect.height > 0.5)
+          .sort((a, b) => a.top - b.top || a.left - b.left);
+        const merged: { mid: number; start: number; end: number }[] = [];
+        for (const rect of rects) {
+          const mid = rect.top + rect.height / 2;
+          const line = merged.find((line) => Math.abs(line.mid - mid) < rect.height / 2);
+          if (line) {
+            line.start = Math.min(line.start, rect.left);
+            line.end = Math.max(line.end, rect.right);
+          } else merged.push({ mid, start: rect.left, end: rect.right });
+        }
+        const style = getComputedStyle(element);
+        const outer = element.getBoundingClientRect();
+        const contentLeft =
+          outer.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+        const contentRight =
+          outer.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
+        return {
+          text: (element.textContent ?? "").trim().slice(0, 40),
+          contentLeft,
+          contentCentre: (contentLeft + contentRight) / 2,
+          lines: merged.map(({ start, end }) => ({ start, end })),
+        };
+      });
+  }, selector);
+}
+
+// mobile-text200: the browser's default font size from 16 to 32 px. The setting stays on the
+// page across navigations, so it's set once and each page waits for its root to reach 32 px.
+async function textSizeDoubled(page: Page) {
+  await expect.poll(() => rootFontSize(page), { message: "the root font size doubles" }).toBe(32);
+  await page.evaluate(() => document.fonts.ready);
+}
+
+const FILLED = ".hero-buttons .button";
+const STATUS = ".hero-status";
+
+test.describe("WP67 on a laptop", () => {
+  test.use({ colorScheme: "light" });
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "laptop window sizes: the desktop project");
+  });
+
+  for (const [width, height] of [
+    [1366, 640],
+    [1536, 730],
+  ] as const)
+    test(`WEB-1201: at ${width} × ${height} the hero's button and its status line end inside the first viewport, in every language`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await settle(page);
+        for (const selector of [FILLED, STATUS]) {
+          const { top, bottom } = await box(page, selector);
+          expect(top, `${homeUrl(language)}: ${selector}'s top`).toBeGreaterThanOrEqual(0);
+          expect(bottom, `${homeUrl(language)}: ${selector}'s bottom at ${width} × ${height}`).toBeLessThanOrEqual(height);
+        }
+      }
+    });
+});
+
+for (const theme of THEMES) {
+  test.describe(`WP67 at 1440 × 1000 (${theme})`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1201: at 1440 × 1000 the H1 starts at most 210 px down and the hero phone is whole in the first viewport (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project");
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await settle(page);
+        const h1 = await box(page, ".hero h1");
+        expect(h1.top, `${homeUrl(language)}: the H1's top`).toBeLessThanOrEqual(210);
+        const phone = await box(page, ".hero-phone");
+        expect(phone.top, `${homeUrl(language)}: .hero-phone's top`).toBeGreaterThanOrEqual(0);
+        expect(phone.bottom, `${homeUrl(language)}: .hero-phone's bottom`).toBeLessThanOrEqual(1000);
+        await expect(page.locator(".hero-phone"), homeUrl(language)).toBeInViewport({ ratio: 1 });
+      }
+    });
+
+    test(`WEB-1203: at 1440 × 1000 the closing card's heading and paragraphs stay centred (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project");
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await settle(page);
+        const card = (await lines(page, ".closing-card"))[0];
+        for (const element of await lines(page, ".closing-card > h2, .closing-card > p")) {
+          expect(element.lines.length, `${homeUrl(language)}: "${element.text}" has text`).toBeGreaterThan(0);
+          for (const [index, line] of element.lines.entries()) {
+            const centre = (line.start + line.end) / 2;
+            expect(
+              Math.abs(centre - card.contentCentre),
+              `${homeUrl(language)}: line ${index + 1} of "${element.text}" is centred in the card`,
+            ).toBeLessThanOrEqual(4);
+          }
+        }
+      }
+    });
+  });
+}
+
+test.describe("WP67 at 200% zoom", () => {
+  // desktop-zoom200: a 1440 × 1000 window at 200% zoom, as tests/ux-renders.spec.ts renders it.
+  test.use({ colorScheme: "light", viewport: { width: 720, height: 500 }, deviceScaleFactor: 2 });
+
+  test("WEB-1201: at 200% zoom (720 × 500) the hero's button ends above the fold on / and starts above it on /es/ and /ca/", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "a desktop window zoomed: the desktop project");
+    for (const language of LANGUAGES) {
+      await page.goto(homeUrl(language));
+      await settle(page);
+      const button = await box(page, FILLED);
+      if (language === "en")
+        expect(button.bottom, "/: the button's bottom at 720 × 500").toBeLessThan(500);
+      else expect(button.top, `${homeUrl(language)}: the button's top at 720 × 500`).toBeLessThan(500);
+    }
+  });
+});
+
+test.describe("WP67 on phones", () => {
+  test.use({ colorScheme: "light" });
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "phone widths: the mobile project");
+  });
+
+  const PHONES = [
+    { name: "390 × 664", width: 390, height: 664, text200: false },
+    { name: "320 × 568", width: 320, height: 568, text200: false },
+    { name: "mobile-text200 (390 × 664)", width: 390, height: 664, text200: true },
+  ];
+
+  for (const phone of PHONES)
+    test(`WEB-1203: at ${phone.name} every line of the hero's, the closing card's and the demo's plans paragraphs starts at the same x, and the H1, the button and the status line start at the copy column's edge`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: phone.width, height: phone.height });
+      if (phone.text200) await doubleTextSize(page);
+      for (const language of LANGUAGES) {
+        const url = homeUrl(language);
+        await page.goto(url);
+        await settle(page);
+        if (phone.text200) await textSizeDoubled(page);
+        for (const selector of [".hero-description", ".closing-card > p", ".closing-plans", ".voice-plans"]) {
+          const elements = await lines(page, selector);
+          expect(elements.length, `${url}: ${selector} is shown`).toBeGreaterThan(0);
+          for (const element of elements) {
+            expect(element.lines.length, `${url}: ${selector} has text`).toBeGreaterThan(0);
+            for (const [index, line] of element.lines.entries())
+              expect(
+                Math.abs(line.start - element.contentLeft),
+                `${url}: line ${index + 1} of ${selector} ("${element.text}") starts at its left edge`,
+              ).toBeLessThanOrEqual(1);
+          }
+        }
+        const column = (await lines(page, ".hero-copy"))[0].contentLeft;
+        const h1 = (await lines(page, ".hero h1"))[0];
+        for (const [index, line] of h1.lines.entries())
+          expect(Math.abs(line.start - column), `${url}: line ${index + 1} of the H1 starts at the copy column's edge`).toBeLessThanOrEqual(1);
+        expect(Math.abs((await box(page, FILLED)).left - column), `${url}: the filled button starts at the copy column's edge`).toBeLessThanOrEqual(1);
+        const status = (await lines(page, STATUS))[0];
+        for (const [index, line] of status.lines.entries())
+          expect(Math.abs(line.start - column), `${url}: line ${index + 1} of the status line starts at the copy column's edge`).toBeLessThanOrEqual(1);
+      }
+    });
+
+  test("WEB-1205: on phones the hero's filled button is at least 56 px tall and at least 8 px above ‘What it does’ when they stack; on /es/ at 390 × 664 the status line ends in the first viewport", async ({
+    page,
+  }) => {
+    let stacked = 0;
+    for (const { width, height } of [
+      { width: 390, height: 664 },
+      { width: 320, height: 568 },
+    ]) {
+      await page.setViewportSize({ width, height });
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} at ${width} × ${height}`;
+        await page.goto(homeUrl(language));
+        await settle(page);
+        const button = await box(page, FILLED);
+        expect(button.bottom - button.top, `${where}: the filled button's height`).toBeGreaterThanOrEqual(56);
+        const link = await box(page, ".hero-buttons .text-link");
+        if (link.top >= button.bottom - 1) {
+          stacked++;
+          expect(link.top - button.bottom, `${where}: the gap above ‘What it does’`).toBeGreaterThanOrEqual(8);
+        }
+        if (language === "es" && width === 390)
+          expect((await box(page, STATUS)).bottom, `${where}: the status line's bottom`).toBeLessThanOrEqual(height);
+      }
+    }
+    // The brief measured the two stacked at 320 px in every language: the gap check ran.
+    expect(stacked, "the button and ‘What it does’ stacked somewhere").toBeGreaterThan(0);
+  });
+});
+
+for (const theme of THEMES) {
+  test.describe(`WP67 the H1's accent (${theme})`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1204: the H1's accent isn't underlined and keeps the green of --green, at every width (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      const sizes =
+        testInfo.project.name === "desktop"
+          ? [
+              { width: 1440, height: 1000 },
+              { width: 1366, height: 640 },
+              { width: 720, height: 500 },
+            ]
+          : [
+              { width: 390, height: 664 },
+              { width: 320, height: 568 },
+            ];
+      for (const size of sizes) {
+        await page.setViewportSize(size);
+        for (const language of LANGUAGES) {
+          const where = `${homeUrl(language)} at ${size.width} px`;
+          await page.goto(homeUrl(language));
+          await settle(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          const accent = await page.locator(".hero h1 .hero-accent").evaluate((span) => {
+            const style = getComputedStyle(span);
+            const probe = document.createElement("span");
+            probe.style.color = style.getPropertyValue("--green").trim();
+            span.after(probe);
+            const green = getComputedStyle(probe).color;
+            probe.remove();
+            return { line: style.textDecorationLine, color: style.color, green };
+          });
+          expect(accent.line, `${where}: text-decoration-line`).toBe("none");
+          expect(parseColor(accent.color), `${where}: the accent's colour is --green`).toEqual(parseColor(accent.green));
+          expect(parseColor(accent.green), `${where}: --green is the theme's green`).toEqual(
+            hexColor(theme === "light" ? "#176e59" : "#9ed5b3"),
+          );
+        }
+      }
+    });
+  });
+}
+
+test("WEB-1204: on /es/ at 390 and 320 px «tu calendario.» stays on one line", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "phone widths: the mobile project");
+  for (const { width, height } of [
+    { width: 390, height: 664 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto("/es/");
+    await settle(page);
+    const count = await page.locator(".hero h1 .hero-accent").evaluate((span) => span.getClientRects().length);
+    expect(count, `/es/ at ${width} px: the accent's line boxes`).toBe(1);
   }
 });

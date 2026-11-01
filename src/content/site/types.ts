@@ -126,7 +126,9 @@ export type SiteCopy = {
     listening: string;
     // Spoken once each: when listening starts, at 50 s (also shown), and when sent.
     listeningStatus: string;
-    tenSecondsLeft: string;
+    // From 50 s, the seconds still to go, shown each second and spoken once at 10; `{n}` is
+    // the count (the app's captureTimeLeft).
+    secondsLeft: { one: string; other: string };
     understanding: string;
     // The links between talking and typing (the app's captureTypeInstead, and back).
     typeInstead: string;
@@ -140,6 +142,8 @@ export type SiteCopy = {
     textPro: string;
     // Microphone errors, by the error's name; each is followed by the text box.
     micBlocked: string;
+    // NotAllowedError after a dismissed prompt: the browser asks again on the next tap.
+    micDismissed: string;
     micMissing: string;
     micFailed: string;
     micUnsupported: string;

@@ -150,7 +150,7 @@ export const es: SiteCopy = {
       ],
     },
     privacy:
-      "Lo que dices o escribes va a Google solo cuando tocas Listo. No guardamos tu grabación, y el texto se borra automáticamente pasadas 24 horas.",
+      "Lo que dices o escribes va a Google solo cuando tocas Listo o se acaba el minuto. No guardamos tu grabación, y el texto se borra automáticamente pasadas 24 horas.",
     privacyLink: "Cómo usamos tus datos",
     fine: "Puede equivocarse con las fechas: revísalas. Nada de esto se guarda en la app.",
     starting: "Un momento…",
@@ -159,13 +159,14 @@ export const es: SiteCopy = {
     close: "Cerrar la demo",
     heading: "¿Qué quieres recordar?",
     talk: "Toca para hablar",
-    micHint: "Hasta un minuto. El navegador te pedirá usar el micrófono.",
+    micHint:
+      "Hasta un minuto. El navegador te pedirá permiso para usar el micrófono.",
     micWaiting: "Esperando al micrófono…",
     done: "Listo",
     tryAgain: "Reintentar",
     listening: "Escuchando · {time}",
     listeningStatus: "Escuchando",
-    tenSecondsLeft: "Quedan 10 segundos",
+    secondsLeft: { one: "Queda 1 segundo", other: "Quedan {n} segundos" },
     understanding: "Entendiendo…",
     typeInstead: "Escribir",
     talkInstead: "Hablar",
@@ -176,6 +177,8 @@ export const es: SiteCopy = {
       "En la app, convertir frases escritas en tareas es parte de TaskFlow Pro. Sin Pro, las dices, o añades cada tarea con un formulario sencillo.",
     micBlocked:
       "El micrófono está desactivado para esta página. Actívalo en los ajustes del navegador para este sitio o escribe.",
+    micDismissed:
+      "Para hablar, toca Hablar y permite el micrófono cuando el navegador te lo pida. O escribe aquí.",
     micMissing:
       "No encontramos ningún micrófono en este dispositivo. Puedes escribir.",
     micFailed:
@@ -205,7 +208,8 @@ export const es: SiteCopy = {
     },
     triesUsedLater:
       "Ya has usado los 3 intentos de esta demo. Podrás volver a probar más tarde.",
-    stillUnderstanding: "Sigo entendiendo. Puede tardar hasta medio minuto.",
+    stillUnderstanding:
+      "Todavía lo estoy entendiendo. Puede tardar hasta 40 segundos.",
     stopWaiting: "Dejar de esperar",
     checkTap: "Toca la comprobación de seguridad de arriba para continuar.",
     checkFailed:
@@ -229,7 +233,7 @@ export const es: SiteCopy = {
       recording:
         "No hemos podido oír la grabación. Grábala otra vez; no ha contado como intento.",
       processing:
-        "Sigo entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
+        "Todavía lo estoy entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
       sayAgain: "Algo ha fallado. Vuelve a decirlo.",
       empty: "Primero di o escribe lo que necesitas hacer.",
     },

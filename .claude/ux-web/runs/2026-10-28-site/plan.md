@@ -296,3 +296,18 @@ The four packages added on 2026-11-01 each run after the packages they build on:
 - **Package numbers.** The new packages start at WP261, as asked. The site's ledger stops at WP73: the "WP260" in the reviews is the Article 29 Working Party's transparency guidance, not a package. WP74–WP260 are simply unused; nothing needs renumbering.
 
 The full briefs, acceptance checks and device checks are in `plan.json`.
+
+## Round 2 (b1)
+
+Re-plan of 2026-11-01, after batch b1's round 1 (WP63–WP67). Every finding the batch built was read as fixed, and the round check passed. One regression comes back, from WP63; nothing is escalated and nothing waits on you. The full brief is in `plan-b1-r2.json`.
+
+### WP265 · H · S · S2: the listening circle reads as a picture (CSS only)
+- **WEB-1611** (regression R1H-1 of WP63): while recording, the new level circle is a filled green disc with a white microphone, the idle "Tap to talk" button pixel for pixel, in the same place. Someone who tapped it to start taps it again to stop, and nothing happens; Done is about 90 px lower. Fix in `src/styles/voice.css` only: a transparent fill, a 2 px green ring and a green outline microphone, as the app draws its "mic that isn't a button". The halo that follows the voice, the hidden status and the focus order stay as they are. Of the reviewer's two options, the ring, because it matches the app and a mint fill would merge into the mint halo.
+
+### Not re-planned (infrastructure, not the site)
+- **The workflow's combined suite-and-renders line** ran the renders in the source checkout instead of the build mirror: they failed, and the line's `rm -rf` deleted the checkout's `artifacts/ux-web`. The tester re-ran the renders on their own (266 passed). The final check will hit the same thing unless the workflow wraps the whole line in `( … )` or changes directory inside the renders subshell.
+- **Next.js's first build stops with a security advisory** (`SecurityFatalError`, recommending `next upgrade --agent=security`); a retry builds. Upgrading Next.js changes dependencies, so it's your call: nothing was upgraded.
+
+### For the main session
+- `waves.py`'s drop calls `wsl`, which doesn't exist in this Linux container, and crashes after removing the worktree. Remove each mirror with `python3 .claude/skills/ux-web/scripts/webrun.py --remove <name>`. The WP65, WP66 and WP67 worktrees and mirrors may still be there: check them before the batch commit.
+- All 20 modified files are this run's b1 work, not another session's.

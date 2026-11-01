@@ -150,7 +150,7 @@ export const en: SiteCopy = {
       ],
     },
     privacy:
-      "What you say or type goes to Google only when you tap Done. We don’t keep your recording, and the text is deleted automatically after 24 hours.",
+      "What you say or type goes to Google only when you tap Done or the minute is up. We don’t keep your recording, and the text is deleted automatically after 24 hours.",
     privacyLink: "How we use your data",
     fine: "It can get dates wrong, so check them. Nothing here is saved to the app.",
     starting: "One moment…",
@@ -165,7 +165,7 @@ export const en: SiteCopy = {
     tryAgain: "Try again",
     listening: "Listening · {time}",
     listeningStatus: "Listening",
-    tenSecondsLeft: "10 seconds left",
+    secondsLeft: { one: "1 second left", other: "{n} seconds left" },
     understanding: "Understanding…",
     typeInstead: "Type instead",
     talkInstead: "Talk instead",
@@ -176,6 +176,8 @@ export const en: SiteCopy = {
       "In the app, turning typed sentences into tasks is part of TaskFlow Pro. Without Pro, you say them, or add each task with a short form.",
     micBlocked:
       "The microphone is off for this page. Turn it on in your browser’s settings for this site, or type instead.",
+    micDismissed:
+      "To talk, tap Talk instead and allow the microphone when your browser asks. Or type here.",
     micMissing:
       "We can’t find a microphone on this device. You can type instead.",
     micFailed:
@@ -204,8 +206,7 @@ export const en: SiteCopy = {
         "You’ve used this demo’s 3 tries. You can try again today at {time}.",
     },
     triesUsedLater: "You’ve used this demo’s 3 tries. You can try again later.",
-    stillUnderstanding:
-      "Still understanding. This can take up to half a minute.",
+    stillUnderstanding: "Still understanding. It can take up to 40 seconds.",
     stopWaiting: "Stop waiting",
     checkTap: "Tap the security check above to continue.",
     checkFailed:

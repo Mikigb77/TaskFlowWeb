@@ -372,12 +372,12 @@ h2 {
 .hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  align-items: center;
+  align-items: start;
   gap: 18px;
   padding-block: 48px 56px;
 }
 .hero-copy {
-  padding-bottom: 16px;
+  padding-block: 64px 16px;
   position: relative;
   z-index: 2;
 }
@@ -386,14 +386,10 @@ h1 {
   line-height: 1.1;
   letter-spacing: -4px;
   font-weight: 650;
+  text-wrap: balance;
 }
 .hero-accent {
   color: var(--green);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--green) 46%, transparent);
-  text-decoration-thickness: 0.05em;
-  text-underline-offset: 0.16em;
-  text-decoration-skip-ink: none;
 }
 .hero-description {
   margin-top: 29px;
@@ -1138,6 +1134,9 @@ summary::-webkit-details-marker {
     padding-block: 45px;
     gap: 4px;
   }
+  .hero-copy {
+    padding-top: 0;
+  }
   h1 {
     font-size: clamp(2.5rem, 6.2vw, 3.0625rem);
     letter-spacing: -2.8px;
@@ -1238,7 +1237,6 @@ summary::-webkit-details-marker {
     gap: 28px;
   }
   .hero-copy {
-    text-align: center;
     padding: 0;
   }
   h1 {
@@ -1248,22 +1246,22 @@ summary::-webkit-details-marker {
   }
   .hero-description {
     max-width: 24rem;
-    margin: 18px auto 0;
+    margin: 18px 0 0;
     line-height: 1.55;
   }
   .hero-buttons {
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    gap: 4px 21px;
+    gap: 12px 21px;
     margin-top: 20px;
   }
   .hero-buttons .text-link {
     gap: 9px;
   }
   .hero-buttons .button {
-    padding: 12px 17px;
+    padding: 16px 17px;
     gap: 13px;
   }
   .hero-status {
@@ -1339,6 +1337,10 @@ summary::-webkit-details-marker {
   .closing-card {
     padding: 40px 22px 29px;
     border-radius: 19px;
+    text-align: left;
+  }
+  .closing-card > p {
+    margin-inline: 0;
   }
   .closing-card h2 {
     font-size: 2.3125rem;
@@ -1346,6 +1348,7 @@ summary::-webkit-details-marker {
   }
   .closing-spark {
     font-size: 2.3125rem;
+    justify-content: flex-start;
   }
   .footer-top {
     flex-direction: column;

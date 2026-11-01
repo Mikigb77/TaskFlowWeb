@@ -156,7 +156,7 @@ export const ca: SiteCopy = {
       ],
     },
     privacy:
-      "El que dius o escrius va a Google només quan toques Fet. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
+      "El que dius o escrius va a Google només quan toques Fet o s’acaba el minut. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
     privacyLink: "Com fem servir les teves dades",
     fine: "Es pot equivocar amb les dates: revisa-les. Res d’això es desa a l’aplicació.",
     starting: "Un moment…",
@@ -166,13 +166,13 @@ export const ca: SiteCopy = {
     heading: "Què t’agradaria recordar?",
     talk: "Toca per parlar",
     micHint:
-      "Fins a un minut. El navegador et demanarà fer servir el micròfon.",
+      "Fins a un minut. El navegador et demanarà permís per fer servir el micròfon.",
     micWaiting: "Esperant el micròfon…",
     done: "Fet",
     tryAgain: "Torna-ho a provar",
     listening: "S’està escoltant · {time}",
     listeningStatus: "S’està escoltant",
-    tenSecondsLeft: "Queden 10 segons",
+    secondsLeft: { one: "Queda 1 segon", other: "Queden {n} segons" },
     understanding: "Entenent…",
     typeInstead: "Escriu",
     talkInstead: "Parla",
@@ -183,6 +183,8 @@ export const ca: SiteCopy = {
       "A l’aplicació, convertir frases escrites en tasques forma part de TaskFlow Pro. Sense Pro, les dius, o afegeixes cada tasca amb un formulari senzill.",
     micBlocked:
       "El micròfon està desactivat per a aquesta pàgina. Activa’l a la configuració del navegador per a aquest lloc o escriu.",
+    micDismissed:
+      "Per parlar, toca Parla i permet el micròfon quan el navegador t’ho demani. O escriu aquí.",
     micMissing:
       "No trobem cap micròfon en aquest dispositiu. Pots escriure.",
     micFailed:
@@ -214,7 +216,7 @@ export const ca: SiteCopy = {
     triesUsedLater:
       "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar més tard.",
     stillUnderstanding:
-      "Encara ho estic entenent. Pot trigar fins a mig minut.",
+      "Encara ho estic entenent. Pot trigar fins a 40 segons.",
     stopWaiting: "Deixa d’esperar",
     checkTap: "Toca la comprovació de seguretat de dalt per continuar.",
     checkFailed:
@@ -236,7 +238,7 @@ export const ca: SiteCopy = {
       invalidDraft:
         "No ho hem pogut convertir en tasques i ha comptat com un intent. Digues què has de fer i quan.",
       recording:
-        "No hem pogut sentir l’enregistrament. Torna’l a gravar; no ha comptat com un intent.",
+        "No hem pogut sentir la gravació. Torna-la a gravar; no ha comptat com un intent.",
       processing:
         "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
       sayAgain: "Alguna cosa ha fallat. Torna-ho a dir.",

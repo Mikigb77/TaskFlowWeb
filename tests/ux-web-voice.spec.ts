@@ -10,6 +10,8 @@
 // again's ring, the privacy line). This file stays uncommitted with them.
 // Every /api/voice/* request is stubbed (tests/support/ux-web.ts); the recordings use
 // Chromium's fake microphone.
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import path from "node:path";
 import type { Locator, Page } from "@playwright/test";
 import type { Project, Scenario, VoiceStub } from "./support/ux-voice";
 import {
@@ -96,9 +98,9 @@ const VOICE = {
     } as Record<Language, [string, string][]>,
   },
   privacy: {
-    en: "What you say or type goes to Google only when you tap Done. We don’t keep your recording, and the text is deleted automatically after 24 hours.",
-    es: "Lo que dices o escribes va a Google solo cuando tocas Listo. No guardamos tu grabación, y el texto se borra automáticamente pasadas 24 horas.",
-    ca: "El que dius o escrius va a Google només quan toques Fet. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
+    en: "What you say or type goes to Google only when you tap Done or the minute is up. We don’t keep your recording, and the text is deleted automatically after 24 hours.",
+    es: "Lo que dices o escribes va a Google solo cuando tocas Listo o se acaba el minuto. No guardamos tu grabación, y el texto se borra automáticamente pasadas 24 horas.",
+    ca: "El que dius o escrius va a Google només quan toques Fet o s’acaba el minut. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
   } as Copy,
   privacyLink: {
     en: "How we use your data",
@@ -147,6 +149,7 @@ const VOICE = {
   },
   listening: { en: "Listening", es: "Escuchando", ca: "S’està escoltant" } as Copy,
   tenSeconds: { en: "10 seconds left", es: "Quedan 10 segundos", ca: "Queden 10 segons" } as Copy,
+  nineSeconds: { en: "9 seconds left", es: "Quedan 9 segundos", ca: "Queden 9 segons" } as Copy,
   understanding: { en: "Understanding…", es: "Entendiendo…", ca: "Entenent…" } as Copy,
   twoThings: { en: "2 things to add", es: "2 cosas para añadir", ca: "2 coses per afegir" } as Copy,
   noDate: { en: "No date", es: "Sin fecha", ca: "Sense data" } as Copy,
@@ -489,7 +492,8 @@ for (const theme of THEMES) {
   });
 }
 
-// getUserMedia replaced, with Chromium's own error names, or absent.
+// getUserMedia replaced, with Chromium's own error names, or absent. Denied is a blocked
+// microphone: the permission reads "denied" (WP64: a dismissed prompt reads "prompt").
 async function microphone(page: Page, mode: "denied" | "missing" | "other" | "unsupported") {
   await page.addInitScript((mode) => {
     if (mode === "unsupported") {
@@ -503,6 +507,8 @@ async function microphone(page: Page, mode: "denied" | "missing" | "other" | "un
           ? new DOMException("Requested device not found", "NotFoundError")
           : new Error("Could not start audio source");
     navigator.mediaDevices.getUserMedia = () => Promise.reject(error);
+    if (mode === "denied")
+      navigator.permissions.query = () => Promise.resolve({ state: "denied" } as PermissionStatus);
   }, mode);
 }
 
@@ -566,7 +572,9 @@ test("WEB-15: while recording, the timer isn't live, and the one status line spe
     expect(await spoken(), `${language}: spoken by 5 s`).toEqual([VOICE.listening[language]]);
     await page.clock.fastForward(45_500);
     await expect(timer).toHaveText(
-      new RegExp(`^${VOICE.listening[language]} · 0:5[01] · ${VOICE.tenSeconds[language]}$`),
+      new RegExp(
+        `^${VOICE.listening[language]} · 0:5(?:0 · ${VOICE.tenSeconds[language]}|1 · ${VOICE.nineSeconds[language]})$`,
+      ),
     );
     expect(await spoken(), `${language}: spoken by 50 s`).toEqual([VOICE.listening[language], VOICE.tenSeconds[language]]);
     await page.clock.fastForward(3_000);
@@ -1260,9 +1268,10 @@ type ErrorKey = keyof Voice["errors"];
 const WP29_COPY = {
   understanding: { en: "Understanding…", es: "Entendiendo…", ca: "Entenent…" },
   stillUnderstanding: {
-    en: "Still understanding. This can take up to half a minute.",
-    es: "Sigo entendiendo. Puede tardar hasta medio minuto.",
-    ca: "Encara ho estic entenent. Pot trigar fins a mig minut.",
+    // WP64 (WEB-1311): the page's own limit, 40 s.
+    en: "Still understanding. It can take up to 40 seconds.",
+    es: "Todavía lo estoy entendiendo. Puede tardar hasta 40 segundos.",
+    ca: "Encara ho estic entenent. Pot trigar fins a 40 segons.",
   },
   stopWaiting: { en: "Stop waiting", es: "Dejar de esperar", ca: "Deixa d’esperar" },
   tryAgain: { en: "Try again", es: "Reintentar", ca: "Torna-ho a provar" },
@@ -1322,11 +1331,11 @@ const WP29_COPY = {
     recording: {
       en: "We couldn’t hear that recording. Record it again; it didn’t use a try.",
       es: "No hemos podido oír la grabación. Grábala otra vez; no ha contado como intento.",
-      ca: "No hem pogut sentir l’enregistrament. Torna’l a gravar; no ha comptat com un intent.",
+      ca: "No hem pogut sentir la gravació. Torna-la a gravar; no ha comptat com un intent.",
     },
     processing: {
       en: "Still understanding. Try again in a moment; it won’t use another try.",
-      es: "Sigo entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
+      es: "Todavía lo estoy entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
       ca: "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
     },
     sayAgain: {
@@ -1351,7 +1360,8 @@ const MESSAGE_BY_CODE: Record<string, ErrorKey | "triesUsed" | "check"> = {
   paused: "off",
   not_ready: "off",
   budget_config: "off",
-  unavailable: "off",
+  // WP64 (WEB-1301): one failed call, not the demo off.
+  unavailable: "notAnswering",
   invalid_draft: "invalidDraft",
   invalid_audio: "recording",
   audio_length: "recording",
@@ -2122,8 +2132,11 @@ test("WEB-9: Turnstile is rendered interaction-only, never retrying, compact whe
   for (const language of LANGUAGES) {
     await capture(page, language);
     await expect(recordButton(page), language).toBeEnabled({ timeout: 10_000 });
+    // Cloudflare's script loads on its own after the capture stage shows: wait for its render.
+    await expect
+      .poll(async () => (await turnstileRenders(page)).length, { message: `${language}: Turnstile renders`, timeout: 10_000 })
+      .toBeGreaterThanOrEqual(1);
     const renders = await turnstileRenders(page);
-    expect(renders.length, `${language}: Turnstile renders`).toBeGreaterThanOrEqual(1);
     const holder = demo(page).locator(".voice-verification");
     await expect(holder, language).toHaveCount(1);
     const width = await holder.evaluate((element) => element.clientWidth);
@@ -2328,3 +2341,815 @@ test("WEB-730: in voice and typing modes the privacy line says Google, not Googl
     }
   }
 });
+
+// ---- Run 2026-10-28-site: WP63 (WEB-1302, WEB-1304, WEB-1305, WEB-1310, WEB-1312, WEB-801) ----
+// The demo while recording: a way out, a sign it hears you, a countdown that counts, focus
+// that stays, and a tries badge that fits. The privacy line's new words (WEB-1302's second
+// part) are proven by WEB-730 above, which reads them from VOICE.privacy.
+
+type MicWindow = { __uxStreams: MediaStream[]; __uxMicCalls: number; __uxReleaseMic?: () => void };
+// Chromium's fake microphone, watched: every stream it hands the page is kept, and each
+// call counted. With `hold`, the call waits, as the browser's permission prompt would,
+// until releaseMicrophone().
+async function watchedMicrophone(page: Page, hold = false) {
+  await page.addInitScript((hold: boolean) => {
+    const w = window as unknown as MicWindow;
+    w.__uxStreams = [];
+    w.__uxMicCalls = 0;
+    const devices = navigator.mediaDevices;
+    if (!devices?.getUserMedia) return;
+    const original = devices.getUserMedia.bind(devices);
+    devices.getUserMedia = (constraints?: MediaStreamConstraints) => {
+      w.__uxMicCalls++;
+      const get = () =>
+        original(constraints).then((stream) => {
+          w.__uxStreams.push(stream);
+          return stream;
+        });
+      if (!hold) return get();
+      return new Promise<MediaStream>((resolve, reject) => {
+        w.__uxReleaseMic = () => void get().then(resolve, reject);
+      });
+    };
+  }, hold);
+}
+const micCalls = (page: Page) => page.evaluate(() => (window as unknown as MicWindow).__uxMicCalls);
+const trackStates = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as MicWindow).__uxStreams.flatMap((stream) => stream.getTracks().map((track) => track.readyState)),
+  );
+const releaseMicrophone = (page: Page) => page.evaluate(() => (window as unknown as MicWindow).__uxReleaseMic!());
+const doneButton = (page: Page, language: Language) =>
+  demo(page).getByRole("button", { name: VOICE.done[language], exact: true });
+const levelCircle = (page: Page) => demo(page).locator("span.voice-level");
+// The spread of a computed box-shadow ("rgb(…) 0px 0px 0px 9px"): its fourth length.
+const SPREAD = (shadow: string) => Number([...shadow.matchAll(/(-?[\d.]+)px/g)][3]?.[1] ?? NaN);
+
+const WP63_COPY = {
+  close: { en: "Close demo", es: "Cerrar la demo", ca: "Tanca la demo" } as Copy,
+  at55: {
+    en: "Listening · 0:55 · 5 seconds left",
+    es: "Escuchando · 0:55 · Quedan 5 segundos",
+    ca: "S’està escoltant · 0:55 · Queden 5 segons",
+  } as Copy,
+  at59: {
+    en: "Listening · 0:59 · 1 second left",
+    es: "Escuchando · 0:59 · Queda 1 segundo",
+    ca: "S’està escoltant · 0:59 · Queda 1 segon",
+  } as Copy,
+  micHint: {
+    es: "Hasta un minuto. El navegador te pedirá permiso para usar el micrófono.",
+    ca: "Fins a un minut. El navegador et demanarà permís per fer servir el micròfon.",
+  },
+  recordingError: "No hem pogut sentir la gravació. Torna-la a gravar; no ha comptat com un intent.",
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP63 close while listening`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1302: while listening, Close demo is enabled; pressing it ends the microphone, sends nothing, uses no try and focuses Try the live demo; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      await watchedMicrophone(page);
+      for (const language of LANGUAGES) {
+        await capture(page, language);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        await talkButton(page, language).click();
+        await expect(doneButton(page, language), language).toBeVisible();
+        await expect(captureHint(page), language).toHaveText(new RegExp(`^${escapeRegExp(VOICE.listening[language])} · `));
+        const close = closeButton(page, language);
+        expect(SITE[language].voice.close, `${language}: the close button's words`).toBe(WP63_COPY.close[language]);
+        await expect(close, `${language}: Close demo while listening`).toBeEnabled();
+        const snapshot = await demo(page).locator(".voice-topline").ariaSnapshot();
+        expect(snapshot, `${language}: the top line's ARIA snapshot`).toContain(`button "${WP63_COPY.close[language]}"`);
+        expect(snapshot, `${language}: the top line's ARIA snapshot`).not.toContain("[disabled]");
+        expect(await axeViolations(page), `${language}: axe while listening`).toEqual([]);
+        expect((await trackStates(page)).length, `${language}: the fake microphone's tracks`).toBeGreaterThan(0);
+        await close.click();
+        await expect
+          .poll(() => trackStates(page), { message: `${language}: every track ended`, timeout: 5_000 })
+          .toEqual(expect.arrayContaining(["ended"]));
+        expect(await trackStates(page), `${language}: no track still live`).not.toContain("live");
+        const start = demo(page).getByRole("button", { name: VOICE.start[language], exact: true });
+        await expect(start, `${language}: the closed card`).toBeVisible();
+        await expect(start, `${language}: focus after closing`).toBeFocused();
+        await expect(levelCircle(page), `${language}: the circle after closing`).toHaveCount(0);
+        // Long enough for a send that was going to happen anyway.
+        await page.waitForTimeout(1_500);
+        expect(voice.requests.draft, `${language}: draft requests`).toBe(0);
+        expect(voice.remaining, `${language}: the stub's tries`).toBe(3);
+        await start.click();
+        await expect(stage(page, "capture"), language).toBeVisible();
+        await expect(triesBadge(page), `${language}: the badge reopened`).toHaveText(
+          SITE[language].voice.triesLeft.replace("{n}", "3"),
+        );
+        if (language === "en") await expect(triesBadge(page)).toHaveText("3 of 3 tries left");
+      }
+      expect(voice.requests.draft).toBe(0);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP63 record button keeps focus`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1304: from the keyboard, focus stays on #voice-record while the microphone is asked for (aria-disabled, opacity 1, a 3:1 ring) and as Done; Enter sends exactly once; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(90_000);
+      await watchedMicrophone(page, true);
+      await capture(page, "en");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      const button = recordButton(page);
+      await button.focus();
+      await page.keyboard.press("Enter");
+      await expect(captureHint(page)).toHaveText(SITE.en.voice.micWaiting);
+      await expect(button, "waiting: the record button").toHaveAttribute("aria-disabled", "true");
+      await expect(button, "waiting: focus").toBeFocused();
+      expect(await page.evaluate(() => document.activeElement?.id), "waiting: document.activeElement").toBe("voice-record");
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(300);
+      expect(await micCalls(page), "a second Enter while waiting asks for nothing more").toBe(1);
+      await expect(button, "waiting: focus after the second Enter").toBeFocused();
+      await expect(button).toHaveAttribute("aria-disabled", "true");
+      const look = await button.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          focusVisible: element.matches(":focus-visible"),
+          opacity: style.opacity,
+          outlineStyle: style.outlineStyle,
+          outlineColor: style.outlineColor,
+          panel: getComputedStyle(element.closest(".voice-panel")!).backgroundColor,
+        };
+      });
+      expect(look.focusVisible, "waiting: the button matches :focus-visible").toBe(true);
+      expect(look.opacity, "waiting: the button's opacity").toBe("1");
+      expect(look.outlineStyle, "waiting: the focus ring").not.toBe("none");
+      expect(
+        contrast(parseColor(look.outlineColor), parseColor(look.panel)),
+        `waiting: the ring ${look.outlineColor} on the card ${look.panel}`,
+      ).toBeGreaterThanOrEqual(3);
+      expect(await axeViolations(page), "axe while waiting for the microphone").toEqual([]);
+
+      await releaseMicrophone(page);
+      await expect(captureHint(page)).toHaveText(new RegExp(`^${VOICE.listening.en} · `));
+      await expect(button, "listening: focus").toBeFocused();
+      await expect(button, "listening: the same button is Done").toHaveAccessibleName(VOICE.done.en);
+      await expect(button, "listening: Done is available").not.toHaveAttribute("aria-disabled", "true");
+      expect(await axeViolations(page), "axe while listening").toEqual([]);
+      await page.waitForTimeout(1_000);
+      await page.keyboard.press("Enter");
+      await page.keyboard.press("Enter");
+      await expect(stage(page, "review")).toBeVisible({ timeout: 15_000 });
+      await page.waitForTimeout(1_000);
+      expect(voice.requests.draft, "draft requests after two Enters on Done").toBe(1);
+      expect(await micCalls(page), "microphone requests").toBe(1);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP63 level circle`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1305: while listening, a hidden, unfocusable microphone circle sits above Done and its halo follows the fake microphone; it's gone when listening ends (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      await capture(page, "en");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(levelCircle(page), "before listening").toHaveCount(0);
+      await talkButton(page, "en").click();
+      const done = doneButton(page, "en");
+      await expect(done).toBeVisible();
+      const circle = levelCircle(page);
+      await expect(circle).toBeVisible();
+      await expect(circle).toHaveAttribute("aria-hidden", "true");
+      await expect(circle.locator("svg"), "the microphone inside").toHaveCount(1);
+      const shape = await circle.evaluate((element) => ({
+        tabIndex: (element as HTMLElement).tabIndex,
+        focusables: element.querySelectorAll("a, button, input, select, textarea, [tabindex]").length,
+        radius: getComputedStyle(element).borderTopLeftRadius,
+      }));
+      expect(shape.tabIndex, "the circle's tabIndex").toBe(-1);
+      expect(shape.focusables, "focusable things inside the circle").toBe(0);
+      const ring = (await circle.boundingBox())!;
+      const button = (await done.boundingBox())!;
+      expect(ring.y + ring.height, "the circle's bottom against Done's top").toBeLessThanOrEqual(button.y);
+      expect(Math.abs(ring.x + ring.width / 2 - (button.x + button.width / 2)), "centred over Done").toBeLessThan(2);
+      // Sampled on each frame for 3 s of the fake microphone's beeps.
+      const spreads = await circle.evaluate(
+        (element) =>
+          new Promise<string[]>((resolve) => {
+            const seen: string[] = [];
+            const end = performance.now() + 3_000;
+            const sample = () => {
+              seen.push(getComputedStyle(element).boxShadow);
+              if (performance.now() < end) requestAnimationFrame(sample);
+              else resolve(seen);
+            };
+            requestAnimationFrame(sample);
+          }),
+      );
+      const values = [...new Set(spreads.map(SPREAD))];
+      expect(values.every((value) => value >= 9 && value <= 30.5), `spreads ${values.join(", ")}`).toBe(true);
+      expect(values.some((value) => value !== 9), `the halo moved from 9 px within 3 s: ${values.join(", ")}`).toBe(true);
+      expect(await axeViolations(page), "axe while listening").toEqual([]);
+      await done.click();
+      await expect(stage(page, "review")).toBeVisible({ timeout: 15_000 });
+      await expect(levelCircle(page), "after listening").toHaveCount(0);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+test.describe("WP63 level circle, reduced motion", () => {
+  test.use({ reducedMotion: "reduce" });
+  test("WEB-1305: with reduced motion, the halo takes at most three sizes and has no transition", async ({ page }) => {
+    await capture(page, "en");
+    await talkButton(page, "en").click();
+    const circle = levelCircle(page);
+    await expect(circle).toBeVisible();
+    const sampled = await circle.evaluate(
+      (element) =>
+        new Promise<{ shadows: string[]; durations: string[] }>((resolve) => {
+          const shadows: string[] = [];
+          const durations: string[] = [];
+          const end = performance.now() + 3_000;
+          const sample = () => {
+            const style = getComputedStyle(element);
+            shadows.push(style.boxShadow);
+            durations.push(style.transitionDuration);
+            if (performance.now() < end) requestAnimationFrame(sample);
+            else resolve({ shadows, durations });
+          };
+          requestAnimationFrame(sample);
+        }),
+    );
+    const values = [...new Set(sampled.shadows.map(SPREAD))];
+    expect(values.length, `distinct spreads: ${values.join(", ")}`).toBeLessThanOrEqual(3);
+    for (const value of values) expect([9, 19.5, 30], `spread ${value}`).toContain(value);
+    expect([...new Set(sampled.durations)], "transition durations").toEqual(["0s"]);
+  });
+});
+
+test("WEB-1310: from 50 s the hint counts down every second in each language, and the hidden status speaks the 10 seconds once", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.clock.install();
+  for (const language of LANGUAGES) {
+    await capture(page, language);
+    // Every text p.voice-status takes, in order.
+    await page.evaluate(() => {
+      const status = document.querySelector("#voice p.voice-status")!;
+      const said: string[] = [];
+      (window as unknown as { __uxSaid: string[] }).__uxSaid = said;
+      new MutationObserver(() => {
+        const text = (status.textContent ?? "").trim();
+        if (text && said.at(-1) !== text) said.push(text);
+      }).observe(status, { subtree: true, childList: true, characterData: true });
+    });
+    const said = () => page.evaluate(() => (window as unknown as { __uxSaid: string[] }).__uxSaid);
+    await talkButton(page, language).click();
+    await expect(doneButton(page, language), language).toBeVisible();
+    const started = await page.evaluate(() => Date.now());
+    const at = async (seconds: number) => {
+      const ms = started + seconds * 1000 - (await page.evaluate(() => Date.now()));
+      if (ms > 0) await page.clock.fastForward(ms);
+    };
+    const hint = captureHint(page);
+    await at(50.3);
+    await expect(hint, `${language} at 50 s`).toHaveText(
+      `${SITE[language].voice.listening.replace("{time}", "0:50")} · ${VOICE.tenSeconds[language]}`,
+    );
+    await expect
+      .poll(said, { message: `${language}: the status by 50 s` })
+      .toEqual([SITE[language].voice.listeningStatus, VOICE.tenSeconds[language]]);
+    await at(55.3);
+    await expect(hint, `${language} at 55 s`).toHaveText(WP63_COPY.at55[language]);
+    await at(59.3);
+    await expect(hint, `${language} at 59 s`).toHaveText(WP63_COPY.at59[language]);
+    expect(await said(), `${language}: the status by 59 s`).toEqual([
+      SITE[language].voice.listeningStatus,
+      VOICE.tenSeconds[language],
+    ]);
+  }
+});
+
+test("WEB-1312: Spanish and Catalan micHint and the Catalan recording error are the plan's words, and src/ has none of the old ones", async () => {
+  expect(es.voice.micHint).toBe(WP63_COPY.micHint.es);
+  expect(ca.voice.micHint).toBe(WP63_COPY.micHint.ca);
+  expect(ca.voice.errors.recording).toBe(WP63_COPY.recordingError);
+  const { readdirSync, readFileSync, statSync } = await import("node:fs");
+  const path = await import("node:path");
+  const found: string[] = [];
+  const walk = (folder: string) => {
+    for (const name of readdirSync(folder)) {
+      const file = path.join(folder, name);
+      if (statSync(file).isDirectory()) walk(file);
+      else {
+        const text = readFileSync(file, "utf8");
+        for (const word of ["te pedirá usar", "demanarà fer servir", "enregistrament"])
+          if (text.includes(word)) found.push(`${path.relative(ROOT, file)}: ${word}`);
+      }
+    }
+  };
+  walk(path.join(ROOT, "src"));
+  expect(found).toEqual([]);
+});
+
+// The open demo's top line with two tries left, on a phone-width screen.
+async function topLine(page: Page) {
+  return page.evaluate(() => {
+    const badge = document.querySelector("#voice .voice-topline .voice-trial-badge")!.getBoundingClientRect();
+    const panel = document.querySelector("#voice .voice-panel")!.getBoundingClientRect();
+    return {
+      badgeRight: badge.right,
+      badgeLeft: badge.left,
+      panelRight: panel.right,
+      viewport: innerWidth,
+      sideways: document.documentElement.scrollWidth - innerWidth,
+    };
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP63 badge at 200%`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-801: at 390 × 664 with the root at 32 px, the open demo's two-tries badge stays inside the panel and the viewport in Spanish and Catalan, nothing scrolls sideways, and Close demo works (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(90_000);
+      await page.setViewportSize({ width: 390, height: 664 });
+      for (const language of ["es", "ca"] as const) {
+        voice.remaining = 2;
+        voice.resetAt = Date.now() + 86_400_000;
+        await capture(page, language);
+        await doubleTextSize(page);
+        expect(await rootFontSize(page), language).toBe(32);
+        await expect(triesBadge(page), language).toHaveText(SITE[language].voice.triesLeft.replace("{n}", "2"));
+        const line = await topLine(page);
+        expect(line.badgeRight, `${language}: the badge's right edge against the panel's`).toBeLessThanOrEqual(line.panelRight + 0.5);
+        expect(line.badgeRight, `${language}: the badge's right edge against the viewport`).toBeLessThanOrEqual(line.viewport);
+        expect(line.badgeLeft, `${language}: the badge's left edge`).toBeGreaterThanOrEqual(0);
+        expect(line.sideways, `${language}: sideways scroll`).toBeLessThanOrEqual(0);
+        const close = closeButton(page, language);
+        await expect(close, language).toBeVisible();
+        const box = (await close.boundingBox())!;
+        expect(box.x + box.width, `${language}: Close demo's right edge`).toBeLessThanOrEqual(line.viewport);
+        await close.click();
+        await expect(demo(page).getByRole("button", { name: VOICE.start[language], exact: true }), language).toBeVisible();
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+test("WEB-801: at 100% text, at 390 and 320 px, the open demo's two-tries badge fits and nothing scrolls sideways", async ({
+  page,
+  voice,
+}) => {
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const language of LANGUAGES) {
+      voice.remaining = 2;
+      voice.resetAt = Date.now() + 86_400_000;
+      await capture(page, language);
+      expect(await rootFontSize(page), language).toBe(16);
+      const line = await topLine(page);
+      expect(line.badgeRight, `${language} ${width}: the badge against the panel`).toBeLessThanOrEqual(line.panelRight + 0.5);
+      expect(line.sideways, `${language} ${width}: sideways scroll`).toBeLessThanOrEqual(0);
+    }
+  }
+});
+
+// ---- Run 2026-10-28-site: WP64 (WEB-1301, WEB-1314, WEB-1311, WEB-1313) ----
+// When the demo fails or waits: one failed call isn't the demo off, older Safari never waits
+// for good, the long-wait line tells the page's real limit, and a dismissed microphone prompt
+// isn't a blocked microphone.
+
+const WP64_COPY = {
+  stillUnderstanding: {
+    en: "Still understanding. It can take up to 40 seconds.",
+    es: "Todavía lo estoy entendiendo. Puede tardar hasta 40 segundos.",
+    ca: "Encara ho estic entenent. Pot trigar fins a 40 segons.",
+  } as Copy,
+  processing: {
+    en: "Still understanding. Try again in a moment; it won’t use another try.",
+    es: "Todavía lo estoy entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
+    ca: "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
+  } as Copy,
+  notAnswering: {
+    en: "The demo isn’t answering right now. Try again in a few minutes.",
+    es: "La demo no responde ahora mismo. Vuelve a probar en unos minutos.",
+    ca: "La demo no respon ara mateix. Torna-ho a provar d’aquí a uns minuts.",
+  } as Copy,
+  micDismissed: {
+    en: "To talk, tap Talk instead and allow the microphone when your browser asks. Or type here.",
+    es: "Para hablar, toca Hablar y permite el micrófono cuando el navegador te lo pida. O escribe aquí.",
+    ca: "Per parlar, toca Parla i permet el micròfon quan el navegador t’ho demani. O escriu aquí.",
+  } as Copy,
+};
+// The request IDs the server accepts, read from its own code (src/app/api/voice/draft/route.ts).
+const SERVER_REQUEST_ID = (() => {
+  const source = readFileSync(path.join(ROOT, "src", "app", "api", "voice", "draft", "route.ts"), "utf8");
+  const found = /!(\/\^\[a-f0-9\][^\n]*?\$\/)\.test\(/.exec(source);
+  if (!found) throw new Error("The draft route's request-ID pattern wasn't found.");
+  const body = found[1].slice(1, -1);
+  return new RegExp(body);
+})();
+// The off stage: the live demo off, the static example in place of the form.
+const offStage = (page: Page) => stage(page, "off");
+const offBlock = (page: Page) => offStage(page).locator(".voice-off");
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP64 one failed call`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1301: typing, a draft answered 503 unavailable shows notAnswering, not the off stage; the text stays, a filled Try again sends it with a new version-4 request ID; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      const ids = await draftIds(page, voice);
+      const unavailable = serverError("unavailable", 503);
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        expect(t.errors.notAnswering, `${language}: notAnswering's words`).toBe(WP64_COPY.notAnswering[language]);
+        expect(t.tryAgain, `${language}: Try again's words`).toBe(TRY_AGAIN[language]);
+        voice.remaining = 3;
+        voice.resetAt = null;
+        voice.draft = unavailable;
+        ids.length = 0;
+        await typeThought(page, language);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        await sendTyped(page);
+        const alert = demo(page).getByRole("alert");
+        await expect(alert, language).toHaveText(t.errors.notAnswering, { timeout: 15_000 });
+        await expect(offStage(page), `${language}: no off stage`).toHaveCount(0);
+        await expect(panel(page).locator(".voice-example"), `${language}: no static example`).toHaveCount(0);
+        await expect(stage(page, "capture"), language).toBeVisible();
+        await expect(textBox(page, language), `${language}: the typed text kept`).toHaveValue(TYPED);
+        const retry = demo(page).locator(".voice-submit");
+        await expect(retry, `${language}: the filled button's words`).toHaveText(TRY_AGAIN[language]);
+        await expect(retry, language).toBeEnabled({ timeout: 10_000 });
+        expect(await isFilled(retry), `${language}: Try again is filled`).toBe(true);
+        expect(await axeViolations(page), `${language}: axe after the failure`).toEqual([]);
+        expect(ids.length, `${language}: draft requests before Try again`).toBe(1);
+        await retry.click();
+        await expect(stage(page, "review"), `${language}: the result after Try again`).toBeVisible({ timeout: 15_000 });
+        expect(ids.length, `${language}: draft requests`).toBe(2);
+        expect(ids[1], `${language}: Try again's request ID is new`).not.toBe(ids[0]);
+        for (const id of ids) expect(id, `${language}: a request ID the server accepts`).toMatch(SERVER_REQUEST_ID);
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+
+    test(`WEB-1301: talking, a draft answered 503 unavailable shows notAnswering and Try again, not the off stage; Try again resends the recording with a new version-4 request ID; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      const ids = await draftIds(page, voice);
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        voice.remaining = 3;
+        voice.resetAt = null;
+        voice.draft = serverError("unavailable", 503);
+        ids.length = 0;
+        await recordAndSend(page, language);
+        const alert = demo(page).getByRole("alert");
+        await expect(alert, language).toHaveText(t.errors.notAnswering, { timeout: 15_000 });
+        await expect(offStage(page), `${language}: no off stage`).toHaveCount(0);
+        await expect(panel(page).locator(".voice-example"), `${language}: no static example`).toHaveCount(0);
+        const retry = stage(page, "capture").locator(".voice-retry");
+        await expect(retry, `${language}: Try again`).toBeVisible();
+        await expect(retry, language).toHaveText(TRY_AGAIN[language]);
+        await expect(retry, language).toBeEnabled({ timeout: 10_000 });
+        expect(await axeViolations(page), `${language}: axe after the failure`).toEqual([]);
+        expect(ids.length, `${language}: draft requests before Try again`).toBe(1);
+        await retry.click();
+        await expect(stage(page, "review"), `${language}: the result after Try again`).toBeVisible({ timeout: 15_000 });
+        expect(ids.length, `${language}: draft requests`).toBe(2);
+        expect(ids[1], `${language}: Try again's request ID is new`).not.toBe(ids[0]);
+        for (const id of ids) expect(id, `${language}: a request ID the server accepts`).toMatch(SERVER_REQUEST_ID);
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+
+    test(`WEB-1301: when opening gets 503 unavailable, the connecting stage shows notAnswering and its filled Try again, with no static example; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        voice.status = serverError("unavailable", 503);
+        await openDemo(page, language);
+        await expect(demo(page).getByRole("alert"), language).toHaveText(t.errors.notAnswering, { timeout: 15_000 });
+        await expect(stage(page, "connecting"), language).toBeVisible();
+        await expect(offStage(page), `${language}: no off stage`).toHaveCount(0);
+        await expect(panel(page).locator(".voice-example"), `${language}: no static example`).toHaveCount(0);
+        await expect(panel(page).locator(".voice-handover"), `${language}: no hand-over`).toHaveCount(0);
+        const again = stage(page, "connecting").getByRole("button", { name: t.tryAgain, exact: true });
+        await expect(again, language).toBeVisible();
+        expect(await isFilled(again), `${language}: Try again is filled`).toBe(true);
+        expect(await axeViolations(page), `${language}: axe`).toEqual([]);
+        voice.status = "ok";
+        await again.click();
+        await expect(stage(page, "capture"), `${language}: after Try again`).toBeVisible();
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+
+    test(`WEB-1301: paused and budget_pause still show the off stage: the static example, then errors.off, then the hand-over line, in each language; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(90_000);
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        for (const code of ["paused", "budget_pause"]) {
+          const what = `${language} ${code}`;
+          voice.remaining = 3;
+          voice.resetAt = null;
+          voice.draft = serverError(code);
+          await typeThought(page, language);
+          await sendTyped(page);
+          const off = offStage(page);
+          await expect(off, what).toBeVisible({ timeout: 15_000 });
+          const order = await offBlock(page).evaluate((root) =>
+            [...root.children].map((child) => ({
+              kind: child.classList.contains("voice-example")
+                ? "example"
+                : child.getAttribute("role") === "alert" || child.querySelector('[role="alert"]')
+                  ? "alert"
+                  : child.classList.contains("voice-handover")
+                    ? "handover"
+                    : child.className,
+              text: (child.textContent ?? "").replace(/\s+/g, " ").trim(),
+              top: child.getBoundingClientRect().top,
+              bottom: child.getBoundingClientRect().bottom,
+            })),
+          );
+          expect(order.map((child) => child.kind), `${what}: the off stage's parts, in order`).toEqual([
+            "example",
+            "alert",
+            "handover",
+          ]);
+          expect(order[1].text, `${what}: the message`).toBe(t.errors.off);
+          expect(order[2].text, `${what}: the hand-over`).toBe(t.handOver);
+          expect(order[1].top, `${what}: the message under the example`).toBeGreaterThanOrEqual(order[0].bottom - 1);
+          expect(order[2].top, `${what}: the hand-over under the message`).toBeGreaterThanOrEqual(order[1].bottom - 1);
+          await expect(offBlock(page).locator(".voice-handover"), what).toBeVisible();
+          expect(await axeViolations(page), `${what}: axe`).toEqual([]);
+        }
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+// Safari before 15.4 has no crypto.randomUUID; before 16, no AbortSignal.timeout. Added
+// after page.clock.install(), whose fake timers bring their own AbortSignal.timeout.
+const withoutNewApis = (page: Page) =>
+  page.addInitScript(() => {
+    delete (Crypto.prototype as unknown as { randomUUID?: unknown }).randomUUID;
+    delete (AbortSignal as unknown as { timeout?: unknown }).timeout;
+  });
+
+test.describe("WP64 a browser without crypto.randomUUID and AbortSignal.timeout", () => {
+  const missing = (page: Page) =>
+    page.evaluate(() => [typeof crypto.randomUUID, typeof (AbortSignal as unknown as { timeout?: unknown }).timeout]);
+
+  test("WEB-1314: typing a sentence and pressing Done sends one draft request with a version-4 request ID and shows the result; Understanding… never stays", async ({
+    page,
+    voice,
+  }) => {
+    await withoutNewApis(page);
+    const ids = await draftIds(page, voice);
+    await typeThought(page, "en");
+    expect(await missing(page), "both APIs are gone").toEqual(["undefined", "undefined"]);
+    await sendTyped(page);
+    await expect(stage(page, "review"), "the stubbed result").toBeVisible({ timeout: 15_000 });
+    await expect(stage(page, "processing"), "no lasting Understanding…").toHaveCount(0);
+    await expect(demo(page).getByText(en.voice.understanding, { exact: true })).toHaveCount(0);
+    expect(ids, "one draft request").toHaveLength(1);
+    expect(ids[0], "a request ID the server accepts").toMatch(SERVER_REQUEST_ID);
+    expect(voice.unexpected).toEqual([]);
+  });
+
+  test("WEB-1314: with a draft that never answers, on a fake clock, the timeout message shows at 40 s, not before", async ({
+    page,
+    voice,
+  }) => {
+    await page.clock.install();
+    await withoutNewApis(page);
+    voice.draft = "hang";
+    await typeThought(page, "en");
+    expect(await missing(page), "both APIs are gone").toEqual(["undefined", "undefined"]);
+    await sendTyped(page);
+    await expect(stage(page, "processing")).toBeVisible();
+    await page.clock.fastForward(39_000);
+    await expect(stage(page, "processing"), "still waiting at 39 s").toBeVisible();
+    await expect(demo(page).getByRole("alert"), "no alert at 39 s").toHaveCount(0);
+    await page.clock.fastForward(1_500);
+    await expect(demo(page).getByRole("alert"), "by 40.5 s").toHaveText(en.voice.errors.timeout);
+    await expect(stage(page, "capture")).toBeVisible();
+    await expect(textBox(page, "en"), "the text kept").toHaveValue(TYPED);
+    await expect(demo(page).locator(".voice-submit")).toHaveAccessibleName(en.voice.tryAgain);
+    expect(voice.requests.draft, "one draft request").toBe(1);
+  });
+
+  test("WEB-1314: Close demo while Understanding… shows, then Try the live demo, shows the capture stage", async ({
+    page,
+    voice,
+  }) => {
+    await withoutNewApis(page);
+    voice.draft = "hang";
+    await typeThought(page, "en");
+    expect(await missing(page), "both APIs are gone").toEqual(["undefined", "undefined"]);
+    await sendTyped(page);
+    await expect(stage(page, "processing")).toBeVisible();
+    await closeButton(page, "en").click();
+    const start = demo(page).getByRole("button", { name: VOICE.start.en, exact: true });
+    await expect(start).toBeVisible();
+    voice.draft = { tasks: TASKS };
+    await start.click();
+    await expect(stage(page, "capture"), "the capture stage after reopening").toBeVisible({ timeout: 15_000 });
+    await expect(stage(page, "processing")).toHaveCount(0);
+    await expect(demo(page).getByText(en.voice.understanding, { exact: true })).toHaveCount(0);
+    expect(voice.unexpected).toEqual([]);
+  });
+});
+
+test("WEB-1314: with every API present, Close demo while Understanding… shows, then Try the live demo, shows the capture stage", async ({
+  page,
+  voice,
+}) => {
+  voice.draft = "hang";
+  await typeThought(page, "es");
+  await sendTyped(page);
+  await expect(stage(page, "processing")).toBeVisible();
+  await closeButton(page, "es").click();
+  const start = demo(page).getByRole("button", { name: VOICE.start.es, exact: true });
+  await expect(start).toBeVisible();
+  await start.click();
+  await expect(stage(page, "capture"), "the capture stage after reopening").toBeVisible({ timeout: 15_000 });
+  await expect(demo(page).getByText(es.voice.understanding, { exact: true })).toHaveCount(0);
+});
+
+test("WEB-1311: from 10 s of waiting the line is the plan's, naming the page's 40 s limit, in each language; the Spanish processing message is the plan's; src/ has none of the old words", async ({
+  page,
+  voice,
+}) => {
+  for (const language of LANGUAGES) {
+    expect(SITE[language].voice.stillUnderstanding, `${language}: stillUnderstanding`).toBe(
+      WP64_COPY.stillUnderstanding[language],
+    );
+    expect(SITE[language].voice.errors.processing, `${language}: errors.processing`).toBe(WP64_COPY.processing[language]);
+    // The number is the page's own limit: the timeout test above gives up at 40 s.
+    expect(/\b(\d+)\b/.exec(SITE[language].voice.stillUnderstanding)?.[1], `${language}: the limit named`).toBe("40");
+  }
+  await page.clock.install();
+  for (const language of LANGUAGES) {
+    voice.remaining = 3;
+    voice.draft = "hang";
+    await typeThought(page, language);
+    await sendTyped(page);
+    await expect(stage(page, "processing"), language).toBeVisible();
+    await page.clock.fastForward(10_500);
+    await expect(demo(page).locator(".voice-waiting-long"), `${language}: the line at 10 s`).toHaveText(
+      WP64_COPY.stillUnderstanding[language],
+    );
+  }
+  const found: string[] = [];
+  const walk = (folder: string) => {
+    for (const name of readdirSync(folder)) {
+      const file = path.join(folder, name);
+      if (statSync(file).isDirectory()) walk(file);
+      else {
+        const text = readFileSync(file, "utf8");
+        for (const word of ["half a minute", "Sigo entendiendo", "medio minuto", "mig minut"])
+          if (text.includes(word)) found.push(`${path.relative(ROOT, file)}: ${word}`);
+      }
+    }
+  };
+  walk(path.join(ROOT, "src"));
+  expect(found).toEqual([]);
+});
+
+// getUserMedia refuses with NotAllowedError, and the permission reads as given: "prompt"
+// (the prompt was dismissed), "denied" (blocked), "throws" (the query fails) or "missing"
+// (no navigator.permissions).
+type Permission = "prompt" | "denied" | "throws" | "missing";
+async function refusedMicrophone(page: Page, permission: Permission) {
+  await page.addInitScript((permission: Permission) => {
+    navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException("Permission denied", "NotAllowedError"));
+    if (permission === "missing")
+      Object.defineProperty(Navigator.prototype, "permissions", { configurable: true, get: () => undefined });
+    else if (permission === "throws")
+      navigator.permissions.query = () => Promise.reject(new TypeError("Failed to execute 'query' on 'Permissions'"));
+    else navigator.permissions.query = () => Promise.resolve({ state: permission } as PermissionStatus);
+  }, permission);
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP64 refused microphone`, () => {
+    test.use({ colorScheme: theme });
+    for (const permission of ["prompt", "denied", "throws", "missing"] as const) {
+      const shows = permission === "prompt" ? "micDismissed" : "micBlocked";
+      test(`WEB-1313: NotAllowedError with the permission ${permission} shows ${shows}, switches to typing and focuses the text box; axe finds nothing (${theme})`, async ({
+        page,
+        voice,
+      }) => {
+        await refusedMicrophone(page, permission);
+        for (const language of LANGUAGES) {
+          const t = SITE[language].voice;
+          if (permission === "prompt") {
+            expect(t.micDismissed, `${language}: micDismissed's words`).toBe(WP64_COPY.micDismissed[language]);
+            expect(t.micDismissed, `${language}: names the Talk instead button`).toContain(t.talkInstead);
+          }
+          await capture(page, language);
+          await talkButton(page, language).click();
+          const alert = demo(page).getByRole("alert");
+          await expect(alert, language).toHaveText(t[shows], { timeout: 10_000 });
+          const box = textBox(page, language);
+          await expect(box, `${language}: typing mode`).toBeVisible();
+          await expect(box, `${language}: the text box has focus`).toBeFocused();
+          await expect(
+            demo(page).getByRole("button", { name: t.talkInstead, exact: true }),
+            `${language}: Talk instead`,
+          ).toBeVisible();
+          expect(await axeViolations(page), `${language}: axe`).toEqual([]);
+        }
+        expect(voice.requests.draft).toBe(0);
+        expect(voice.unexpected).toEqual([]);
+      });
+    }
+  });
+}
+
+// ---- Run 2026-10-28-site: WP265 (WEB-1611) ----
+// While listening, the circle above Done is a picture, not the record button: an outline
+// --green ring and microphone on the panel, where Tap to talk was a filled --green disc.
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP265 listening circle`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1611: while listening, the circle is a transparent 80 px ring with a 2 px solid --green border and a --green microphone, unlike the filled Tap to talk and Done; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      for (const language of LANGUAGES) {
+        await capture(page, language);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        const tapToTalk = await recordButton(page).evaluate((button) => getComputedStyle(button).backgroundColor);
+        expect(tapToTalk, `${language}: Tap to talk's fill before tapping`).toBe(GREEN[theme]);
+        await talkButton(page, language).click();
+        const done = doneButton(page, language);
+        await expect(done, language).toBeVisible();
+        const circle = levelCircle(page);
+        await expect(circle, language).toBeVisible();
+        const look = await circle.evaluate((element) => {
+          const style = getComputedStyle(element);
+          const box = element.getBoundingClientRect();
+          return {
+            background: style.backgroundColor,
+            borderWidth: style.borderTopWidth,
+            borderStyle: style.borderTopStyle,
+            borderColor: style.borderTopColor,
+            color: style.color,
+            radius: style.borderTopLeftRadius,
+            width: box.width,
+            height: box.height,
+            svgStroke: getComputedStyle(element.querySelector("svg")!).stroke,
+          };
+        });
+        expect(look.background, `${language}: the circle's fill`).toBe("rgba(0, 0, 0, 0)");
+        expect(look.background, `${language}: the circle's fill against Tap to talk's`).not.toBe(tapToTalk);
+        expect(look.borderWidth, `${language}: the ring's width`).toBe("2px");
+        expect(look.borderStyle, `${language}: the ring's style`).toBe("solid");
+        expect(look.borderColor, `${language}: the ring's colour`).toBe(GREEN[theme]);
+        expect(look.color, `${language}: the microphone's colour`).toBe(GREEN[theme]);
+        expect(look.svgStroke, `${language}: the microphone is drawn in --green`).toBe(GREEN[theme]);
+        expect(look.width, `${language}: the circle's width`).toBeCloseTo(80, 0);
+        expect(look.height, `${language}: the circle's height`).toBeCloseTo(80, 0);
+        expect(["50%", "40px"], `${language}: the circle's radius ${look.radius}`).toContain(look.radius);
+        // Done stays the filled, worded button.
+        const doneFill = await done.evaluate((button) => getComputedStyle(button).backgroundColor);
+        expect(doneFill, `${language}: Done's fill`).toBe(GREEN[theme]);
+        expect(look.background, `${language}: the circle's fill against Done's`).not.toBe(doneFill);
+        expect(await axeViolations(page), `${language}: axe while listening`).toEqual([]);
+      }
+      expect(voice.requests.draft).toBe(0);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}

@@ -56,6 +56,9 @@ CONTEXT = [".claude/ux-web/DECISIONS.md", ".claude/ux-web/ISSUES.md"]
 # Never merged back: the loop's own records and setup belong to the organizer. Build output
 # (.next, artifacts, test results) is ignored by git, so a copy never reports it.
 NOT_MERGED = (".claude/", ".agents/", ".codex/")
+# Test and build output, never a package's change, even when a copy's .gitignore misses it
+# (test-results-renders/ wasn't ignored before 2026-11-01).
+OUTPUT = ("artifacts/", "test-results/", "test-results-renders/", "playwright-report/", ".next/")
 SEED_FILE = "UX_WAVES_SEED"
 # Where the copies live. Keep in step with pkg.py.
 COPIES = Path.home() / ".taskflow-tools" / "wt"
@@ -273,18 +276,18 @@ def merge_text(base, ours, theirs, marked=False, union=True):
 
 # ---------------------------------------------------------------- gate
 
-def gate(args):
-    """Runs a heavy command (a build, Playwright) once one of the machine's slots is free, so
-    many implementers can think and edit in parallel while only a few build at a time. A slot
-    is a lock on a file in the main repo's git folder; the OS releases it if the process dies."""
-    command = args.argv
-    if command and command[0] == "--":
-        command = command[1:]
-    if not command:
-        raise SystemExit("gate needs a command after --")
-    slots = max(1, int(args.slots or os.environ.get("UX_GATE_SLOTS") or 3))
+@contextmanager
+def gate_slot(slots=None, pool="web"):
+    """Holds one of the machine's slots for heavy commands (a build, Playwright) while the block
+    runs, so many implementers can think and edit in parallel while only a few build at a time.
+    A slot is a lock on a file in the main repo's git folder; the OS releases it if the process
+    dies. A process the gate started (UX_GATE_HELD names its pool) holds a slot already."""
+    slots = max(1, int(slots or os.environ.get("UX_GATE_SLOTS") or 3))
     # One pool per loop and repo; the app's loop keeps its own, in its own repo.
-    pool = re.sub(r"[^a-z0-9-]", "", (args.pool or "web").lower()) or "web"
+    pool = re.sub(r"[^a-z0-9-]", "", (pool or "web").lower()) or "web"
+    if os.environ.get("UX_GATE_HELD") == pool:
+        yield 0.0
+        return
     common = git(Path(__file__).resolve().parent, "rev-parse", "--path-format=absolute", "--git-common-dir")
     lock_dir = Path(common) / f"ux-gate-{pool}"  # this repo's .git, from any of its worktrees
     lock_dir.mkdir(parents=True, exist_ok=True)
@@ -304,13 +307,30 @@ def gate(args):
             waited += 2
     if waited:
         print(f"[gate] waited {waited:.0f} s for a slot", file=sys.stderr, flush=True)
+    previous = os.environ.get("UX_GATE_HELD")
+    os.environ["UX_GATE_HELD"] = pool
     try:
+        yield waited
+    finally:
+        if previous is None:
+            os.environ.pop("UX_GATE_HELD", None)
+        else:
+            os.environ["UX_GATE_HELD"] = previous
+        handle.close()
+
+
+def gate(args):
+    """Runs a heavy command once one of the machine's slots is free (gate_slot)."""
+    command = args.argv
+    if command and command[0] == "--":
+        command = command[1:]
+    if not command:
+        raise SystemExit("gate needs a command after --")
+    with gate_slot(args.slots, args.pool):
         if len(command) == 1:  # one command line, for the shell
             return subprocess.run(command[0], shell=True).returncode
         exe = shutil.which(command[0]) or command[0]
         return subprocess.run([exe, *command[1:]]).returncode
-    finally:
-        handle.close()
 
 
 class NotSeeded(Exception):
@@ -324,7 +344,7 @@ def changes(wt):
         raise NotSeeded(f"{wt} was never seeded (no {SEED_FILE}): its changes have no known base.")
     git(wt, "add", "-A")
     listed = git(wt, "diff", "--cached", "--name-only", "--no-renames", seed_commit)
-    return seed_commit, [p for p in listed.splitlines() if p]
+    return seed_commit, [p for p in listed.splitlines() if p and not p.startswith(OUTPUT)]
 
 
 def three_way(target, wt, seed_commit, paths, marked=False):

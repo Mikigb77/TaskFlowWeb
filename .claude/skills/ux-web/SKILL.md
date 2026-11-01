@@ -148,7 +148,7 @@ When it returns:
 
 ## 6. Fix and verify — workflow `ux-web-fix`
 
-Every package flows through on its own, in its own copy of the website with its own build mirror and port: web-ux-implementer, then web-ux-tester (tests, and renders of its pages), then web-ux-reviewer; if it falls short, one fix and a second check; then it's merged into the main checkout. A package starts as soon as its `dependsOn` are merged and an agent is free; it never waits for unrelated packages. When every package is in, one final check runs the type and legal checks, the build, the whole suite and the renders, the unit tests and lab performance; what still fails is re-planned once. How it works: `.claude/skills/ux-web/references/loop.md`, step 5.
+Every package flows through on its own, in its own copy of the website with its own build mirror and port: web-ux-implementer, then web-ux-tester (tests, and renders of its pages), then web-ux-reviewer; if it falls short, one fix and a second check; then it's merged into the main checkout. A package starts as soon as its `dependsOn` are merged and an agent is free; it never waits for unrelated packages. Each step of a package checks only what it touched, through the package check (`scripts/check.py`): the type and legal checks, the build and the unit tests only where its change needs them, and only the specs that cover it, chosen by the parts of the site, the copy's sections and the modules it changed. When every package is in, one final check runs the type and legal checks, the build, the whole suite and the renders, the unit tests and lab performance: the run's only whole-suite run. What it finds goes to one repair in the main checkout, re-checked the same targeted way; what still fails is re-planned once, and that round is re-checked the same way too. How it works: `.claude/skills/ux-web/references/loop.md`, step 5.
 
 1. **Make the starting point.**
    - If this session made website changes of its own before the run (the work being reviewed), commit them first, as in step 4's commit: `ux-web.sh ran` lists them if a `base` was taken before that work began (AGENTS.md asks for one). Message: `Changes reviewed by the UX web loop (<run id>)`, plus the attribution line. If no `base` was taken, commit only files that `git status` shows as changed by this session alone, and leave the rest for the owner.
@@ -165,10 +165,9 @@ Every package flows through on its own, in its own copy of the website with its 
    - Leave `maxParallel`, `agents`, `fileLimit`, `fixAttempts`, `maxExtraRounds`, `portBase` and `runner` at their defaults unless the owner asks. The workflow works out for itself whether the runner goes through WSL (Windows) or runs directly (Linux).
    - Save the args of every run you start, with its run ID: resuming needs exactly the same args.
 
-   **Lanes, on a machine with fewer than 8 CPUs** (a cloud session has 4): run the plan as two workflows at once, so each brings its own agents. More lanes don't help the website: its two heavy slots are full by then.
-   1. Split it: `python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --lanes 2`, adding `--only …` or `--skip …` as the owner asked. It prints each lane's packages; packages that depend on each other share a lane.
-   2. Start one run per lane, both in the same message: the args above plus `part: "packages"`, `lane: "L1"` or `"L2"`, `only` set to that lane's packages, and `portBase` 3101 for L1 and 3131 for L2, so their copies' ports never meet.
-   3. When both have returned, start one more run with the same args, without `lane`, `only` or `portBase`, plus `part: "finish"` and `laneResults` set to the list of the lanes' results, unchanged. It runs the final check, the re-plan and the record. Its result is what step 4 uses.
+   **Lanes.** First split the plan: `python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --lanes auto`, adding `--only …` or `--skip …` as the owner asked. It prints the lanes for this machine; packages that depend on each other share a lane. With one lane (8 CPUs or more), run the plan as one run, as above. On a smaller machine (a cloud session has 4 CPUs, so 2 agents per workflow) it prints one lane per 4 packages, up to 3: more lanes than that only wait for the two heavy slots. The plan then runs as that many workflows at once, each with its own agents:
+   1. Start one run per lane, all in the same message: the args above plus `part: "packages"`, `lane: "L1"` (`"L2"`, `"L3"`), `only` set to that lane's packages, and `portBase` 3101 for L1, 3131 for L2 and 3161 for L3, so their copies' ports never meet.
+   2. When every lane has returned, start one more run with the same args, without `lane`, `only` or `portBase`, plus `part: "finish"` and `laneResults` set to the list of the lanes' results, unchanged. It runs the final check, the repair, the re-plan and the record. Its result is what step 4 uses.
 4. **When it returns:**
    - **Save the reports.** Write `close.report` to `<runDir>/<reportName>`, and each of `inlineNotes` to its `path`. Subagents may not write report files, so the agents return the text.
    - **`testsPassed` is true:** commit the run, in one commit.
@@ -193,7 +192,7 @@ Run the whole approved plan in one run, or one pair of lanes. Don't split it int
 
 ### How long it takes
 
-The 2026-10-28-site plan's first batch (5 packages) took almost 4 hours, from its start to its commit, in a 4-CPU cloud session on 2026-11-01: its packages in waves, two agents at a time; then four of them integrated again, one by one, in the main checkout, because the merge step crashed calling WSL, which a cloud session hasn't got; then the round's check (31 minutes) and a second round. With packages flowing through on their own, the same batch comes to about 2 hours there in one run, and about 1½ hours in two lanes. These are estimates from that batch's measured step times, not a measured run. On the PC, with 14 agents and WSL's heavy slots, a plan's packages no longer wait for agents at all, only for the two heavy slots.
+The 2026-10-28-site plan's first batch (5 packages) took almost 4 hours, from its start to its commit, in a 4-CPU cloud session on 2026-11-01: its packages in waves, two agents at a time; then four of them integrated again, one by one, in the main checkout, because the merge step crashed calling WSL, which a cloud session hasn't got; then the round's check (31 minutes) and a second round. With packages flowing through on their own and each step checking only what it touched, the same batch comes to about 1–1¼ hours there in two lanes. These are estimates from that batch's measured step times, not a measured run. One package check measured in a cloud session (2026-11-01, a footer and a hero change): the type check 6 s, the build 1 minute, 4 of the 12 spec files (212 tests) in 3.4 minutes with 2 workers, and the home and privacy renders in 3 minutes. On the PC, with 14 agents and WSL's heavy slots, a plan's packages no longer wait for agents at all, only for the two heavy slots.
 
 ## 7. Tell the owner
 
@@ -208,9 +207,9 @@ Keep it short; the details live in `report.md`.
 ## Size and cost
 
 - **Each package:** an implementer, a tester and a reviewer; a fix and a second check when it falls short; a share of a merge step (a small model runs it). A conflict at merge adds an integrator.
-- **Each run:** a load step, one final check, the record and the reviewer's memory; a re-plan and its packages if the final check fails.
+- **Each run:** a load step, one final check (the only whole-suite run), the record and the reviewer's memory; a repair if the final check fails, and a re-plan, its packages and a targeted re-check if the repair can't clear it.
 - **Scoped run, one area:** 1 reviewer and 1 organizer, then about 4–6 agents per package.
 - **Whole site:** 5 reviewers (H has two) and 1 organizer, then the same per package.
-- Each implementer builds the site once in its copy's mirror (1.5 to 6 minutes), and its tester serves that build. The final check builds once more and runs the whole suite, the renders and the audit side by side: about half an hour in a cloud session.
+- Each implementer's check builds the site in its copy's mirror (1 to 6 minutes), and its tester's check serves that build. The final check builds once more and runs the whole suite, the renders and the audit side by side: about half an hour in a cloud session.
 
 Models and effort are set in each agent's frontmatter in `.claude/agents/web-ux-*.md`. The fix workflow lowers the effort of verification, the re-plan and the record, and runs the mechanical steps (loading the plan, merging) on a small model.

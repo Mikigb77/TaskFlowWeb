@@ -30,24 +30,28 @@ The main session runs `/ux-web` by itself after website work, and whenever an ap
    - merges duplicates;
    - sends product decisions to you;
    - groups the fixes into work packages, each with an exact brief and acceptance checks.
-5. **Fix.** `web-ux-implementer` (Opus, high effort) changes the site, with all copy in the three languages, builds it, runs the Playwright tests it affects, and refreshes the renders.
-   - **Waves (2026-10-21):** packages that share no file run side by side, up to 12 at once. The site's copy (`src/content/`), the stylesheets and the tests don't count as shared.
-   - Each package gets its own copy of the website (`waves.py add`, under `~/.taskflow-tools/wt/`), its own build mirror on WSL's disk and its own port, and its tester follows it there.
-   - `waves.py merge` brings each copy back like a pull request. A package that conflicts goes to an implementer, who integrates it by hand.
-   - Builds and Playwright runs go through the web pool of `waves.py gate`, 2 at a time.
-6. **Test.** `web-ux-tester` (Opus, high effort) runs once per round.
+5. **Fix.** Every package flows through on its own, in its own copy of the website, as many at once as the machine allows (2026-11-01):
+   - `web-ux-implementer` (Opus, high effort) changes the site, with all copy in the three languages, builds it, and runs the Playwright tests its change affects: never the whole suite, and no renders.
+   - Each package gets its own copy of the website (`waves.py add`, under `~/.taskflow-tools/wt/`), its own build mirror and its own port; its tester and reviewer follow it there.
+   - A package starts as soon as the packages in its `dependsOn` are merged and an agent is free. It never waits for unrelated packages: there are no waves and no rounds to wait for. At most two packages change one file at once; the site's copy (`src/content/`), the stylesheets and the tests don't count.
+   - Earlier packages go first: a package's next step runs before a later package starts, so packages finish one after another and later ones are seeded with more of the run.
+   - Builds and Playwright runs go through the web pool of `waves.py gate`, 2 at a time, across every run and lane.
+6. **Test.** `web-ux-tester` (Opus, high effort), in the package's copy, right after its implementer.
    - It writes a Playwright test for every acceptance check a test can prove, working from the plan rather than the code, including axe accessibility checks, on the desktop and mobile projects and in light and dark.
-   - It then runs the type check, the legal check, the build, the whole suite, the unit tests and the renders, and classes every failure as the site's or the infrastructure's.
-   - If a test fails because the site falls short, that finding counts as not fixed, whatever the reviewer says.
-7. **Verify.** The reviewer checks only the findings just fixed and the files just changed.
-8. **Re-plan.** Anything that failed goes back to the organizer, for at most 2 more rounds. A finding that fails twice comes to you instead.
-9. **Record.** The issue log and the run report are updated, and the reviewer updates its memory. If the gate passed, the round is committed on `dev`, the site's files and the loop's records together. The snapshot then moves forward.
+   - It runs its new tests and renders the package's pages for the reviewer, against the implementer's build, and classes every failure as the site's or the infrastructure's.
+   - If a test fails because the site falls short, that finding counts as not fixed, whatever the reviewer says. Every fix that passes stays protected by its test.
+7. **Verify, and fix once.** The reviewer checks the package in its copy: only its findings and the files it changed, with its tester's renders. If it falls short, the implementer fixes exactly what the reviewer and the tester found, in the same copy, and the reviewer checks again. A finding still short after that has failed twice, and comes to you.
+8. **Merge, then the final check.**
+   - `waves.py merge` brings the copy into the main checkout, like a pull request, with a three-way merge. A package that conflicts is carried over by an implementer into a fresh copy (`waves.py carry`), then merged. A package whose own tests still fail after its fix isn't merged: its patch is saved in the run folder for you.
+   - When every package is in, `web-ux-tester` runs the final check once in the main checkout: the type and legal checks, the build, the whole suite and the renders side by side against that build, the unit tests, and lab performance.
+   - Tests that fail there, and regressions a package's own fix didn't clear, go back to the organizer for one more round, which ends with the final check again.
+9. **Record.** The issue log and the run report are updated, and the reviewer updates its memory. If the final check passed, the run is committed on `dev`, the site's files and the loop's records together. The snapshot then moves forward.
 
 ## Rules (your decisions, 2026-10-18)
 
 - The loop fixes everything the reviewers find **except product decisions**; those come to you.
 - Only whole-site runs stop for your approval.
-- Each verified round becomes one commit on `dev` in each repo. Nothing is ever pushed or deployed, and `main` is never touched.
+- Each verified run becomes one commit on `dev` in each repo. Nothing is ever pushed or deployed, and `main` is never touched.
 - The site teaches and creates desire; it doesn't replicate the app. Every claim must be true of the app today.
 - No agent touches a phone. Anything that needs a real device, a screen reader or the live voice demo is listed for you to check.
 
@@ -63,6 +67,7 @@ The main session runs `/ux-web` by itself after website work, and whenever an ap
 
 - **Why WSL:** the website's `node_modules` holds Linux binaries (Next.js, sharp, Playwright's Chromium), and Windows has no Node. nvm loads Node 26 only from `~/.bashrc`, which `bash -lc` skips, hence `source ~/.nvm/nvm.sh`. npm 12 prints `npm notice` lines and progress; pipe through `| tail -n 40` (or `| cat`) to keep output readable.
 - **Why Windows for git:** the checkout belongs to Windows git, and `ux-web.sh` runs in Git Bash, like the app's `ux.sh`.
+- **In a Linux session,** such as a cloud session, there's no WSL and no Windows: Git, the scripts and the runner all run there, the runner directly (`python3 .claude/skills/ux-web/scripts/webrun.py --src <repo> --name main --port 3100 -- '<command>'`), with nvm's Node if it's installed, else the Node on PATH. The fix workflow picks the right form itself, from the platform its load step reports.
 
 The website's commands, run in WSL from its root:
 
@@ -125,9 +130,9 @@ The skill, `.claude/skills/ux-web/`, holds everything the loop does:
 | `SKILL.md` | The `/ux-web` command: modes, scope, renders, the review and the fix runs. |
 | `workflows/ux-web-review.js`, `workflows/ux-web-fix.js` | The two workflows, run with the Workflow tool by `scriptPath`. |
 | `scripts/ux-web.sh` | Snapshots (`refs/ux-web/last` here, `refs/ux-web/app-last` in the app repo) and the run's own changes (`refs/ux-web/base`). It never moves a branch or touches a working tree, and it leaves the index alone, except `stage`, which stages the run's own changes. |
-| `scripts/webrun.py` | Runs a website command on WSL's own disk, in a mirror with its own port. |
-| `scripts/waves.py` | Side-by-side packages: a seeded copy of the website per package, merged back; gates the builds. |
-| `scripts/pkg.py` | Prints a plan's packages for the agents. |
+| `scripts/webrun.py` | Runs a website command in a mirror with its own port: on WSL's own disk from Windows, directly on Linux. |
+| `scripts/waves.py` | Side-by-side packages: a seeded copy of the website per package (made once; `--fresh` starts it over), merged back (idempotent, and one package's error never stops the others), a conflicted package carried into a fresh copy, an unmerged one set aside with its patch; gates the builds. |
+| `scripts/pkg.py` | Prints a plan's packages for the agents, the headers and the machine for the fix workflow (`--headers`), and lanes (`--lanes N`). |
 | `scripts/webkit_renders.py` | WebKit renders of every page, from Windows (the skill's §4). |
 | `scripts/crop.mjs` | Cuts screenfuls out of a full-page render or a demo card. |
 | `references/loop.md` | This guide. |
@@ -140,7 +145,7 @@ The records, `.claude/ux-web/`, hold what the loop decided and found:
 | `DECISIONS.md` | Your decisions about the site. Every agent reads it first. |
 | `ISSUES.md` | Every web issue and its current status, `WEB-1` upward. |
 | `KNOWN_FAILURES.md` | Checks that were already failing before the loop started, and the baseline. |
-| `runs/<run id>/` | One run: `review-*.md`, `plan.md`, `plan.json`, `plan-r*.json`, `verify-*.md`, `report.md`. |
+| `runs/<run id>/` | One run: `review-*.md`, `plan.md`, `plan.json`, `plan-r*.json`, `verify-*.md` (one per package and check), `merges*.jsonl` (what each merge did), `unmerged-*.patch` (packages set aside), `report.md`. |
 
 App images for the site: the hero's Calendar screenshots (`public/images/hero-calendar-<language>-<theme>.png`) come from the real app. In `../TaskFlow/App/`, `flutter test --no-pub --dart-define=WRITE_WEB_ASSETS=true test/ux_previews/website_assets_test.dart` writes them to `../TaskFlow/App/build/web-assets/`; copy them over when the app's Calendar changes.
 
@@ -155,6 +160,10 @@ Project agents and skills load when a session starts or changes folder. After ad
 
 Learned the hard way; each cost a run, or hours.
 - **Keep the PC awake** before the build and the renders, or a fix run: on 2026-10-28 the renders took 15 hours because the PC slept.
+- **A workflow runs at most min(16, CPUs − 2) agents at once,** whatever `maxParallel` says. In a 4-CPU cloud session that's 2: on 2026-11-01 a five-package batch took almost 4 hours that way. Use two lanes there (SKILL.md §6), or run big plans on the PC. Where the app loop's 19 hours went, and why: `../TaskFlow/.claude/skills/ux/references/speed-2026-11-01.md`.
+- **A cloud session has no WSL, nvm or `ss`.** Since 2026-11-01 the scripts work without them: `webrun.py` runs directly with the Node on PATH and finds a server on its port with `lsof` or `fuser`, and `waves.py` removes a mirror without `wsl`. Before that, a cloud run's merge crashed calling `wsl`, and four packages were integrated again by hand, one by one.
+- **A command line with several commands runs whole in the mirror** (2026-11-01). Before, `webrun.py` ran the second half of `a & b` in the checkout, and a suite-and-renders line deleted its own renders there.
+- **Hands off the main checkout during a fix run:** copies are seeded from it and merges write it. Seeds and merges share a lock (`ux-waves.lock` in the git folder), so they never see each other half done.
 - **Resuming:** `Workflow({scriptPath, resumeFromRunId, args})` replays every finished agent from cache, even after a restart, but only with exactly the same args. Save a run's args when you launch it.
 - **Long checks run in the background:** the whole suite and the renders together take more than 10 minutes, longer than one tool call may wait.
 - **Git Bash rewrites `/mnt/c` paths** unless a command starts with `MSYS_NO_PATHCONV=1`.
@@ -165,7 +174,7 @@ Learned the hard way; each cost a run, or hours.
 
 ## How it differs from the app loop
 
-- It lives with what it reviews: the loop and the site share this repo, and one commit holds a round. The app it checks the site against is `../TaskFlow`, read only.
+- It lives with what it reviews: the loop and the site share this repo, and one commit holds a run. The app it checks the site against is `../TaskFlow`, read only.
 - IDs are `WEB-`, packages `WP`, decisions `WD`, so they can't be confused with the app's.
 - The areas are H, F, L and G, and the reviewer checks the site against the app (faithfulness), with a second snapshot of the app-side files.
 - Renders come from Playwright, not Flutter previews, and the build must come first.
@@ -175,10 +184,11 @@ Learned the hard way; each cost a run, or hours.
 
 ## Cost
 
-- **Scoped run** (one area): about 7 agents.
-- **Whole-site run:** 4 reviewers and an organizer, then one implementer per package you approve, plus, each round, one tester and one verifier per area.
-- Every implementer and tester builds the site (1.5 to 6 minutes) and runs Playwright in WSL. The tester's full renders and audit add about 5.5 minutes a round.
+- **Each package:** an implementer, a tester and a reviewer, a fix and a second check when it falls short, and a share of a merge step.
+- **Each run:** a load step, one final check, the record and the reviewer's memory.
+- **Whole-site review:** 5 reviewers (H has two) and an organizer before any of that.
+- Each implementer builds the site once in its copy's mirror (1.5 to 6 minutes), and its tester serves that build. The whole suite, the full renders and the audit run once per run, in the final check.
 
-To change a model or an effort level, edit the agent's frontmatter.
+To change a model or an effort level, edit the agent's frontmatter. The fix workflow lowers the effort of verification, the re-plan and the record, and runs the mechanical steps (loading the plan, merging) on a small model.
 
 **WSL is shared.** No agent may stop, restart or reset it (`wsl --shutdown`, `--terminate`, `--unregister`). On 2026-10-20 a tester's repeated shutdowns left it unable to start (`Wsl/Service/CreateInstance/E_UNEXPECTED`), and only the owner could restart it, through the WSL service or Windows.

@@ -31,20 +31,23 @@ The main session runs `/ux-web` by itself after website work, and whenever an ap
    - sends product decisions to you;
    - groups the fixes into work packages, each with an exact brief and acceptance checks.
 5. **Fix.** Every package flows through on its own, in its own copy of the website, as many at once as the machine allows (2026-11-01):
-   - `web-ux-implementer` (Opus, high effort) changes the site, with all copy in the three languages, builds it, and runs the Playwright tests its change affects: never the whole suite, and no renders.
+   - `web-ux-implementer` (Opus, high effort) changes the site, with all copy in the three languages, and runs the package check: never the whole suite, and no renders.
+   - **The package check** (`scripts/check.py`, 2026-11-01) is how every step of a package checks what it touched, and only that, in its copy's build mirror: `npm run check` when a TypeScript file changed, `npm run legal:check` when the legal texts did, the production build when the site did, the unit tests when `src/lib/` or `edge/` did, and only the specs that cover the change: the specs of the parts of the site it changed, of the copy's sections whose wording changed, of the modules the specs import, and the specs that failed last time. It says why it chose each spec, and keeps its state in the copy's git folder: the first run counts the package since its seed, each later run only what changed since, plus what failed. It takes one gate slot for the whole check, and renders pages only when asked (`--renders auto`).
    - Each package gets its own copy of the website (`waves.py add`, under `~/.taskflow-tools/wt/`), its own build mirror and its own port; its tester and reviewer follow it there.
    - A package starts as soon as the packages in its `dependsOn` are merged and an agent is free. It never waits for unrelated packages: there are no waves and no rounds to wait for. At most two packages change one file at once; the site's copy (`src/content/`), the stylesheets and the tests don't count.
    - Earlier packages go first: a package's next step runs before a later package starts, so packages finish one after another and later ones are seeded with more of the run.
    - Builds and Playwright runs go through the web pool of `waves.py gate`, 2 at a time, across every run and lane.
+   - On a machine under 8 CPUs, where a workflow gets only CPUs − 2 agents, the plan runs in lanes: several workflows at once, one per 4 packages, up to 3 (`pkg.py --lanes auto`), then one finish run.
 6. **Test.** `web-ux-tester` (Opus, high effort), in the package's copy, right after its implementer.
    - It writes a Playwright test for every acceptance check a test can prove, working from the plan rather than the code, including axe accessibility checks, on the desktop and mobile projects and in light and dark.
-   - It runs its new tests and renders the package's pages for the reviewer, against the implementer's build, and classes every failure as the site's or the infrastructure's.
+   - It runs the package check with the renders: only its new tests, since the implementer's check, against the implementer's build, and the renders of the pages the package changed, for the reviewer. It classes every failure as the site's or the infrastructure's.
    - If a test fails because the site falls short, that finding counts as not fixed, whatever the reviewer says. Every fix that passes stays protected by its test.
 7. **Verify, and fix once.** The reviewer checks the package in its copy: only its findings and the files it changed, with its tester's renders. If it falls short, the implementer fixes exactly what the reviewer and the tester found, in the same copy, and the reviewer checks again. A finding still short after that has failed twice, and comes to you.
 8. **Merge, then the final check.**
    - `waves.py merge` brings the copy into the main checkout, like a pull request, with a three-way merge. A package that conflicts is carried over by an implementer into a fresh copy (`waves.py carry`), then merged. A package whose own tests still fail after its fix isn't merged: its patch is saved in the run folder for you.
-   - When every package is in, `web-ux-tester` runs the final check once in the main checkout: the type and legal checks, the build, the whole suite and the renders side by side against that build, the unit tests, and lab performance.
-   - Tests that fail there, and regressions a package's own fix didn't clear, go back to the organizer for one more round, which ends with the final check again.
+   - When every package is in, `web-ux-tester` runs the final check once in the main checkout: the type and legal checks, the build, the whole suite and the renders side by side against that build, the unit tests, and lab performance. It is the run's only whole-suite run.
+   - What fails there goes first to one repair: an implementer fixes the causes in the main checkout and reruns the failing specs and the check of what it changed. Lab performance can't be re-measured by the check, so a failure there goes to the re-plan.
+   - What the repair can't clear, and regressions a package's own fix didn't clear, go back to the organizer for one more round. That round ends with a re-check of its own changes and the specs that failed before (and lab performance, if it failed), not the whole suite again.
 9. **Record.** The issue log and the run report are updated, and the reviewer updates its memory. If the final check passed, the run is committed on `dev`, the site's files and the loop's records together. The snapshot then moves forward.
 
 ## Rules (your decisions, 2026-10-18)
@@ -130,9 +133,10 @@ The skill, `.claude/skills/ux-web/`, holds everything the loop does:
 | `SKILL.md` | The `/ux-web` command: modes, scope, renders, the review and the fix runs. |
 | `workflows/ux-web-review.js`, `workflows/ux-web-fix.js` | The two workflows, run with the Workflow tool by `scriptPath`. |
 | `scripts/ux-web.sh` | Snapshots (`refs/ux-web/last` here, `refs/ux-web/app-last` in the app repo) and the run's own changes (`refs/ux-web/base`). It never moves a branch or touches a working tree, and it leaves the index alone, except `stage`, which stages the run's own changes. |
+| `scripts/check.py` | The package check: the checks, build, specs and renders a package's change touches, and only those (step 5). `--list` shows what it would run and why. |
 | `scripts/webrun.py` | Runs a website command in a mirror with its own port: on WSL's own disk from Windows, directly on Linux. |
 | `scripts/waves.py` | Side-by-side packages: a seeded copy of the website per package (made once; `--fresh` starts it over), merged back (idempotent, and one package's error never stops the others), a conflicted package carried into a fresh copy, an unmerged one set aside with its patch; gates the builds. |
-| `scripts/pkg.py` | Prints a plan's packages for the agents, the headers and the machine for the fix workflow (`--headers`), and lanes (`--lanes N`). |
+| `scripts/pkg.py` | Prints a plan's packages for the agents, the headers and the machine for the fix workflow (`--headers`), and lanes (`--lanes auto` or `N`). |
 | `scripts/webkit_renders.py` | WebKit renders of every page, from Windows (the skill's §4). |
 | `scripts/crop.mjs` | Cuts screenfuls out of a full-page render or a demo card. |
 | `references/loop.md` | This guide. |
@@ -160,7 +164,7 @@ Project agents and skills load when a session starts or changes folder. After ad
 
 Learned the hard way; each cost a run, or hours.
 - **Keep the PC awake** before the build and the renders, or a fix run: on 2026-10-28 the renders took 15 hours because the PC slept.
-- **A workflow runs at most min(16, CPUs − 2) agents at once,** whatever `maxParallel` says. In a 4-CPU cloud session that's 2: on 2026-11-01 a five-package batch took almost 4 hours that way. Use two lanes there (SKILL.md §6), or run big plans on the PC. Where the app loop's 19 hours went, and why: `../TaskFlow/.claude/skills/ux/references/speed-2026-11-01.md`.
+- **A workflow runs at most min(16, CPUs − 2) agents at once,** whatever `maxParallel` says. In a 4-CPU cloud session that's 2: on 2026-11-01 a five-package batch took almost 4 hours that way. Use lanes there (`pkg.py --lanes auto`, SKILL.md §6), or run big plans on the PC. Where the app loop's 19 hours went, and why: `../TaskFlow/.claude/skills/ux/references/speed-2026-11-01.md`.
 - **A cloud session has no WSL, nvm or `ss`.** Since 2026-11-01 the scripts work without them: `webrun.py` runs directly with the Node on PATH and finds a server on its port with `lsof` or `fuser`, and `waves.py` removes a mirror without `wsl`. Before that, a cloud run's merge crashed calling `wsl`, and four packages were integrated again by hand, one by one.
 - **A command line with several commands runs whole in the mirror** (2026-11-01). Before, `webrun.py` ran the second half of `a & b` in the checkout, and a suite-and-renders line deleted its own renders there.
 - **Hands off the main checkout during a fix run:** copies are seeded from it and merges write it. Seeds and merges share a lock (`ux-waves.lock` in the git folder), so they never see each other half done.
@@ -185,9 +189,10 @@ Learned the hard way; each cost a run, or hours.
 ## Cost
 
 - **Each package:** an implementer, a tester and a reviewer, a fix and a second check when it falls short, and a share of a merge step.
-- **Each run:** a load step, one final check, the record and the reviewer's memory.
+- **Each run:** a load step, one final check (the only whole-suite run), the record and the reviewer's memory; a repair when the final check fails.
 - **Whole-site review:** 5 reviewers (H has two) and an organizer before any of that.
-- Each implementer builds the site once in its copy's mirror (1.5 to 6 minutes), and its tester serves that build. The whole suite, the full renders and the audit run once per run, in the final check.
+- Each implementer's check builds the site in its copy's mirror (1 to 6 minutes), and its tester's check serves that build. The whole suite, the full renders and the audit run once per run, in the final check.
+- **Next.js's security notice** (2026-11-01): Next.js 16.4.0 sometimes stops a build with `SecurityFatalError` (it says the version has a known security vulnerability) and goes on when the same build runs again. The package check runs it again once and says so; the final check's tester does the same and notes it for the owner.
 
 To change a model or an effort level, edit the agent's frontmatter. The fix workflow lowers the effort of verification, the re-plan and the record, and runs the mechanical steps (loading the plan, merging) on a small model.
 

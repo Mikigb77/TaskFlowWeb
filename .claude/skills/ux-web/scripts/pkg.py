@@ -5,7 +5,7 @@ Agents use this instead of opening the whole plan.json, which is large.
 Usage:
   python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> WP31 [WP1 ...] [--conventions]
   python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --headers [--plan <file>] [--repo <website repo>]
-  python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --lanes N [--plan <file>] [--only WP1 WP2 ...] [--skip WP3 ...]
+  python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --lanes auto|N [--plan <file>] [--only WP1 WP2 ...] [--skip WP3 ...]
 
 Looks in plan.json and in every plan-*.json of the run folder. When a package
 appears in more than one file, the most recently written file wins.
@@ -21,6 +21,8 @@ where waves.py add makes the packages' copies.
 caps each workflow's agents at its CPUs minus 2). Packages joined by dependsOn share a lane;
 the lanes balance by size (S 1, M 2, L 3) and keep packages that change the same file
 together where that keeps them balanced. Prints JSON: {"lanes": [[ids], ...], "weights": [...]}.
+--lanes auto picks N for this machine: 1 with 8 CPUs or more, where one run gets enough agents;
+on a smaller machine one lane per 4 packages, up to 3, the most its heavy slots keep busy.
 """
 import glob
 import json
@@ -34,6 +36,9 @@ from pathlib import Path
 # stylesheets and the tests merge line by line. Keep in step with ux-web-fix.js.
 MERGEABLE = re.compile(r"^(src/content/|src/styles/|tests/)")
 WEIGHT = {"S": 1, "M": 2, "L": 3}
+# --lanes auto: on a machine under 8 CPUs (a workflow runs at most CPUs - 2 agents), one lane
+# per PER_LANE packages, up to MAX_LANES: more lanes than that only wait for the heavy slots.
+PER_LANE, MAX_LANES = 4, 3
 # Where waves.py add makes the packages' copies. Keep in step with waves.py.
 COPIES = Path.home() / ".taskflow-tools" / "wt"
 
@@ -109,6 +114,10 @@ def lanes(run_dir, n):
     only, skip = set(listed("--only")), set(listed("--skip"))
     plan = [p for p in data.get("packages", []) if p.get("id") not in skip and (not only or p.get("id") in only)]
     ids = [p["id"] for p in plan]
+    cpus = os.cpu_count() or 1
+    if n == "auto":
+        n = 1 if cpus >= 8 else max(1, min(MAX_LANES, -(-len(ids) // PER_LANE)))
+    n = int(n)
     parent = {i: i for i in ids}
 
     def find(x):
@@ -144,7 +153,7 @@ def lanes(run_dir, n):
         for p in c["ps"]:
             lane_of[p["id"]] = best
     out = [[i for i in ids if lane_of[i] == k] for k in range(n)]
-    print(json.dumps({"lanes": out, "weights": load}, ensure_ascii=False))
+    print(json.dumps({"lanes": out, "weights": load, "cpus": cpus}, ensure_ascii=False))
 
 
 def main() -> None:
@@ -156,7 +165,8 @@ def main() -> None:
         headers(run_dir)
         return
     if "--lanes" in sys.argv:
-        lanes(run_dir, int(option("--lanes", "1")))
+        n = option("--lanes", "1")
+        lanes(run_dir, n if n == "auto" else int(n))
         return
     wanted = [a for a in sys.argv[2:] if not a.startswith("--")]
     files = [os.path.join(run_dir, "plan.json")]

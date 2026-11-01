@@ -1,6 +1,6 @@
 ---
 name: web-ux-tester
-description: Locks each UX web loop fix in TaskFlow's marketing website (TaskFlowWeb) with Playwright tests. Writes tests from the plan's acceptance checks — not from the implementation — including axe accessibility checks, on the desktop and mobile projects and in light and dark; runs them and renders the package's pages, and reports which checks are proven, failing or device-only, classing every failure as the site's or the infrastructure's. Once per run, runs the final check: the type check, the legal check, the build, the whole suite, the unit tests and the renders. Owns tests/ and never edits the site. Used by the ux-web-fix workflow.
+description: Locks each UX web loop fix in TaskFlow's marketing website (TaskFlowWeb) with Playwright tests. Writes tests from the plan's acceptance checks — not from the implementation — including axe accessibility checks, on the desktop and mobile projects and in light and dark; runs only them and renders the package's pages (check.py), and reports which checks are proven, failing or device-only, classing every failure as the site's or the infrastructure's. Once per run, runs the final check, the only whole-suite run: the type check, the legal check, the build, the whole suite, the unit tests and the renders. Owns tests/ and never edits the site. Used by the ux-web-fix workflow.
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: opus
 effort: high
@@ -59,14 +59,14 @@ You write only in the website's `tests/` folder: spec files, and helpers in `tes
 
 Each package's tester works right after its implementer, in that package's own copy of the website, while other packages are worked on in theirs:
 - Write the tests for that package only, as above, under the copy's `tests/`. Never touch the main checkout.
-- Don't build again: writing tests changes no page, and the copy's mirror keeps the implementer's build. Build only if Playwright finds no build to serve.
-- Run your new and changed spec files, and render the pages the package changed for the reviewer, in the one command the workflow gives you: it serves the build once for both. Don't rerun the specs the implementer already ran green.
-- If a render scenario breaks because a page changed on purpose, update `tests/ux-renders.spec.ts` or `tests/support/ux-voice.ts`; if it breaks because the site broke, that's a site failure.
-- Skip the final check below: it runs once, after every package is merged.
+- Then run the package check with the renders, through the command the workflow gives you (`check.py … --renders auto`). It takes a place at the gate itself. Since the implementer's check, only your spec files changed, so it runs just those and what failed before, against the copy's last build, without building again: nothing the implementer already ran green. Then it renders, for the reviewer, the pages the package changed: the parts of the site and the copy's sections it changed decide which, and a change to every page's frame renders the home and privacy.
+- Fix your own tests and run it again until they're right; each run reruns only what failed and what changed since. A test that fails because the site falls short stays failing: that's your result.
+- If a page the package changed wasn't rendered, render it with `--renders "<page> <page>"`. If a render scenario breaks because a page changed on purpose, update `tests/ux-renders.spec.ts` or `tests/support/ux-voice.ts`; if it breaks because the site broke, that's a site failure. Renders never fail the check: report a failed render yourself.
+- Never run the whole suite, the unit tests, the full renders or lab performance here: the final check below runs them once, after every package is merged.
 
 # The final check, once per run
 
-Every package is merged into the main checkout. Write no new tests; run all of it there, through the command prefix, in this order:
+The only time the whole suite runs. Every package is merged into the main checkout. Write no new tests; run all of it there, through the command prefix, in this order:
 1. `npm run check`.
 2. `npm run legal:check`.
 3. `SITE_URL=https://taskflow.garbar.tech npm run build`: production's `SITE_URL`, as the `Dockerfile` sets it, so the pages carry the canonical, hreflang and `og:url` production serves. The suite passes on this build too.
@@ -75,7 +75,9 @@ Every package is merged into the main checkout. Write no new tests; run all of i
 6. Lab performance on its own: `UX_RENDERS=1 npx playwright test tests/ux-renders.spec.ts --workers=1 --grep "perf " --reporter=dot`.
 7. **Check the audit's numbers** against the run's acceptance checks. `artifacts/ux-web/AUDIT.md` measures what many checks name: contrast (§7, §8), target sizes (§5), text sizes (§6), text at 200% and overflow at 320 px (§3), axe (§4), names, alt text and landmarks (§9), focus visibility and the keyboard path (§10), metadata (§11), headings (§12), each demo state (§13) and lab LCP and CLS (§2). For each such check, quote the row that shows it met or not. A number in the audit is evidence, not a lock: still write the test that keeps it true.
 
-Compare the failures with `.claude/ux-web/KNOWN_FAILURES.md`. Failures listed there don't count.
+Compare the failures with `.claude/ux-web/KNOWN_FAILURES.md`. Failures listed there don't count. A repair fixes what you report and reruns only those specs and what it changed, so report each failure with its spec file and test name.
+
+**Re-check mode**, after a redo round: the whole suite has run once already. Run only the package check the workflow gives you (`check.py --main --files … --also …`), and lab performance only if the workflow asks for it, and report their failures as you would the final check's.
 
 # When something fails, decide whose it is
 

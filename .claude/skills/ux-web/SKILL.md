@@ -1,6 +1,6 @@
 ---
 name: ux-web
-description: Run TaskFlow's UX web loop on the marketing website (TaskFlowWeb). web-ux-reviewer reviews what changed since the last web review (or the whole site, or named pages) — including whether the site still tells the truth about the app — web-ux-organizer plans the fixes, web-ux-implementer makes them one package at a time, web-ux-tester locks them with Playwright, and the reviewer re-checks until they hold. Use when the owner types /ux-web, asks for a UX review of the website, after website work, and when an app feature changes what the site should say (AGENTS.md's UX web loop section).
+description: Run TaskFlow's UX web loop on the marketing website (TaskFlowWeb). web-ux-reviewer reviews what changed since the last web review (or the whole site, or named pages) — including whether the site still tells the truth about the app — web-ux-organizer plans the fixes, web-ux-implementers make them side by side, and each package is locked with Playwright by web-ux-tester and re-checked on its own until it holds. Use when the owner types /ux-web, asks for a UX review of the website, after website work, and when an app feature changes what the site should say (AGENTS.md's UX web loop section).
 argument-hint: "[site | fix [skip WP3 | only WP1 WP2] | plan <run id> | <pages or areas>]"
 ---
 
@@ -18,10 +18,11 @@ Two repos are involved:
 MSYS_NO_PATHCONV=1 wsl -e python3 /mnt/c/Users/mikig/Desktop/Custom/MikiHacks/TaskFlow/TaskFlowWeb/.claude/skills/ux-web/scripts/webrun.py --src /mnt/c/Users/mikig/Desktop/Custom/MikiHacks/TaskFlow/TaskFlowWeb --name main --port 3100 -- '<command>'
 ```
 
-- **What it does:** it syncs the website to a mirror under `~/twb` with rsync, with `node_modules` installed once per lockfile and hard-linked into each mirror. It runs the command there with nvm's Node, on the mirror's own port, and copies `artifacts/` and `test-results/` back to the checkout.
+- **What it does:** it syncs the website to a mirror under `~/twb` with rsync (or its own copy where rsync is missing), with `node_modules` installed once per lockfile and hard-linked into each mirror. It runs the command there with nvm's Node (or the Node on PATH), on the mirror's own port, and copies `artifacts/` and `test-results/` back to the checkout.
 - **Why:** on `/mnt/c`, Node was several times slower.
 - **The port:** the loop uses 3100 and up. The runner stops a server left on its port, and 3000 stays free for people.
 - **Git Bash:** `MSYS_NO_PATHCONV=1` keeps Git Bash from rewriting the `/mnt/c` paths.
+- **In a Linux session,** such as a cloud session, there's no WSL, and everything runs there: Git and the scripts, and the same runner directly, `python3 .claude/skills/ux-web/scripts/webrun.py --src "$(git rev-parse --show-toplevel)" --name main --port 3100 -- '<command>'`. The fix workflow picks the right form itself.
 
 ## 1. Read the argument
 
@@ -147,19 +148,30 @@ When it returns:
 
 ## 6. Fix and verify — workflow `ux-web-fix`
 
-1. **Make the starting point.**
-   - If this session made website changes of its own before the run (the work being reviewed), commit them first, as in step 3's commit: `ux-web.sh ran` lists them if a `base` was taken before that work began (AGENTS.md asks for one). Message: `Changes reviewed by the UX web loop (<run id>)`, plus the attribution line. If no `base` was taken, commit only files that `git status` shows as changed by this session alone, and leave the rest for the owner.
-   - Then run `bash .claude/skills/ux-web/scripts/ux-web.sh base`. It records the website's whole working tree, including the other session's uncommitted work, so the run's own changes can be told apart from it afterwards.
-2. **Run the workflow.** First:
-   - Keep the PC awake while it runs. In the desktop app, call `mcp__ccd_host__request_keep_awake` with `until: "session_idle"`. The longest runs so far each lost 2–4 hours to a sleeping or restarting laptop.
-   - It may run while a `ux-fix` run is going (owner, 2026-10-21). Each loop runs up to 12 packages side by side, and each limits its own heavy commands: the website's builds in WSL, the app's Flutter on Windows.
+Every package flows through on its own, in its own copy of the website with its own build mirror and port: web-ux-implementer, then web-ux-tester (tests, and renders of its pages), then web-ux-reviewer; if it falls short, one fix and a second check; then it's merged into the main checkout. A package starts as soon as its `dependsOn` are merged and an agent is free; it never waits for unrelated packages. When every package is in, one final check runs the type and legal checks, the build, the whole suite and the renders, the unit tests and lab performance; what still fails is re-planned once. How it works: `.claude/skills/ux-web/references/loop.md`, step 5.
 
-   Then call the Workflow tool with `scriptPath` set to the absolute path of `.claude/skills/ux-web/workflows/ux-web-fix.js`, and args `{ runId, runDir, date, repoRoot, maxParallel, heavySlots, skip, only, batch, recordMemory, notes }`:
-   - `repoRoot` is this repo (`git rev-parse --show-toplevel`), with forward slashes. With it, packages that share no file run side by side, each in its own copy of the website (`waves.py add`), with its own build mirror and port. Without it, they run one at a time in the main checkout.
-   - `maxParallel` is 12, and `heavySlots` 2: builds and Playwright runs at once in WSL, which has about 7.5 GB. For `/ux-web fix`, the run folder is the newest one under `.claude/ux-web/runs/` that has a `plan.json` but no `report.md`.
-3. **When it returns:**
+1. **Make the starting point.**
+   - If this session made website changes of its own before the run (the work being reviewed), commit them first, as in step 4's commit: `ux-web.sh ran` lists them if a `base` was taken before that work began (AGENTS.md asks for one). Message: `Changes reviewed by the UX web loop (<run id>)`, plus the attribution line. If no `base` was taken, commit only files that `git status` shows as changed by this session alone, and leave the rest for the owner.
+   - Then run `bash .claude/skills/ux-web/scripts/ux-web.sh base`. It records the website's whole working tree, including the other session's uncommitted work, so the run's own changes can be told apart from it afterwards.
+2. **Get ready.**
+   - Keep the PC awake while it runs. In the desktop app, call `mcp__ccd_host__request_keep_awake` with `until: "session_idle"`. The longest runs so far each lost 2–4 hours to a sleeping or restarting laptop.
+   - Count the CPUs: `nproc`. A workflow runs at most min(16, CPUs − 2) agents at once, whatever its args say: 14 on a 16-CPU PC, but only 2 in a 4-CPU cloud session. That cap, not the plan, is why runs in the cloud took so long.
+   - It may run while a `ux-fix` run is going (owner, 2026-10-21). Each loop limits its own heavy commands: the website's builds and Playwright runs, the app's Flutter.
+   - While it runs, don't edit, commit, stash or switch branches in the main checkout: every package's copy is seeded from it, and every merge writes it.
+3. **Run it.** Call the Workflow tool with `scriptPath` set to the absolute path of `.claude/skills/ux-web/workflows/ux-web-fix.js`, and args `{ runId, runDir, date, repoRoot, heavySlots, skip, only, notes }`:
+   - `repoRoot` is this repo (`git rev-parse --show-toplevel`), with forward slashes. With it, every package runs in its own copy of the website (`waves.py add`, under `~/.taskflow-tools/wt/`), with its own build mirror and port. Without it, packages run one at a time in the main checkout.
+   - `heavySlots` is 2: builds and Playwright runs at once, across every run and lane of this repo. That's what WSL's 7.5 GB allows on the PC, and a cloud session's 4 CPUs.
+   - For `/ux-web fix`, the run folder is the newest one under `.claude/ux-web/runs/` that has a `plan.json` but no `report.md`.
+   - Leave `maxParallel`, `agents`, `fileLimit`, `fixAttempts`, `maxExtraRounds`, `portBase` and `runner` at their defaults unless the owner asks. The workflow works out for itself whether the runner goes through WSL (Windows) or runs directly (Linux).
+   - Save the args of every run you start, with its run ID: resuming needs exactly the same args.
+
+   **Lanes, on a machine with fewer than 8 CPUs** (a cloud session has 4): run the plan as two workflows at once, so each brings its own agents. More lanes don't help the website: its two heavy slots are full by then.
+   1. Split it: `python -I -X utf8 .claude/skills/ux-web/scripts/pkg.py <runDir> --lanes 2`, adding `--only …` or `--skip …` as the owner asked. It prints each lane's packages; packages that depend on each other share a lane.
+   2. Start one run per lane, both in the same message: the args above plus `part: "packages"`, `lane: "L1"` or `"L2"`, `only` set to that lane's packages, and `portBase` 3101 for L1 and 3131 for L2, so their copies' ports never meet.
+   3. When both have returned, start one more run with the same args, without `lane`, `only` or `portBase`, plus `part: "finish"` and `laneResults` set to the list of the lanes' results, unchanged. It runs the final check, the re-plan and the record. Its result is what step 4 uses.
+4. **When it returns:**
    - **Save the reports.** Write `close.report` to `<runDir>/<reportName>`, and each of `inlineNotes` to its `path`. Subagents may not write report files, so the agents return the text.
-   - **`testsPassed` is true:** commit the round, in one commit.
+   - **`testsPassed` is true:** commit the run, in one commit.
      - **The site's files.** Run `bash .claude/skills/ux-web/scripts/ux-web.sh ran`. Stage the files that appear both there and in the workflow's `webFiles`, with `bash .claude/skills/ux-web/scripts/ux-web.sh stage <files>`:
        - a file that was clean when the run started is staged whole;
        - a file that held the other session's uncommitted changes gets only the run's hunks (`git apply --cached`);
@@ -169,18 +181,19 @@ When it returns:
      - **The loop's records.** `git add -- .claude/ux-web/ISSUES.md .claude/ux-web/KNOWN_FAILURES.md .claude/ux-web/runs/<run id> .claude/agent-memory/web-ux-reviewer`, plus `.claude/ux-web/DECISIONS.md` if you recorded decisions. They're the loop's own files, never another session's.
      - Check `git diff --cached` (only the run's lines and records), then commit: subject `UX web loop <run id>: <n> fixes verified`; body: the verified IDs, then the IDs still open with a short reason each, then any refused files; end with the attribution line.
    - **`testsPassed` is false:** don't commit. Tell the owner which checks fail, and that the changes are left uncommitted for them to look at.
+   - **Packages set aside** (`packages[].patch`): a package whose own tests still failed after its fix isn't merged; its patch is in the run folder. List them for the owner; don't apply them.
    - Either way, run `bash .claude/skills/ux-web/scripts/ux-web.sh save` afterwards.
+   - **Leftovers:** `ls ~/.taskflow-tools/wt/` should list no copy named after this run. A run that was stopped can leave copies behind; remove each with `python -I -X utf8 .claude/skills/ux-web/scripts/waves.py drop --worktree <path> --save <runDir>/leftover-<name>.patch`, which also removes its build mirror.
 
 Never push. Never deploy: no `scripts/deploy-*`, `gcloud`, `wrangler` or `docker`. Never commit on `main`. Never skip hooks. Never commit, stage or revert the other session's work.
 
-### Big plans run in batches
+### Big plans run in one go
 
-A plan with more than about 6 packages runs in batches of about 5, in plan order.
-- Each batch is one `ux-web-fix` run, with `only` set to the batch's packages and `batch` set to `b1`, `b2`, and so on.
-- Set `recordMemory: false` on every batch except the last, so the reviewer updates its memory once per plan.
-- After each batch: save its report, commit, run `ux-web.sh save`, then `ux-web.sh base`, then start the next batch.
-- Don't wait for the owner between batches.
-- Stop and tell the owner if a batch's tests fail, or if it escalates more than two findings.
+Run the whole approved plan in one run, or one pair of lanes. Don't split it into batches: each package already gets its own tester and reviewer, and every batch only added a final check, a record and a wait for its slowest package. `batch` still names a run's report and records, for a plan that must be split for another reason, such as the owner approving it in parts. Then set `recordMemory: false` on every part but the last, and after each part save its report, commit, and run `ux-web.sh save`, then `ux-web.sh base`.
+
+### How long it takes
+
+The 2026-10-28-site plan's first batch (5 packages) took almost 4 hours, from its start to its commit, in a 4-CPU cloud session on 2026-11-01: its packages in waves, two agents at a time; then four of them integrated again, one by one, in the main checkout, because the merge step crashed calling WSL, which a cloud session hasn't got; then the round's check (31 minutes) and a second round. With packages flowing through on their own, the same batch comes to about 2 hours there in one run, and about 1½ hours in two lanes. These are estimates from that batch's measured step times, not a measured run. On the PC, with 14 agents and WSL's heavy slots, a plan's packages no longer wait for agents at all, only for the two heavy slots.
 
 ## 7. Tell the owner
 
@@ -194,8 +207,10 @@ Keep it short; the details live in `report.md`.
 
 ## Size and cost
 
-- **Scoped run, one area:** 1 reviewer, 1 organizer, 1–3 implementers, 1 tester, 1 verifier, 2 recording steps. That's about 7–8 agents.
-- **Whole site:** 4 reviewers and 1 organizer, then one implementer per approved package, one tester per round, and one verifier per area touched.
-- Every implementer and tester builds the site (1.5 to 6 minutes) and runs Playwright in WSL; the tester's full renders and audit add about 5.5 minutes.
+- **Each package:** an implementer, a tester and a reviewer; a fix and a second check when it falls short; a share of a merge step (a small model runs it). A conflict at merge adds an integrator.
+- **Each run:** a load step, one final check, the record and the reviewer's memory; a re-plan and its packages if the final check fails.
+- **Scoped run, one area:** 1 reviewer and 1 organizer, then about 4–6 agents per package.
+- **Whole site:** 5 reviewers (H has two) and 1 organizer, then the same per package.
+- Each implementer builds the site once in its copy's mirror (1.5 to 6 minutes), and its tester serves that build. The final check builds once more and runs the whole suite, the renders and the audit side by side: about half an hour in a cloud session.
 
-Models and effort are set in each agent's frontmatter in `.claude/agents/web-ux-*.md`.
+Models and effort are set in each agent's frontmatter in `.claude/agents/web-ux-*.md`. The fix workflow lowers the effort of verification, the re-plan and the record, and runs the mechanical steps (loading the plan, merging) on a small model.

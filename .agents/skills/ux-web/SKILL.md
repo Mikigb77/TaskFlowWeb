@@ -81,13 +81,21 @@ site's generated output and only when no other run owns it. WebKit captures run
 on Windows after the main render suite via `.claude/skills/ux-web/scripts/webkit_renders.py`,
 using the documented tools environment. WebKit emulation is not a real iPhone.
 
-The tester runs focused acceptance checks per package. Once per run, after the
+Every step of a package checks only what it touched, with the package check:
+`python -I -X utf8 .claude/skills/ux-web/scripts/check.py --copy <copy> --name <copy>
+--port <port>` (or `--main --files <changed files>` in the main checkout). In the
+copy's build mirror it runs the type and legal checks, the build and the unit
+tests where the change needs them, and only the specs that cover it; `--list`
+shows what and why, `--renders auto` renders the changed pages. The tester writes
+the acceptance tests and runs them through the check. Once per run, after the
 last package is in (owner, 2026-11-01), it runs the README's type, legal, build,
 unit and Playwright checks (`npm run check`, `npm run legal:check`,
 `npm run build`, `npm run test:unit`, `npm test -- --reporter=dot`), with the same
 production SITE_URL for the build, and refreshes affected evidence. Review all
 supported languages, mobile/desktop, light/dark, keyboard, large text and error
 states. Infrastructure or missing render failures stay visible as pending checks.
+That is the run's only whole-suite run: what it finds is repaired once in the main
+checkout and re-checked with the package check.
 
 Use `.claude/skills/ux-web/scripts/pkg.py` for WP packages. Only the orchestrator writes the
 shared web records and memory. Use the ownership-aware `ux-web.sh stage` helper

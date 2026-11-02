@@ -1,4 +1,4 @@
-FROM node:26.11.1-bookworm-slim AS dependencies
+FROM node:26.13.0-bookworm-slim AS dependencies
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
@@ -11,7 +11,7 @@ ENV SITE_URL=$SITE_URL SITE_INDEXABLE=$SITE_INDEXABLE
 COPY . .
 RUN npm run legal:check && npm run build
 
-FROM node:26.11.1-bookworm-slim AS runtime
+FROM node:26.13.0-bookworm-slim AS runtime
 WORKDIR /app
 ARG COMMIT_SHA=development
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 \

@@ -99,12 +99,12 @@ export const es: SiteCopy = {
       {
         question: "¿Necesito una cuenta?",
         answer:
-          "Sí. Inicias sesión una vez: toca Continuar con Google, o usa tu correo y una contraseña, y escribe el código de 6 cifras que te enviamos. Tus tareas se guardan en tu cuenta, así no las pierdes si cambias de móvil.",
+          "Sí. La primera vez, toca Continuar con Google; o toca Continuar con mi correo, elige una contraseña y escribe el código de 6 cifras que te enviamos. Tus tareas se guardan en tu cuenta, así no las pierdes si cambias de móvil.",
       },
       {
         question: "¿Cómo añado tareas hablando?",
         answer:
-          "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
+          "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Para entender lo que dices necesita internet: tus palabras se envían a Google.",
       },
       {
         question: "¿Puedo añadir algo que se repite?",

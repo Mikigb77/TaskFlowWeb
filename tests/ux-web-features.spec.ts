@@ -649,9 +649,9 @@ const VOICE_QUESTION: Copy = {
   ca: "Com afegeixo tasques parlant?",
 };
 const VOICE_ANSWER: Copy = {
-  en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
-  es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
-  ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
+  en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. Understanding what you say needs the internet: your words are sent to Google.",
+  es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Para entender lo que dices necesita internet: tus palabras se envían a Google.",
+  ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Per entendre el que dius necessita internet: les teves paraules s’envien a Google.",
 };
 // WP53, WP59, WP60: the calendar card's paragraph, without ‘the first time you add one’ or ‘it asks you once’, and with reminders that come more and more often.
 const CALENDAR_TITLE: Copy = {
@@ -806,7 +806,7 @@ for (const theme of THEMES) {
   });
 }
 
-test("WEB-1001: in the voice answer no sentence runs over 24 words, and the English answer is 85 words or fewer", async ({
+test("WEB-1001: in the voice answer no sentence runs over 24 words, and the English answer is 88 words or fewer", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
@@ -815,7 +815,7 @@ test("WEB-1001: in the voice answer no sentence runs over 24 words, and the Engl
     const answer = (await item.locator("p").innerText()).trim();
     expect(answer, homeUrl(language)).toBe(VOICE_ANSWER[language]);
     expect(longestSentence(answer), `${homeUrl(language)}: the longest sentence`).toBeLessThanOrEqual(24);
-    if (language === "en") expect(words(answer).length, "the English answer's words").toBeLessThanOrEqual(85);
+    if (language === "en") expect(words(answer).length, "the English answer's words").toBeLessThanOrEqual(88);
   }
 });
 
@@ -1688,4 +1688,222 @@ test("WEB-1404: on the phone with the browser's text doubled and the repeat answ
     expect(await scrollsSideways(page), where).toBe(false);
     expect(await wp264Clipped(item), where).toEqual([]);
   }
+});
+
+// ---- Run 2026-11-02-changes, round 1: WP269 (WEB-1701, WEB-1702) ----
+// The account answer names the app's two buttons, ‘Continue with Google’ and ‘Continue with
+// email’, with no ‘sign in’; the voice answer's last sentence says only understanding needs the
+// internet, in the offline answer's words. The brief's copy, exact.
+const WP269_ACCOUNT_INDEX = 2; // The third question, ‘Do I need an account?’.
+const WP269_VOICE_INDEX = 3; // The fourth question, ‘How do I add tasks by voice?’.
+const WP269_OFFLINE_INDEX = 5; // The sixth question, ‘Can I use it offline?’.
+const WP269_ACCOUNT_QUESTION: Copy = {
+  en: "Do I need an account?",
+  es: "¿Necesito una cuenta?",
+  ca: "Necessito un compte?",
+};
+const WP269_ACCOUNT: Copy = {
+  en: "Yes. The first time, tap Continue with Google; or tap Continue with email, choose a password and type the 6-digit code we email you. Your tasks are kept in your account, so you don’t lose them if you change phones.",
+  es: "Sí. La primera vez, toca Continuar con Google; o toca Continuar con mi correo, elige una contraseña y escribe el código de 6 cifras que te enviamos. Tus tareas se guardan en tu cuenta, así no las pierdes si cambias de móvil.",
+  ca: "Sí. La primera vegada, toca Continua amb Google; o toca Continua amb el correu, tria una contrasenya i escriu el codi de 6 xifres que t’enviem. Les tasques es desen al teu compte, així no les perds si canvies de mòbil.",
+};
+const WP269_GOOGLE: Copy = { en: "Continue with Google", es: "Continuar con Google", ca: "Continua amb Google" };
+const WP269_EMAIL: Copy = { en: "Continue with email", es: "Continuar con mi correo", ca: "Continua amb el correu" };
+const WP269_PASSWORD: Copy = { en: "password", es: "contraseña", ca: "contrasenya" };
+const WP269_CODE: Copy = { en: "6-digit code", es: "código de 6 cifras", ca: "codi de 6 xifres" };
+const WP269_SIGN_IN: Record<Language, RegExp> = {
+  en: /sign in/i,
+  es: /inicias sesi[oó]n/i,
+  ca: /inicies la sessi[oó]/i,
+};
+const WP269_VOICE_QUESTION: Copy = {
+  en: "How do I add tasks by voice?",
+  es: "¿Cómo añado tareas hablando?",
+  ca: "Com afegeixo tasques parlant?",
+};
+// The voice answer as it was before WP269, without its last sentence: it stays word for word.
+const WP269_VOICE_KEPT: Copy = {
+  en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it.",
+  es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo.",
+  ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer.",
+};
+const WP269_VOICE_LAST: Copy = {
+  en: "Understanding what you say needs the internet: your words are sent to Google.",
+  es: "Para entender lo que dices necesita internet: tus palabras se envían a Google.",
+  ca: "Per entendre el que dius necessita internet: les teves paraules s’envien a Google.",
+};
+const WP269_OLD_START: Record<Language, RegExp> = {
+  en: /^It needs the internet/i,
+  es: /^Necesita internet/i,
+  ca: /^Necessita internet/i,
+};
+const WP269_UNDERSTANDING: Copy = {
+  en: "understanding what you say",
+  es: "entender lo que dices",
+  ca: "entendre el que dius",
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP269`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1701: opened, the account answer is the brief's text, names Continue with Google and Continue with email, has no ‘sign in’, and still names a password (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = page.locator("#questions details").nth(WP269_ACCOUNT_INDEX);
+        await expect(item.locator("summary"), where).toHaveText(WP269_ACCOUNT_QUESTION[language]);
+        await openAnswer(page, WP269_ACCOUNT_INDEX);
+        const paragraph = item.locator("p");
+        await expect(paragraph, where).toHaveCount(1);
+        await expect(paragraph, where).toBeVisible();
+        const answer = (await paragraph.innerText()).trim();
+        expect(answer, where).toBe(WP269_ACCOUNT[language]);
+        expect(answer, `${where}: the Google button`).toContain(WP269_GOOGLE[language]);
+        expect(answer, `${where}: the email button`).toContain(WP269_EMAIL[language]);
+        expect(answer, `${where}: ‘sign in’`).not.toMatch(WP269_SIGN_IN[language]);
+        expect(answer, `${where}: the password`).toContain(WP269_PASSWORD[language]);
+      }
+    });
+
+    test(`WEB-1701, WEB-708: in the account answer the password and the 6-digit code come only on the email path, after the semicolon (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = await openAnswer(page, WP269_ACCOUNT_INDEX);
+        const answer = (await item.locator("p").innerText()).trim();
+        const semicolon = answer.indexOf(";");
+        expect(semicolon, `${where}: a semicolon`).toBeGreaterThan(0);
+        const before = answer.slice(0, semicolon);
+        expect(before, `${where}: before the semicolon`).toContain(WP269_GOOGLE[language]);
+        expect(before.toLowerCase(), `${where}: the password before the semicolon`).not.toContain(WP269_PASSWORD[language]);
+        expect(before, `${where}: the code before the semicolon`).not.toContain(WP269_CODE[language]);
+        const email = answer.indexOf(WP269_EMAIL[language]);
+        expect(email, `${where}: the email button comes after the semicolon`).toBeGreaterThan(semicolon);
+        expect(answer.indexOf(WP269_PASSWORD[language]), `${where}: the password after the email button`).toBeGreaterThan(email);
+        expect(answer.indexOf(WP269_CODE[language]), `${where}: the code after the email button`).toBeGreaterThan(email);
+      }
+    });
+
+    test(`WEB-1702: opened, the voice answer is today's with only its last sentence replaced by the brief's, no sentence starts ‘It needs the internet’, none runs over 24 words, and the English one is 88 words or fewer (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = page.locator("#questions details").nth(WP269_VOICE_INDEX);
+        await expect(item.locator("summary"), where).toHaveText(WP269_VOICE_QUESTION[language]);
+        await openAnswer(page, WP269_VOICE_INDEX);
+        const paragraph = item.locator("p");
+        await expect(paragraph, where).toHaveCount(1);
+        await expect(paragraph, where).toBeVisible();
+        const answer = (await paragraph.innerText()).trim();
+        expect(answer, where).toBe(`${WP269_VOICE_KEPT[language]} ${WP269_VOICE_LAST[language]}`);
+        const all = sentences(answer);
+        expect(all.at(-1), `${where}: the last sentence`).toBe(WP269_VOICE_LAST[language]);
+        for (const sentence of all) expect(sentence, `${where}: a sentence`).not.toMatch(WP269_OLD_START[language]);
+        expect(longestSentence(answer), `${where}: the longest sentence`).toBeLessThanOrEqual(24);
+        if (language === "en") expect(words(answer).length, `${where}: the English answer's words`).toBeLessThanOrEqual(88);
+      }
+    });
+
+    test(`WEB-1702: with every answer open, the voice answer's last sentence and the offline answer both name understanding what you say (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const items = page.locator("#questions details");
+        const count = await items.count();
+        for (let index = 0; index < count; index++) await openAnswer(page, index);
+        await expect(page.locator("#questions details[open]"), where).toHaveCount(count);
+        const voice = (await items.nth(WP269_VOICE_INDEX).locator("p").innerText()).trim();
+        const last = sentences(voice).at(-1) ?? "";
+        expect(last.toLowerCase(), `${where}: the voice answer's last sentence`).toContain(WP269_UNDERSTANDING[language]);
+        const offline = items.nth(WP269_OFFLINE_INDEX);
+        await expect(offline.locator("p"), `${where}: the offline answer`).toBeVisible();
+        const offlineText = (await offline.locator("p").innerText()).trim().toLowerCase();
+        expect(offlineText, `${where}: the offline answer`).toContain(WP269_UNDERSTANDING[language]);
+      }
+    });
+
+    test(`WEB-1701, WEB-1702: axe reports no violations on the three homes with the third and fourth answers open (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await openAnswer(page, WP269_ACCOUNT_INDEX);
+        await openAnswer(page, WP269_VOICE_INDEX);
+        await expect(page.locator("#questions details[open]"), where).toHaveCount(2);
+        await page.evaluate(() => document.fonts.ready);
+        expect(await axeViolations(page), where).toEqual([]);
+      }
+    });
+  });
+}
+
+test("WEB-1701: with the account answer open, /es/ and /ca/ don't scroll sideways at 320 × 800", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of ["es", "ca"] as const) {
+    const where = `${homeUrl(language)} at 320 × 800`;
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    const item = await openAnswer(page, WP269_ACCOUNT_INDEX);
+    await expect(item.locator("p"), where).toHaveText(WP269_ACCOUNT[language]);
+    await item.locator("p").scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), where).toBe(false);
+    expect(await wp264Clipped(item), where).toEqual([]);
+  }
+});
+
+test("WEB-1701, WEB-1702: on desktop with the browser's text doubled, the account and voice answers open whole, with nothing clipped or overlapping", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Desktop (1440 × 1000) at 200% text.");
+  await doubleTextSize(page);
+  const found: string[] = [];
+  for (const language of LANGUAGES) {
+    const where = `${homeUrl(language)} at 200% text`;
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    expect(await rootFontSize(page), `${where}: the root`).toBe(32);
+    const account = await openAnswer(page, WP269_ACCOUNT_INDEX);
+    const voice = await openAnswer(page, WP269_VOICE_INDEX);
+    await expect(account.locator("p"), where).toHaveText(WP269_ACCOUNT[language]);
+    await expect(voice.locator("p"), where).toHaveText(`${WP269_VOICE_KEPT[language]} ${WP269_VOICE_LAST[language]}`);
+    await page.evaluate(() => document.fonts.ready);
+    if (await scrollsSideways(page)) found.push(`${where}: the page scrolls sideways`);
+    for (const [name, item] of [
+      ["account", account],
+      ["voice", voice],
+    ] as const) {
+      for (const problem of await wp264Clipped(item)) found.push(`${where}, ${name} answer: ${problem}`);
+      const summary = (await item.locator("summary").boundingBox())!;
+      const paragraph = (await item.locator("p").boundingBox())!;
+      if (paragraph.y < summary.y + summary.height - 0.5) found.push(`${where}, ${name} answer: the answer overlaps its question`);
+      const box = (await item.boundingBox())!;
+      if (paragraph.y + paragraph.height > box.y + box.height + 0.5)
+        found.push(`${where}, ${name} answer: the answer runs past its item's bottom`);
+    }
+    const accountBox = (await account.boundingBox())!;
+    const voiceBox = (await voice.boundingBox())!;
+    if (accountBox.y + accountBox.height > voiceBox.y + 0.5) found.push(`${where}: the account item overlaps the voice item`);
+    const next = (await page.locator("#questions details").nth(WP269_VOICE_INDEX + 1).boundingBox())!;
+    if (voiceBox.y + voiceBox.height > next.y + 0.5) found.push(`${where}: the voice item overlaps the next question`);
+  }
+  expect(found).toEqual([]);
 });

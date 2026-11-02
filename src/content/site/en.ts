@@ -99,12 +99,12 @@ export const en: SiteCopy = {
       {
         question: "Do I need an account?",
         answer:
-          "Yes. You sign in once: tap Continue with Google, or use your email and a password, then type the 6-digit code we email you. Your tasks are kept in your account, so you don’t lose them if you change phones.",
+          "Yes. The first time, tap Continue with Google; or tap Continue with email, choose a password and type the 6-digit code we email you. Your tasks are kept in your account, so you don’t lose them if you change phones.",
       },
       {
         question: "How do I add tasks by voice?",
         answer:
-          "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
+          "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. Understanding what you say needs the internet: your words are sent to Google.",
       },
       {
         question: "Can I add something that repeats?",

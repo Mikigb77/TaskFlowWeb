@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Snapshot 2026-11-02 (after run 2026-10-28-site b2). Check against the code before relying on line numbers.
+Snapshot 2026-11-02 (after run 2026-10-28-site b2; 2026-11-02-changes changed copy only, no structure). FAQ open-state renders cover only answers 1, 2 and 5. Check against the code before relying on line numbers.
 
 **Home** (`src/components/HomePage.tsx`; copy in `src/content/site/{en,es,ca}.ts`, shared type `types.ts`):
 - hero `#hero-title`; primary CTA → `#voice` (`.button`), secondary text link → `#features`; under the status line `p.hero-free` (`HomePage.tsx:29`, copy `hero.free` = `closing.plans`' first sentence, no "Pro" in the hero; below the fold at 320 × 568, accepted)

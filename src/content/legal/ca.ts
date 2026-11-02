@@ -72,7 +72,7 @@ export const ca: LegalCopy = {
         id: "sharing",
         title: "5. Compartició i proveïdors",
         paragraphs: [
-          "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per») i a les que tens assignades; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. Els recordatoris no es comparteixen: cada persona té els seus. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
+          "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per»), a les que tens assignades i a l’«Activitat» de cada tasca, al costat de cada canvi que hi has fet i la data; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. Els recordatoris no es comparteixen: cada persona té els seus. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
           "Els proveïdors reben les dades necessàries per a la seva funció. Poden actuar com a encarregats sota instruccions o responsables independents per a les seves pròpies obligacions de compte, pagament, seguretat o legals.",
         ],
         bullets: [
@@ -119,7 +119,7 @@ export const ca: LegalCopy = {
         id: "retention",
         title: "7. Conservació i supressió",
         bullets: [
-          "Compte i contingut personal al núvol: es conserven mentre utilitzes el compte, fins que suprimeixes el contingut o el compte. No esborrem mai les teves tasques pel nostre compte, fetes o no. Esborrar un element pot deixar metadades de sincronització; suprimir el compte elimina els registres personals de la base de dades i les sessions.",
+          "Compte i contingut personal al núvol: es conserven mentre tinguis el compte. No esborrem mai les teves tasques pel nostre compte, fetes o no. Una tasca, nota o projecte que esborres desapareix dels teus dispositius i se’n suprimeixen els fitxers, però el nostre servidor en conserva la resta, oculta, fins que suprimeixis el compte (si era en un projecte compartit, es queda amb aquell projecte). Suprimir el compte elimina els registres personals de la base de dades i les sessions.",
           "Adjunts personals: la supressió retira l’accés i demana l’esborrament dels fitxers emmagatzemats. L’esborrament segueix la transacció de base de dades; una fallada d’emmagatzematge requereix seguiment. Els fitxers dels projectes compartits que continuen segueixen disponibles per als membres, tal com s’indica abans de confirmar.",
           "Contingut compartit: tasques, notes i fitxers de projectes compartits que continuen es conserven fins que un membre autoritzat els elimina o finalitza l’espai. Els traspassos de titularitat mostrats s’executen en confirmar; es retiren la pertinença, les assignacions i l’atribució identificativa d’activitat. Contacta amb suport per dades personals dins del contingut compartit conservat.",
           "Dispositiu: la supressió confirmada des de l’app esborra la còpia local del compte i les captures pendents. Els altres dispositius perden l’accés i esborren la còpia en tornar a contactar amb el servei. Exportacions, descàrregues fora de l’emmagatzematge de l’app i còpies del dispositiu s’eliminen a part. Desinstal·lar no suprimeix el compte del servidor.",
@@ -366,7 +366,7 @@ export const ca: LegalCopy = {
         title: "3. Què se suprimeix i què es queda",
         bullets: [
           "Se suprimeix, a tots els dispositius: el compte, les teves tasques, notes i fitxers i els projectes que només fas servir tu. També l’accés, el vincle amb Google, les sessions, la pertinença a projectes i grups, les preferències d’avisos i el recompte de dictats gratuïts. A més, demanem a RevenueCat, l’empresa que comprova les subscripcions per nosaltres, que esborri el registre que té de tu.",
-          "Es queda per als altres: les tasques i els fitxers que vas afegir a projectes compartits. Se’n treu el teu nom, també de «Creada per», però el que hi vas escriure no canvia. Els projectes i grups que són teus passen a un altre membre; l’app et diu a qui abans de confirmar. Si a dins hi ha dades personals teves, escriu a suport.",
+          "Es queda per als altres: les tasques, les notes i els fitxers que vas afegir a projectes compartits. Se’n treu el teu nom, també de «Creada per», però el que hi vas escriure no canvia. Els projectes i grups que són teus passen a un altre membre; l’app et diu a qui abans de confirmar. Si a dins hi ha dades personals teves, escriu a suport.",
           "L’app no suprimeix: el registre de les teves compres que guarda Google Play, els correus amb suport, els registres de seguretat ni les còpies de seguretat, que caduquen soles. Demana a suport que suprimeixi el que es pugui; et direm què s’ha de conservar, per què i durant quant de temps. No podem suprimir les còpies que hagin desat altres persones.",
         ],
       },

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Runs a website command (npm, npx, Playwright) on WSL's own disk instead of /mnt/c.
 
+On Windows it runs in WSL (wsl -e python3 webrun.py ...). In a Linux session, such as a
+cloud session, it runs directly (python3 webrun.py ...), with the same mirrors and ports.
+
 The website's checkout lives on the Windows drive, where Node is slow (in the loop's first runs a
 type check took 71 s, a build 143 s and one Playwright spec file 175 s). Each call:
 1. syncs the checkout, or a worktree of it, into ~/twb/<name>: the source only, by size and
@@ -11,7 +14,9 @@ type check took 71 s, a build 143 s and one Playwright spec file 175 s). Each ca
 3. gives the mirror its own port: its package.json start script and its Playwright config say
    <port> instead of 3000, and a server left on that port is stopped first, so Playwright never
    tests a stale build. The loop uses 3100 and up; 3000 stays free for people;
-4. runs the command in the mirror, with nvm's Node;
+4. runs the command in the mirror, with nvm's Node when nvm is installed (else the Node on
+   PATH). A command line with several commands runs whole in the mirror: on 2026-11-01 a
+   suite-and-renders line ran its second half in the checkout, and deleted its renders;
 5. copies artifacts/ and test-results/ back to the checkout, where agents read them.
 
 Usage, from Windows (the main checkout, then a package's worktree):
@@ -32,6 +37,8 @@ import time
 from pathlib import Path
 
 HOME = Path.home() / "twb"
+# nvm's Node when nvm is installed (bash -lc skips ~/.bashrc, where nvm loads); else PATH's.
+NODE = '[ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"; '
 # Never synced either way: built or installed on each side, or not the site's (the loops'
 # own folders: their records and agents aren't needed to build or test it).
 SKIP = {"node_modules", ".next", "artifacts", "test-results", "test-results-renders", "playwright-report", ".git",
@@ -114,7 +121,7 @@ def deps(src, mirror):
             shutil.copy2(src / "package.json", store / "package.json")
             shutil.copy2(src / "package-lock.json", store / "package-lock.json")
             say(f"installing node_modules for lock {digest} (once per lock)")
-            done = subprocess.run(["bash", "-lc", f"source ~/.nvm/nvm.sh && cd {shlex.quote(str(store))} && npm ci --prefer-offline --no-audit --no-fund"])
+            done = subprocess.run(["bash", "-lc", f"{NODE}cd {shlex.quote(str(store))} && npm ci --prefer-offline --no-audit --no-fund"])
             if done.returncode:
                 raise SystemExit(f"npm ci failed in {store}")
             (store / ".ok").touch()
@@ -144,24 +151,40 @@ def own_config(mirror, port, workers):
         pkg.write_text(re.sub(r"--port 3000\b", f"--port {port}", pkg.read_text()))
 
 
+def listeners(port):
+    """(pids, something listens) for the TCP port, with ss, else lsof, else fuser."""
+    tools = (
+        (["ss", "-ltnpH", f"sport = :{port}"], lambda out: re.findall(r"pid=(\d+)", out)),
+        (["lsof", "-t", f"-iTCP:{port}", "-sTCP:LISTEN"], lambda out: re.findall(r"\d+", out)),
+        (["fuser", f"{port}/tcp"], lambda out: re.findall(r"\d+", out)),
+    )
+    for command, pids in tools:
+        if not shutil.which(command[0]):
+            continue
+        out = subprocess.run(command, capture_output=True, text=True).stdout
+        return set(pids(out)), bool(out.strip())
+    say("warning: no ss, lsof or fuser here, so a server left on the port can't be stopped")
+    return set(), False
+
+
 def free_port(port):
-    out = subprocess.run(["ss", "-ltnpH", f"sport = :{port}"], capture_output=True, text=True).stdout
-    for pid in set(re.findall(r"pid=(\d+)", out)):
+    pids, busy = listeners(port)
+    for pid in pids:
         try:
             os.kill(int(pid), 15)
             say(f"stopped an old server on :{port} (pid {pid})")
         except OSError:
             pass
-    if out.strip() and not re.search(r"pid=", out):
+    if busy and not pids:
         say(f"warning: something else listens on :{port}")
-    time.sleep(0.5 if out.strip() else 0)
+    time.sleep(0.5 if busy else 0)
 
 
 def serve(mirror, port, env):
     """Starts the mirror's last build on its port and waits until it answers, so several Playwright
     runs in one command share it (the config reuses a server that already answers)."""
     import urllib.request
-    server = subprocess.Popen(["bash", "-lc", f"source ~/.nvm/nvm.sh && cd {shlex.quote(str(mirror))} && exec npm run start"],
+    server = subprocess.Popen(["bash", "-lc", f"{NODE}cd {shlex.quote(str(mirror))} && exec npm run start"],
                               env=env, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     for _ in range(120):
         try:
@@ -210,7 +233,9 @@ def main():
     env = dict(os.environ, PORT=str(args.port))
     server = serve(mirror, args.port, env) if args.serve else None
     try:
-        code = subprocess.run(["bash", "-lc", f"source ~/.nvm/nvm.sh && cd {shlex.quote(str(mirror))} && {line}"], env=env).returncode
+        # The braces keep every command of the line in the mirror: "cd x && a & b" would run
+        # b where this script started.
+        code = subprocess.run(["bash", "-lc", f"{NODE}cd {shlex.quote(str(mirror))} && {{\n{line}\n}}"], env=env).returncode
     finally:
         if server:
             os.killpg(server.pid, 15)

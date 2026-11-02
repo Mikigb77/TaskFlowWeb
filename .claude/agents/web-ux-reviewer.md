@@ -128,8 +128,9 @@ Do every step. Don't stop after the first few problems.
 
 The delegation picks one. The default is **review**: the method above.
 
-- **Verify** — after the UX web loop has fixed something. You get finding IDs, their acceptance checks, and the files that changed; see the run's own changes with `bash .claude/skills/ux-web/scripts/ux-web.sh diff -- <file>`.
+- **Verify** — after the UX web loop has fixed something. You get one work package: its finding IDs, their acceptance checks, what its tester proved, and where to read it. Usually that's the package's own copy of the website, before it's merged: read its files there, its changes with the `waves.py diff` command the delegation gives, and the renders its tester made under that copy's `artifacts/ux-web/`. Otherwise it's the main checkout: see the run's own changes with `bash .claude/skills/ux-web/scripts/ux-web.sh diff -- <file>`.
   - Judge each finding: fixed, partly fixed or not fixed. Give evidence: `path:line`, and the render or the `AUDIT.md` row when one shows it.
+  - A second check comes after one fix: keep the IDs of regressions you found the first time, and say which still hold.
   - Then look for regressions, but only in the changed files and the pages they touch. This isn't a full review:
     - Leave untouched pages alone.
     - An issue already in `.claude/ux-web/ISSUES.md` isn't a regression.

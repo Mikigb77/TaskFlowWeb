@@ -4,7 +4,7 @@ export const es: SiteCopy = {
   meta: {
     title: "TaskFlow — Dilo y ya está en tu calendario",
     description:
-      "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, muy pronto en Google Play.",
+      "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, próximamente en Google Play.",
     imageAlt:
       "El calendario de TaskFlow en un móvil Android, con «Llamar al dentista» y «Comprar pan» para mañana",
   },
@@ -20,7 +20,7 @@ export const es: SiteCopy = {
     voice: "Pruébalo con tu voz",
     features: "Qué hace",
     questions: "Preguntas",
-    comingSoon: "Muy pronto en Android",
+    comingSoon: "Próximamente en Android",
     menu: "Menú",
     language: "Idioma",
     appearance: "Apariencia",
@@ -32,13 +32,13 @@ export const es: SiteCopy = {
     footer: {
       navigation: "Navegación del pie de página",
       legal: "Legal y privacidad",
-      privacy: "Privacidad",
+      privacy: "Política de privacidad",
       terms: "Términos y condiciones",
       legalNotice: "Aviso legal",
       deleteAccount: "Eliminar cuenta",
       support: "Escribir a soporte",
       operator: "Un producto de {company}",
-      trademark: "Android es una marca comercial de Google LLC.",
+      trademark: "Android es una marca comercial de Google\u00a0LLC.",
       backToTop: "Volver arriba",
     },
   },
@@ -46,11 +46,12 @@ export const es: SiteCopy = {
     title: "Dilo y ya está en ",
     titleAccent: "tu calendario.",
     description:
-      "Toca un botón y di lo que tienes que hacer, aunque sean varias cosas a la vez. TaskFlow pone cada una en su día y puede avisarte antes. Una app para móviles Android™.",
+      "Una app para móviles Android™: toca un botón y di lo que tienes que hacer, aunque sean varias cosas a la vez. TaskFlow pone cada una en su día y puede avisarte antes.",
     primary: "Pruébalo con tu voz",
     secondary: "Qué hace",
-    status: "Muy pronto en Google Play. Todavía no se puede descargar.",
-    voiceQuote: "«Mañana, llamar al dentista y comprar pan.»",
+    status: "Próximamente en Google Play. Todavía no se puede descargar.",
+    free: "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.",
+    voiceQuote: "«Mañana, llamar al dentista y comprar pan»",
     imageAlt:
       "TaskFlow en un móvil Android: el calendario de mañana con dos tareas, Llamar al dentista y Comprar pan, y el botón Añadir tarea.",
   },
@@ -90,8 +91,10 @@ export const es: SiteCopy = {
       },
       {
         question: "¿TaskFlow es gratis?",
-        answer:
-          "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+        answer: [
+          "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
+          "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+        ],
       },
       {
         question: "¿Necesito una cuenta?",
@@ -102,6 +105,11 @@ export const es: SiteCopy = {
         question: "¿Cómo añado tareas hablando?",
         answer:
           "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
+      },
+      {
+        question: "¿Puedo añadir algo que se repite?",
+        answer:
+          "Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.",
       },
       {
         question: "¿Puedo usarla sin conexión?",
@@ -116,7 +124,7 @@ export const es: SiteCopy = {
       {
         question: "¿Puedo guardar notas además de tareas?",
         answer:
-          "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+          "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como una idea para un regalo. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
       },
       {
         question: "¿Puedo añadir tareas desde la pantalla de inicio o desde WhatsApp?",
@@ -126,7 +134,7 @@ export const es: SiteCopy = {
     ],
   },
   closing: {
-    title: "Muy pronto en Android.",
+    title: "Próximamente en Android.",
     body: "TaskFlow todavía no está en Google Play. Mientras tanto, puedes probarlo con tu voz en esta página.",
     button: "Pruébalo con tu voz",
     plans:
@@ -142,7 +150,7 @@ export const es: SiteCopy = {
     noscript: "Activa JavaScript para probarlo con tu voz.",
     example: {
       label: "Por ejemplo, di:",
-      quote: "«Mañana, llamar al dentista y comprar pan.»",
+      quote: "«Mañana, llamar al dentista y comprar pan»",
       heading: "2 cosas para añadir",
       tasks: [
         { title: "Llamar al dentista", date: "Mañana" },
@@ -186,16 +194,20 @@ export const es: SiteCopy = {
     micUnsupported: "Este navegador no puede grabar tu voz. Puedes escribir.",
     thingsToAdd: { one: "1 cosa para añadir", other: "{n} cosas para añadir" },
     noDate: "Sin fecha",
+    today: "Hoy",
+    tomorrow: "Mañana",
     checkDetail: "Revisa este dato: {question}",
     completionTitle: "Todo listo. Respira.",
     completionBody: "Imagina un poco más de calma en tu día.",
     handOver:
-      "En la app: toca Añadir tarea, dilo, toca Listo y añádelo al calendario. Muy pronto en Google Play.",
+      "En la app: toca Añadir tarea, dilo, toca Listo y añádelo al calendario. Próximamente en Google Play.",
     sayAgain: "Volver a decirlo",
     changeText: "Cambiar el texto",
     seeWhatISaid: "Ver lo que dije",
+    originalText: "Texto original",
+    completeTask: "Completar {title}",
     noTasks:
-      "No se encontraron tareas. Tus palabras se conservan. Ha contado como un intento.",
+      "No he encontrado ninguna tarea. Di qué y cuándo, por ejemplo: «Mañana, llamar al dentista». Ha contado como un intento.",
     triesUsed: {
       onDay:
         "Ya has usado los 3 intentos de esta demo. Podrás volver a probar el {weekday} a las {time}.",
@@ -216,7 +228,7 @@ export const es: SiteCopy = {
       "La comprobación de seguridad no se ha cargado. Revisa la conexión y toca Reintentar.",
     errors: {
       offline:
-        "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo. Lo que dijiste se conserva y volver a probar no te costará otro intento.",
+        "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo. Tus palabras se conservan y volver a probar no te costará otro intento.",
       offlineOpening:
         "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo.",
       notAnswering:
@@ -229,12 +241,12 @@ export const es: SiteCopy = {
       unverified:
         "La comprobación de seguridad no se ha cargado, así que la demo en directo no puede funcionar aquí. El ejemplo de arriba muestra lo que hace TaskFlow.",
       invalidDraft:
-        "No hemos podido convertirlo en tareas y ha contado como un intento. Di qué tienes que hacer y cuándo.",
+        "No hemos podido convertirlo en tareas. Di qué tienes que hacer y cuándo.",
       recording:
         "No hemos podido oír la grabación. Grábala otra vez; no ha contado como intento.",
       processing:
         "Todavía lo estoy entendiendo. Vuelve a probar en un momento; no gastará otro intento.",
-      sayAgain: "Algo ha fallado. Vuelve a decirlo.",
+      sayAgain: "Algo ha fallado. Vuelve a probar.",
       empty: "Primero di o escribe lo que necesitas hacer.",
     },
   },

@@ -56,6 +56,16 @@ export function allowance(
   };
 }
 
+// A request that ends without a result gives its try back (WD30): remove one
+// entry equal to that try's time. Unchanged when it isn't there (expired, or
+// a developer window, which counts no try).
+export function withoutTry(attempts: number[], at: unknown) {
+  const index = typeof at === "number" ? attempts.indexOf(at) : -1;
+  return index < 0
+    ? attempts
+    : [...attempts.slice(0, index), ...attempts.slice(index + 1)];
+}
+
 export function checkAdmission(
   visitor: number[],
   network: number[],

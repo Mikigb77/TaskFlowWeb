@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Icon from "./Icon";
 import VoiceExample from "./VoiceExample";
 import { useSiteLanguage } from "./useSiteLanguage";
@@ -32,19 +32,30 @@ function dateFormats(language: SiteLanguage) {
   };
 }
 
-// A task's date line, as the app shows it: weekday, day and month, then the time.
+// A task's date line, as the app shows it: Today or Tomorrow by the visitor's own
+// clock, otherwise weekday, day and month; then the time.
 function dateLine(
   task: Draft,
   formats: ReturnType<typeof dateFormats>,
-  noDate: string,
+  t: Pick<Voice, "noDate" | "today" | "tomorrow">,
 ) {
-  if (!task.date) return noDate;
+  if (!task.date) return t.noDate;
   const [year, month, day] = task.date.split("-").map(Number);
   const [hour, minute] = (task.time ?? "12:00").split(":").map(Number);
   const at = new Date(year, month - 1, day, hour, minute);
-  return task.time
-    ? `${formats.day.format(at)} · ${formats.time.format(at)}`
-    : formats.day.format(at);
+  const now = new Date();
+  const tomorrow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  );
+  const label =
+    at.toDateString() === now.toDateString()
+      ? t.today
+      : at.toDateString() === tomorrow.toDateString()
+        ? t.tomorrow
+        : formats.day.format(at);
+  return task.time ? `${label} · ${formats.time.format(at)}` : label;
 }
 
 type Voice = (typeof copy)[SiteLanguage]["voice"];
@@ -303,6 +314,7 @@ export default function VoiceDemo() {
   const panel = useRef<HTMLDivElement>(null);
   const completionBanner = useRef<HTMLDivElement>(null);
   const taskPointer = useRef<number | null>(null);
+  const taskId = useId();
   const revealCompletion = useRef(false);
   const stageHeading = useRef<HTMLHeadingElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
@@ -311,6 +323,7 @@ export default function VoiceDemo() {
   // The circle that follows the voice while listening; its size is set without re-rendering.
   const levelRing = useRef<HTMLSpanElement>(null);
   const textBox = useRef<HTMLTextAreaElement>(null);
+  const submitButton = useRef<HTMLButtonElement>(null);
   // Where focus goes after switching between talking and typing.
   const focusNext = useRef<"text" | "record" | null>(null);
   const warned = useRef(false);
@@ -465,6 +478,23 @@ export default function VoiceDemo() {
     }, 10_000);
     return () => clearTimeout(later);
   }, [busy, t.stillUnderstanding]);
+  // Typing: keep Done in view with the text box, when the box takes focus and when a
+  // phone keyboard opens over it (WEB-1308).
+  const showDone = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (document.activeElement === textBox.current)
+        submitButton.current?.scrollIntoView({
+          block: "nearest",
+          behavior: "instant",
+        });
+    });
+  }, []);
+  useEffect(() => {
+    if (mode !== "text" || stage !== "capture") return;
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", showDone);
+    return () => viewport?.removeEventListener("resize", showDone);
+  }, [mode, stage, showDone]);
   // The security check passed after its Try again: carry on where the visitor would.
   useEffect(() => {
     if (checkFailed || !checkRetried.current) return;
@@ -837,6 +867,12 @@ export default function VoiceDemo() {
       ? "one"
       : "other"
   ].replace("{n}", number.format(tasks.length));
+  const privacyLine = (
+    <p className="voice-privacy">
+      {t.privacy}{" "}
+      <a href={`${homePath(language)}privacy/#website`}>{t.privacyLink}</a>
+    </p>
+  );
   const alertBox = shownError ? (
     <p role="alert" className="voice-error" tabIndex={-1} ref={errorMessage}>
       {shownError}
@@ -1031,6 +1067,7 @@ export default function VoiceDemo() {
                         value={text}
                         disabled={busy}
                         placeholder={t.textPlaceholder}
+                        onFocus={showDone}
                         onChange={(event) => {
                           setText(event.target.value);
                           setRetryPending(false);
@@ -1043,15 +1080,12 @@ export default function VoiceDemo() {
                           .replace("{n}", number.format(text.length))
                           .replace("{max}", number.format(1500))}
                       </p>
-                      <p className="voice-text-pro">{t.textPro}</p>
                     </div>
                   )}
-                  <p className="voice-privacy">
-                    {t.privacy}{" "}
-                    <a href={`${homePath(language)}privacy/#website`}>
-                      {t.privacyLink}
-                    </a>
-                  </p>
+                  {/* Talking: the privacy line before the security check. Typing: after
+                      Done, so Done stays right under the box. The check keeps its one
+                      place among these siblings, so switching never reloads it. */}
+                  {mode === "voice" && privacyLine}
                   <Verification
                     siteKey={status.siteKey}
                     onToken={receiveToken}
@@ -1081,6 +1115,7 @@ export default function VoiceDemo() {
                       {/* A request still to be retrieved is sent again with Try again,
                           without using another try. */}
                       <button
+                        ref={submitButton}
                         className="button voice-submit"
                         disabled={
                           unavailable || checkBlocked || text.trim().length < 3
@@ -1089,6 +1124,8 @@ export default function VoiceDemo() {
                       >
                         {retryPending && !checkBlocked ? t.tryAgain : t.done}
                       </button>
+                      {privacyLine}
+                      <p className="voice-text-pro">{t.textPro}</p>
                     </>
                   )}
                   {/* A recording whose request is still to be retrieved: send it again
@@ -1152,34 +1189,52 @@ export default function VoiceDemo() {
                       <ul className="voice-drafts">
                         {tasks.map((task, index) => (
                           <li className="voice-task-card" key={index}>
-                            <h4>
-                              <label
-                                className="voice-task-toggle"
-                                onClickCapture={(event) => {
-                                  // Capture the actual pointer/touch click,
-                                  // including a title-label click before its
-                                  // forwarded detail-0 checkbox activation.
-                                  // toggleTask consumes the origin immediately.
-                                  if (event.detail > 0)
-                                    taskPointer.current = index;
-                                }}
-                                onKeyDownCapture={() => {
-                                  taskPointer.current = null;
-                                }}
+                            <div
+                              className="voice-task-toggle"
+                              onClickCapture={(event) => {
+                                // Capture the actual pointer/touch click,
+                                // including a title-label click before its
+                                // forwarded detail-0 checkbox activation.
+                                // toggleTask consumes the origin immediately.
+                                if (event.detail > 0)
+                                  taskPointer.current = index;
+                              }}
+                              onKeyDownCapture={() => {
+                                taskPointer.current = null;
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                id={`${taskId}-${index}`}
+                                aria-label={t.completeTask.replace(
+                                  "{title}",
+                                  task.title,
+                                )}
+                                checked={checkedTasks.includes(index)}
+                                onChange={(event) =>
+                                  toggleTask(index, event.target.checked)
+                                }
+                              />
+                              {/* The app's completion circle, drawn under the transparent input. */}
+                              <span
+                                className="voice-task-circle"
+                                aria-hidden="true"
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={checkedTasks.includes(index)}
-                                  onChange={(event) =>
-                                    toggleTask(index, event.target.checked)
-                                  }
-                                />
-                                <span>{task.title}</span>
-                              </label>
-                            </h4>
+                                <Icon name="check" size={16} />
+                              </span>
+                              {/* The heading is the title alone; tapping it still ticks the circle. */}
+                              <h4>
+                                <label
+                                  htmlFor={`${taskId}-${index}`}
+                                  className="voice-task-title"
+                                >
+                                  {task.title}
+                                </label>
+                              </h4>
+                            </div>
                             <p className="voice-task-schedule">
                               <Icon name="calendar" size={16} />
-                              {dateLine(task, formats, t.noDate)}
+                              {dateLine(task, formats, t)}
                             </p>
                             {task.notes && (
                               <p className="voice-task-notes">{task.notes}</p>
@@ -1226,10 +1281,16 @@ export default function VoiceDemo() {
                       {t.changeText}
                     </button>
                   )}
-                  <details className="voice-transcript">
-                    <summary>{t.seeWhatISaid}</summary>
-                    <p>{transcript}</p>
-                  </details>
+                  {/* A typed result shows its text here only when Change the
+                      text isn't there, after the last try. */}
+                  {(mode === "voice" || allowanceUsed) && (
+                    <details className="voice-transcript">
+                      <summary>
+                        {mode === "voice" ? t.seeWhatISaid : t.originalText}
+                      </summary>
+                      <p>{transcript}</p>
+                    </details>
+                  )}
                   <p className="voice-fine">{t.fine}</p>
                 </div>
               )}

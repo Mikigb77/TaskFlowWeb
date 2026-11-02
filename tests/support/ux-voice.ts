@@ -218,7 +218,7 @@ export class VoiceStub {
   }
 
   // The server records the try when it admits a request, before the AI call: a request
-  // still waiting, or one the AI couldn't turn into drafts, has used it.
+  // still waiting has used it. One that ends without a result gives it back (WD30).
   private useTry() {
     this.remaining = Math.max(0, this.remaining - 1);
     this.resetAt ??= Date.now() + 86_400_000;
@@ -228,8 +228,7 @@ export class VoiceStub {
     this.requests[kind]++;
     let answer: Answer;
     const setting = kind === "status" ? this.status : this.draft;
-    if (kind === "draft" && (setting === "hang" || (typeof setting === "object" && "code" in setting && setting.code === "invalid_draft")))
-      this.useTry();
+    if (kind === "draft" && setting === "hang") this.useTry();
     if (setting === "hang") answer = { kind: "hang" };
     else if (setting === "offline") answer = { kind: "offline" };
     else if (setting === "html") answer = { kind: "html", status: 502 };
@@ -813,12 +812,11 @@ export function scenarios(
         { key: "voice-result", what: "Three tasks: one dated, one with a question, one undated; then the hand-over" },
         { key: "voice-result-open", what: "The same, with “See what I said” open" },
       ],
-      did: "Typed a thought and tapped Done; then opened “See what I said”",
+      did: "Recorded about 2.5 s and tapped Done; then opened “See what I said” (a spoken result's transcript)",
       answered: "Draft: 3 tasks; 2 of 3 tries left",
       run: async ({ page, capture }) => {
         await open(page);
-        await typeThought(page);
-        await submit(page);
+        await record(page);
         await stage(page, "review");
         await capture("voice-result");
         await page.locator("#voice .voice-transcript summary").click();
@@ -898,7 +896,7 @@ export function scenarios(
         did: audio
           ? "Recorded about 2.5 s and tapped Done"
           : "Typed a thought and tapped Done",
-        answered: `Draft: ${quote(error)} (${error.source})${error.code === "visitor_limit" ? "; status then says 0 tries left" : error.code === "invalid_draft" ? "; the try counts, as the server records it before the AI call" : ""}`,
+        answered: `Draft: ${quote(error)} (${error.source})${error.code === "visitor_limit" ? "; status then says 0 tries left" : error.code === "invalid_draft" ? "; the try is given back, as the server does when a request ends without a result" : ""}`,
         setup: async (_page, voice) => {
           voice.draft = error;
           if (error.code === "visitor_limit") {

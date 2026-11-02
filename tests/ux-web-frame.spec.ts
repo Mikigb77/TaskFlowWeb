@@ -13,6 +13,7 @@ import {
   type Language,
   LANGUAGES,
   pageUrl,
+  scrollsSideways,
   smallestText,
   test,
   THEMES,
@@ -263,7 +264,7 @@ test("WEB-2: the footer has the language switch, each name in its own language, 
     await hydrated(page);
     const switcher = page
       .locator("footer")
-      .getByRole("navigation", { name: FRAME.language[language], exact: true });
+      .getByRole("group", { name: FRAME.language[language], exact: true });
     await expect(switcher.getByRole("link"), url).toHaveText(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
     for (const code of LANGUAGES) {
       const link = switcher.getByRole("link", { name: LANGUAGE_NAMES[code], exact: true });
@@ -461,6 +462,316 @@ for (const theme of THEMES) {
         await expect(page.getByRole("heading", { level: 1 }), url).toHaveText(NOT_FOUND.heading[language]);
         expect(await axeViolations(page), url).toEqual([]);
       }
+    });
+  });
+}
+
+// ---- Run 2026-10-28-site: WP73 (WEB-1605, WEB-1607, WEB-1609) ----
+// The footer names the Privacy Policy in full and at body size, each 404's tab title is in
+// the address's language, and no line ends with a lone «LLC.» or ‘website.’. axe on the
+// three homes, light and dark: ux-web-home.spec.ts, “WEB-6, WEB-19, WEB-707, WEB-705,
+// WEB-706: axe reports no violations on the three homes”; on the three 404s: the WP38
+// test above, “WEB-713: each 404's h1 is in the address's language, and axe reports no
+// violations”.
+
+const WP73_PRIVACY: Record<Language, string> = {
+  en: "Privacy Policy",
+  es: "Política de privacidad",
+  ca: "Política de privacitat",
+};
+const WP73_MISSING = (language: Language) => `${homeUrl(language)}no-such-page/`;
+
+for (const theme of THEMES) {
+  test.describe(`${theme} footer, WP73`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1605: on the homes, the privacy pages and the 404s, the first legal link is the Privacy Policy by the page's own title, at 16 px, and the fine print stays 14 px (${theme})`, async ({
+      page,
+    }) => {
+      const titles = {} as Record<Language, string>;
+      for (const language of LANGUAGES) {
+        // The page's own title is its tab title's first part: “Privacy Policy — TaskFlow”.
+        await page.goto(pageUrl(language, "privacy"));
+        titles[language] = (await page.title()).split(" — ")[0];
+        expect(titles[language], `${pageUrl(language, "privacy")}: the page's title`).toBe(WP73_PRIVACY[language]);
+      }
+      for (const language of LANGUAGES)
+        for (const url of [homeUrl(language), pageUrl(language, "privacy"), WP73_MISSING(language)]) {
+          await page.goto(url);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          const footer = page.locator("footer");
+          const legal = footer.getByRole("navigation", { name: FOOTER.legal[language], exact: true });
+          const first = legal.getByRole("link").first();
+          await expect(first, url).toHaveText(WP73_PRIVACY[language]);
+          await expect(first, url).toHaveText(titles[language]);
+          await expect(first, url).toHaveAttribute("href", pageUrl(language, "privacy"));
+          const sizes = await legal
+            .getByRole("link")
+            .evaluateAll((anchors) =>
+              anchors.map((a) => `${a.textContent?.trim()}: ${getComputedStyle(a).fontSize}`),
+            );
+          expect(sizes, url).toHaveLength(5);
+          for (const size of sizes) expect(size, url).toMatch(/: 16px$/);
+          const fine = await footer
+            .locator(".footer-operator, .footer-fine p")
+            .evaluateAll((lines) =>
+              lines.map((line) => `${line.textContent?.trim()}: ${getComputedStyle(line).fontSize}`),
+            );
+          expect(fine, `${url}: operator, © and trademark`).toHaveLength(3);
+          for (const size of fine) expect(size, url).toMatch(/: 14px$/);
+        }
+    });
+  });
+}
+
+test("WEB-1605: at 320 × 568 the footer's legal row wraps, its links stay 44 px tall and 8 px apart, and nothing scrolls sideways", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    const legal = page.locator("footer").getByRole("navigation", { name: FOOTER.legal[language], exact: true });
+    await legal.scrollIntoViewIfNeeded();
+    const boxes = await legal.getByRole("link").evaluateAll((anchors) =>
+      anchors.map((a) => {
+        const { left, top, right, bottom, height } = a.getBoundingClientRect();
+        return { name: a.textContent?.trim() ?? "", left, top, right, bottom, height };
+      }),
+    );
+    expect(boxes, url).toHaveLength(5);
+    expect(new Set(boxes.map((box) => Math.round(box.top))).size, `${url}: rows of legal links`).toBeGreaterThan(1);
+    for (const box of boxes) {
+      expect(box.height, `${url}: “${box.name}” height`).toBeGreaterThanOrEqual(44);
+      expect(box.right, `${url}: “${box.name}” right edge`).toBeLessThanOrEqual(320);
+    }
+    for (const [i, a] of boxes.entries())
+      for (const b of boxes.slice(i + 1)) {
+        const dx = Math.max(b.left - a.right, a.left - b.right);
+        const dy = Math.max(b.top - a.bottom, a.top - b.bottom);
+        expect(Math.max(dx, dy), `${url}: “${a.name}” to “${b.name}”`).toBeGreaterThanOrEqual(8 - 0.5);
+      }
+    expect(await scrollsSideways(page), `${url} scrolls sideways at 320 px`).toBe(false);
+  }
+});
+
+test("WEB-1607: with JavaScript, each 404's tab title is in the address's language alone", async ({ page }) => {
+  for (const [url, title] of [
+    ["/ca/no-such-page/", "No hem trobat aquesta pàgina — TaskFlow"],
+    ["/es/x/", "Página no encontrada — TaskFlow"],
+    ["/x/", "Page not found — TaskFlow"],
+  ]) {
+    const response = await page.goto(url);
+    expect(response?.status(), url).toBe(404);
+    await hydrated(page);
+    await expect(page, url).toHaveTitle(title);
+  }
+});
+
+test("WEB-1607: without JavaScript, each 404 keeps the three-language title, with the Catalan h1's words", async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const origin = new URL(baseURL!).origin;
+  await context.route("**/*", (route) =>
+    new URL(route.request().url()).origin === origin ? route.continue() : route.abort(),
+  );
+  const page = await context.newPage();
+  for (const url of ["/ca/no-such-page/", "/es/x/", "/x/"]) {
+    const response = await page.goto(url);
+    expect(response?.status(), url).toBe(404);
+    await expect(page, url).toHaveTitle(
+      "Page not found · Página no encontrada · No hem trobat aquesta pàgina — TaskFlow",
+    );
+  }
+  await context.close();
+});
+
+test("WEB-1609: at 320 px ‘Google LLC.’ stays on one line in the footer, in every language", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of LANGUAGES) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    await page.evaluate(() => document.fonts.ready);
+    const trademark = page.locator("footer .footer-fine p").filter({ hasText: "Android" });
+    await expect(trademark, url).toHaveCount(1);
+    const result = await trademark.evaluate((line) => {
+      const node = Array.from(line.childNodes).find((child) => child.textContent?.includes("Google"))!;
+      const text = node.textContent ?? "";
+      const start = text.indexOf("Google");
+      const range = document.createRange();
+      range.setStart(node, start);
+      range.setEnd(node, text.length);
+      const tops = Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top));
+      return { phrase: JSON.stringify(text.slice(start)), lines: new Set(tops).size };
+    });
+    expect(result.phrase, url).toBe(JSON.stringify("Google LLC."));
+    expect(result.lines, `${url}: lines that ‘Google LLC.’ spans`).toBe(1);
+  }
+});
+
+test("WEB-1609: on the English 404 at 390 px the paragraph's last line holds two words or more", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 664 });
+  const response = await page.goto("/x/");
+  expect(response?.status()).toBe(404);
+  await hydrated(page);
+  await page.evaluate(() => document.fonts.ready);
+  const paragraph = page.locator('.not-found-block[lang="en"] p');
+  await expect(paragraph).toHaveText(NOT_FOUND.body.en);
+  const lines = await paragraph.evaluate((element) => {
+    const node = element.firstChild!;
+    const text = node.textContent ?? "";
+    const words: { word: string; top: number }[] = [];
+    for (const match of text.matchAll(/\S+/g)) {
+      const range = document.createRange();
+      range.setStart(node, match.index!);
+      range.setEnd(node, match.index! + match[0].length);
+      words.push({ word: match[0], top: Math.round(range.getClientRects()[0].top) });
+    }
+    const byLine = new Map<number, string[]>();
+    for (const { word, top } of words) byLine.set(top, [...(byLine.get(top) ?? []), word]);
+    return [...byLine.entries()].sort(([a], [b]) => a - b).map(([, line]) => line);
+  });
+  expect(lines.at(-1)!.length, `last line: “${lines.at(-1)!.join(" ")}” of ${JSON.stringify(lines)}`).toBeGreaterThanOrEqual(2);
+});
+
+test("WEB-1609: the footer's fine print and the 404's paragraphs compute text-wrap: pretty", async ({ page }) => {
+  const wraps = (selector: string) =>
+    page.locator(selector).evaluateAll((elements) =>
+      elements.map((element) => {
+        const style = getComputedStyle(element);
+        return `${style.getPropertyValue("text-wrap-style") || style.getPropertyValue("text-wrap")}`;
+      }),
+    );
+  await page.goto("/es/");
+  await hydrated(page);
+  const fine = await wraps("footer .footer-fine p");
+  expect(fine, "/es/: .footer-fine p").toHaveLength(2);
+  for (const wrap of fine) expect(wrap, "/es/: .footer-fine p").toMatch(/pretty/);
+  for (const language of LANGUAGES) {
+    const url = WP73_MISSING(language);
+    await page.goto(url);
+    await hydrated(page);
+    const paragraphs = await wraps(".not-found p");
+    expect(paragraphs, `${url}: .not-found p`).toHaveLength(3);
+    for (const wrap of paragraphs) expect(wrap, `${url}: .not-found p`).toMatch(/pretty/);
+  }
+});
+
+// ---- Run 2026-10-28-site: WP267 (WEB-1614) ----
+// The footer's own links (‘Try it with your voice’, Features, Questions) are as large as the
+// legal row under them: 16 px at weight 650, while the operator, © and trademark lines stay
+// 14 px. Measured on the three homes at 1440 × 1000 (desktop), 390 × 664 and 320 × 568
+// (mobile), light and dark. axe on the three homes, light and dark: ux-web-home.spec.ts,
+// “WEB-6, WEB-19, WEB-707, WEB-705, WEB-706: axe reports no violations on the three homes”.
+
+const WP267_SIZES = (project: string) =>
+  project === "desktop"
+    ? [{ width: 1440, height: 1000 }]
+    : [
+        { width: 390, height: 664 },
+        { width: 320, height: 568 },
+      ];
+
+for (const theme of THEMES) {
+  test.describe(`${theme} footer, WP267`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1614: on the three homes the footer's site links are 16 px at weight 650, no smaller than the legal row, and the fine print stays 14 px (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const size of WP267_SIZES(testInfo.project.name))
+        for (const language of LANGUAGES) {
+          await page.setViewportSize(size);
+          const url = homeUrl(language);
+          const where = `${url} at ${size.width} × ${size.height}`;
+          await page.goto(url);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          const footer = page.locator("footer");
+          const style = (anchors: Element[]) =>
+            anchors.map((a) => {
+              const computed = getComputedStyle(a);
+              return {
+                name: a.textContent?.trim() ?? "",
+                size: parseFloat(computed.fontSize),
+                weight: computed.fontWeight,
+              };
+            });
+          const site = await footer
+            .getByRole("navigation", { name: FOOTER.navigation[language], exact: true })
+            .getByRole("link")
+            .evaluateAll(style);
+          const legal = await footer
+            .getByRole("navigation", { name: FOOTER.legal[language], exact: true })
+            .getByRole("link")
+            .evaluateAll(style);
+          expect(site, `${where}: the footer's site links`).toHaveLength(3);
+          expect(legal, `${where}: the legal links`).toHaveLength(5);
+          for (const link of site) {
+            expect(link.size, `${where}: “${link.name}” font size`).toBe(16);
+            expect(link.weight, `${where}: “${link.name}” font weight`).toBe("650");
+          }
+          for (const link of legal) expect(link.size, `${where}: “${link.name}” font size`).toBe(16);
+          expect(
+            Math.min(...site.map((link) => link.size)),
+            `${where}: the smallest site link against the largest legal link`,
+          ).toBeGreaterThanOrEqual(Math.max(...legal.map((link) => link.size)));
+          const fine = await footer
+            .locator(".footer-operator, .footer-fine p")
+            .evaluateAll((lines) =>
+              lines.map((line) => `${line.textContent?.trim()}: ${getComputedStyle(line).fontSize}`),
+            );
+          expect(fine, `${where}: operator, © and trademark`).toHaveLength(3);
+          for (const line of fine) expect(line, where).toMatch(/: 14px$/);
+        }
+    });
+
+    test(`WEB-1614: on the three homes nothing scrolls sideways and every footer link is 44 × 44 px or more (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const size of WP267_SIZES(testInfo.project.name))
+        for (const language of LANGUAGES) {
+          await page.setViewportSize(size);
+          const url = homeUrl(language);
+          const where = `${url} at ${size.width} × ${size.height}`;
+          await page.goto(url);
+          await hydrated(page);
+          await page.evaluate(() => document.fonts.ready);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          const footer = page.locator("footer");
+          await footer.scrollIntoViewIfNeeded();
+          const boxes = await footer.locator("a[href]").evaluateAll((anchors) =>
+            anchors
+              .filter((a) => a.getClientRects().length > 0 && getComputedStyle(a).visibility !== "hidden")
+              .map((a) => {
+                const { width, height } = a.getBoundingClientRect();
+                return {
+                  name: a.getAttribute("aria-label") || a.textContent?.trim() || a.getAttribute("href") || "",
+                  width,
+                  height,
+                };
+              }),
+          );
+          // The brand, three site links, five legal links, three languages and Back to top.
+          expect(boxes.length, `${where}: footer links`).toBeGreaterThanOrEqual(13);
+          for (const box of boxes) {
+            expect(box.width, `${where}: “${box.name}” width`).toBeGreaterThanOrEqual(44);
+            expect(box.height, `${where}: “${box.name}” height`).toBeGreaterThanOrEqual(44);
+          }
+          expect(await scrollsSideways(page), `${where} scrolls sideways`).toBe(false);
+          const overflow = await page.evaluate(() => ({
+            scroll: document.documentElement.scrollWidth,
+            client: document.documentElement.clientWidth,
+          }));
+          expect(overflow.scroll, `${where}: scrollWidth against clientWidth`).toBeLessThanOrEqual(overflow.client);
+        }
     });
   });
 }

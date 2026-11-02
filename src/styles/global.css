@@ -411,6 +411,12 @@ h1 {
   font-size: 1rem;
   line-height: 1.5;
 }
+.hero-free {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
 .hero-art {
   position: relative;
   min-width: 0;
@@ -802,6 +808,9 @@ summary::-webkit-details-marker {
   padding-bottom: 24px;
   padding-right: 30px;
 }
+.faq-item p:not(:last-child) {
+  padding-bottom: 12px;
+}
 @media (hover: hover) {
   .faq-item summary:hover {
     color: var(--green);
@@ -905,7 +914,7 @@ summary::-webkit-details-marker {
   justify-content: center;
   min-height: 44px;
   min-width: 44px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 650;
   color: var(--muted);
   transition: color 0.2s;
@@ -925,6 +934,9 @@ summary::-webkit-details-marker {
   align-items: center;
   justify-content: space-between;
   gap: 12px 20px;
+}
+.footer-fine p {
+  text-wrap: pretty;
 }
 .footer-back {
   display: inline-flex;
@@ -979,6 +991,7 @@ summary::-webkit-details-marker {
   color: var(--muted);
   font-size: 1rem;
   margin-block: 12px 8px;
+  text-wrap: pretty;
 }
 .not-found-links {
   display: flex;
@@ -1060,6 +1073,11 @@ summary::-webkit-details-marker {
   }
   .header-menu[open] summary {
     background: var(--mint);
+  }
+  /* The open pill shows ✕ instead of ≡; CSS alone, so it works without JavaScript. */
+  .header-menu:not([open]) > summary .close-icon,
+  .header-menu[open] > summary .menu-icon {
+    display: none;
   }
   .header-menu-panel {
     position: absolute;
@@ -1385,6 +1403,33 @@ summary::-webkit-details-marker {
     padding-inline: 22px;
   }
 }
+/* On short screens (a phone held sideways, 400% zoom) the header scrolls away with the page;
+   relative, not static, so the open menu's panel stays anchored to it. */
+@media (max-height: 480px) {
+  .site-header {
+    position: relative;
+  }
+  :root {
+    scroll-padding-top: 16px;
+  }
+  /* A jump to a section lands on its heading, not on its top padding (the paddings above). */
+  .section-space {
+    scroll-margin-top: -106px;
+  }
+  .faq-section {
+    scroll-margin-top: -88px;
+  }
+}
+@media (max-height: 480px) and (max-width: 800px) {
+  .section-space {
+    scroll-margin-top: -75px;
+  }
+}
+@media (max-height: 480px) and (max-width: 580px) {
+  .section-space {
+    scroll-margin-top: -65px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1402,5 +1447,10 @@ summary::-webkit-details-marker {
   .hero-stage,
   .orbit {
     border: 1px solid CanvasText;
+  }
+  /* The current language's ring is a box-shadow, which forced colours remove. WEB-1608. */
+  .language-switch a[aria-current="page"]:not(:focus-visible) {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
   }
 }

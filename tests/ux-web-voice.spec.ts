@@ -78,8 +78,8 @@ const VOICE = {
     label: { en: "For example, say:", es: "Por ejemplo, di:", ca: "Per exemple, digues:" } as Copy,
     quote: {
       en: "“Tomorrow, call the dentist and buy bread.”",
-      es: "«Mañana, llamar al dentista y comprar pan.»",
-      ca: "«Demà, trucar al dentista i comprar pa.»",
+      es: "«Mañana, llamar al dentista y comprar pan»",
+      ca: "«Demà, trucar al dentista i comprar pa»",
     } as Copy,
     heading: { en: "2 things to add", es: "2 cosas para añadir", ca: "2 coses per afegir" } as Copy,
     cards: {
@@ -155,14 +155,14 @@ const VOICE = {
   noDate: { en: "No date", es: "Sin fecha", ca: "Sense data" } as Copy,
   handOver: {
     en: "In the app: tap Add a task, say it, tap Done, and add it to your calendar. Coming soon to Google Play.",
-    es: "En la app: toca Añadir tarea, dilo, toca Listo y añádelo al calendario. Muy pronto en Google Play.",
-    ca: "A l’aplicació: toca Afegeix una tasca, digues-ho, toca Fet i afegeix-ho al calendari. Molt aviat a Google Play.",
+    es: "En la app: toca Añadir tarea, dilo, toca Listo y añádelo al calendario. Próximamente en Google Play.",
+    ca: "A l’aplicació: toca Afegeix una tasca, digues-ho, toca Fet i afegeix-ho al calendari. Properament a Google Play.",
   } as Copy,
   seeWhatISaid: { en: "See what I said", es: "Ver lo que dije", ca: "Mostra què he dit" } as Copy,
   noTasks: {
-    en: "No tasks were found. Your words are kept. That used a try.",
-    es: "No se encontraron tareas. Tus palabras se conservan. Ha contado como un intento.",
-    ca: "No s’ha trobat cap tasca. Les teves paraules es conserven. Ha comptat com un intent.",
+    en: "I didn’t find a task. Say what and when, for example: “Tomorrow, call the dentist.” That used a try.",
+    es: "No he encontrado ninguna tarea. Di qué y cuándo, por ejemplo: «Mañana, llamar al dentista». Ha contado como un intento.",
+    ca: "No he trobat cap tasca. Digues què i quan, per exemple: «Demà, trucar al dentista». Ha comptat com un intent.",
   } as Copy,
   triesUsedStart: {
     en: "You’ve used this demo’s 3 tries.",
@@ -757,7 +757,9 @@ test.describe("an English browser on the Spanish page", () => {
 
 test("WEB-9: the ‘See what I said’ summary row is 44 px tall or more", async ({ page }) => {
   for (const language of LANGUAGES) {
-    await typeAndSend(page, language);
+    // WP69 (WEB-1309): only a spoken result has the transcript.
+    await recordAndSend(page, language);
+    await expect(stage(page, "review"), language).toBeVisible();
     const summary = demo(page).locator("summary").filter({ hasText: VOICE.seeWhatISaid[language] });
     await expect(summary, language).toBeVisible();
     expect((await summary.boundingBox())!.height, language).toBeGreaterThanOrEqual(44);
@@ -812,7 +814,9 @@ for (const theme of THEMES) {
       page,
       voice,
     }) => {
-      await typeAndSend(page, "en");
+      // WP69 (WEB-1309): only a spoken result has “See what I said”.
+      await recordAndSend(page, "en");
+      await expect(stage(page, "review")).toBeVisible();
       await demo(page).locator("summary").click();
       expect(await axeViolations(page), "result, “See what I said” open").toEqual([]);
       voice.draft = { tasks: [] };
@@ -1287,9 +1291,9 @@ const WP29_COPY = {
   },
   errors: {
     offline: {
-      en: "No connection. Check Wi-Fi or mobile data and try again. What you said is kept, and trying again won’t cost an extra try.",
-      es: "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo. Lo que dijiste se conserva y volver a probar no te costará otro intento.",
-      ca: "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. El que has dit es conserva i tornar-ho a provar no et costarà cap altre intent.",
+      en: "No connection. Check Wi-Fi or mobile data and try again. Your words are kept, and trying again won’t cost an extra try.",
+      es: "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo. Tus palabras se conservan y volver a probar no te costará otro intento.",
+      ca: "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. Les teves paraules es conserven i tornar-ho a provar no et costarà cap altre intent.",
     },
     // WP43 (WEB-721): opening with no connection, before anything has been said.
     offlineOpening: {
@@ -1324,9 +1328,9 @@ const WP29_COPY = {
       ca: "La comprovació de seguretat no s’ha carregat, així que la demo en directe no pot funcionar aquí. L’exemple de dalt mostra què fa TaskFlow.",
     },
     invalidDraft: {
-      en: "We couldn’t turn that into tasks, and it used a try. Say what you need to do, and when.",
-      es: "No hemos podido convertirlo en tareas y ha contado como un intento. Di qué tienes que hacer y cuándo.",
-      ca: "No ho hem pogut convertir en tasques i ha comptat com un intent. Digues què has de fer i quan.",
+      en: "We couldn’t turn that into tasks. Say what you need to do, and when.",
+      es: "No hemos podido convertirlo en tareas. Di qué tienes que hacer y cuándo.",
+      ca: "No ho hem pogut convertir en tasques. Digues què has de fer i quan.",
     },
     recording: {
       en: "We couldn’t hear that recording. Record it again; it didn’t use a try.",
@@ -1339,9 +1343,9 @@ const WP29_COPY = {
       ca: "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
     },
     sayAgain: {
-      en: "Something went wrong. Say it again.",
-      es: "Algo ha fallado. Vuelve a decirlo.",
-      ca: "Alguna cosa ha fallat. Torna-ho a dir.",
+      en: "Something went wrong. Please try again.",
+      es: "Algo ha fallado. Vuelve a probar.",
+      ca: "Alguna cosa ha fallat. Torna-ho a provar.",
     },
     empty: {
       en: "Say or type what you need to do first.",
@@ -1866,7 +1870,8 @@ test("WEB-8: the demo's text follows the browser's text size, and its error box 
 
 // The words the brief removes from every state (WEB-12). ‘Tomorrow’ is checked outside the
 // teaching example (WD1's static example and the prompt above the microphone), which says
-// ‘Tomorrow, call the dentist and buy bread.’ on purpose.
+// ‘Tomorrow, call the dentist and buy bread.’ on purpose, and outside the no-tasks sentence,
+// the app's captureNoTasks, whose example says ‘Tomorrow, call the dentist.’ (WP69, WEB-1303).
 const WP29_WORDS = [
   /allowance/i,
   /rolling/i,
@@ -1970,7 +1975,7 @@ for (const theme of THEMES) {
         test.setTimeout(120_000);
         await runScenario(scenario, page, voice, testInfo.project.name as Project, async (state) => {
           await expect(page.locator("html"), state).toHaveAttribute("data-theme", theme);
-          const text = await demoText(page, [".voice-example", ".voice-prompt"]);
+          const text = await demoText(page, [".voice-example", ".voice-prompt", ".voice-results > .voice-message"]);
           for (const word of WP29_WORDS) expect(text, `${state}: ${word}`).not.toMatch(word);
           const all = await demoText(page, []);
           for (const word of WP46_WORDS) expect(all, `${state}: ${word}`).not.toMatch(word);
@@ -3149,6 +3154,558 @@ for (const theme of THEMES) {
         expect(await axeViolations(page), `${language}: axe while listening`).toEqual([]);
       }
       expect(voice.requests.draft).toBe(0);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+// ---- Run 2026-10-28-site: WP69 (WEB-1308, WEB-1309, WEB-1303, WEB-1307) ----
+// Typing and the result: Done right under the box, typed words aren't ‘what you said’, the
+// app's no-tasks sentence, and Today or Tomorrow on the cards. The completion circle
+// (WEB-1306) is in tests/ux-web-completion.spec.ts.
+
+// The plan's exact copy (WP69's brief).
+const WP69_COPY = {
+  offline: {
+    en: "No connection. Check Wi-Fi or mobile data and try again. Your words are kept, and trying again won’t cost an extra try.",
+    es: "No hay conexión. Revisa el wifi o los datos móviles e inténtalo de nuevo. Tus palabras se conservan y volver a probar no te costará otro intento.",
+    ca: "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. Les teves paraules es conserven i tornar-ho a provar no et costarà cap altre intent.",
+  } as Copy,
+  sayAgain: {
+    en: "Something went wrong. Please try again.",
+    es: "Algo ha fallado. Vuelve a probar.",
+    ca: "Alguna cosa ha fallat. Torna-ho a provar.",
+  } as Copy,
+  noTasks: {
+    en: "I didn’t find a task. Say what and when, for example: “Tomorrow, call the dentist.” That used a try.",
+    es: "No he encontrado ninguna tarea. Di qué y cuándo, por ejemplo: «Mañana, llamar al dentista». Ha contado como un intento.",
+    ca: "No he trobat cap tasca. Digues què i quan, per exemple: «Demà, trucar al dentista». Ha comptat com un intent.",
+  } as Copy,
+  oldNoTasks: ["No tasks were found", "No se encontraron tareas", "No s’ha trobat cap tasca"],
+  talkInstead: { en: "Talk instead", es: "Hablar", ca: "Parla" } as Copy,
+  today: { en: "Today", es: "Hoy", ca: "Avui" } as Copy,
+  tomorrow: { en: "Tomorrow", es: "Mañana", ca: "Demà" } as Copy,
+};
+// The page's --ink, read through a probe in the page's own theme.
+const inkColour = (page: Page) =>
+  page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--ink)";
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  });
+// The order of elements in the document, by selector, inside the capture stage: each
+// selector's first match, and whether it comes after the one before.
+const documentOrder = (page: Page, selectors: string[]) =>
+  stage(page, "capture").evaluate((root, selectors) => {
+    const found = selectors.map((selector) => root.querySelector(selector));
+    return selectors.map((selector, index) => ({
+      selector,
+      present: !!found[index],
+      afterPrevious:
+        index === 0 || !found[index] || !found[index - 1]
+          ? null
+          : !!(found[index - 1]!.compareDocumentPosition(found[index]!) & Node.DOCUMENT_POSITION_FOLLOWING),
+    }));
+  }, selectors);
+// Top and bottom of a visible element, in viewport px.
+const edges = async (locator: Locator) => {
+  const box = (await locator.boundingBox())!;
+  return { top: box.y, bottom: box.y + box.height };
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP69 typing order`, () => {
+    test.use({ colorScheme: theme, viewport: { width: 390, height: 664 } });
+
+    test(`WEB-1308: at 390 × 664, typing: the filled Done starts within 60 px under the text box, then the privacy line with its link, the Pro note, Talk instead and the fine print; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      for (const language of LANGUAGES) {
+        await typeThought(page, language);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        const box = textBox(page, language);
+        const done = doneButton(page, language);
+        await expect(done, language).toBeEnabled({ timeout: 10_000 });
+        expect(await isFilled(done), `${language}: Done is filled`).toBe(true);
+        const capture = stage(page, "capture");
+        const privacy = capture.locator(".voice-privacy");
+        await expect(privacy, language).toHaveCount(1);
+        await expect(privacy.getByRole("link", { name: VOICE.privacyLink[language], exact: true }), language).toBeVisible();
+        const pro = capture.getByText(VOICE.textPro[language], { exact: true });
+        const talk = capture.getByRole("button", { name: WP69_COPY.talkInstead[language], exact: true });
+        const fine = capture.locator(".voice-fine");
+        for (const [what, item] of [["the privacy line", privacy], ["the Pro note", pro], ["Talk instead", talk], ["the fine print", fine]] as const)
+          await expect(item, `${language}: ${what}`).toBeVisible();
+        const boxEdges = await edges(box);
+        const doneEdges = await edges(done);
+        const gap = doneEdges.top - boxEdges.bottom;
+        expect(gap, `${language}: Done's top under the text box's bottom`).toBeGreaterThanOrEqual(0);
+        expect(gap, `${language}: Done's top within 60 px of the text box's bottom`).toBeLessThanOrEqual(60);
+        let previous = doneEdges;
+        for (const [what, item] of [["the privacy line", privacy], ["the Pro note", pro], ["Talk instead", talk], ["the fine print", fine]] as const) {
+          const next = await edges(item);
+          expect(next.top, `${language}: ${what} starts under what comes before it`).toBeGreaterThanOrEqual(previous.bottom - 1);
+          previous = next;
+        }
+        // The brief's order in the document, the security check between the counter and Done.
+        const order = await documentOrder(page, [
+          "textarea",
+          ".voice-text-count",
+          ".voice-verification",
+          ".voice-submit",
+          ".voice-privacy",
+          ".voice-text-pro",
+          ".voice-mode-link",
+          ".voice-fine",
+        ]);
+        for (const row of order) {
+          expect(row.present, `${language}: ${row.selector} in typing mode`).toBe(true);
+          if (row.afterPrevious !== null) expect(row.afterPrevious, `${language}: ${row.selector} after the one before`).toBe(true);
+        }
+        expect(await axeViolations(page), `${language}: axe in typing mode`).toEqual([]);
+      }
+      expect(voice.requests.draft).toBe(0);
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+
+test.describe("WP69 typing with a phone keyboard up", () => {
+  test.use({ viewport: { width: 390, height: 364 } });
+  test("WEB-1308: at 390 × 364, with the text box focused and a sentence typed, Done is wholly in the viewport, in each language", async ({
+    page,
+    voice,
+  }) => {
+    for (const language of LANGUAGES) {
+      await typeThought(page, language);
+      const box = textBox(page, language);
+      await box.focus();
+      await expect(box, language).toBeFocused();
+      const done = doneButton(page, language);
+      await expect(done, language).toBeEnabled({ timeout: 10_000 });
+      await expect(done, `${language}: Done wholly in the viewport`).toBeInViewport({ ratio: 1 });
+      await expect(box, `${language}: the text box still focused`).toBeFocused();
+    }
+    expect(voice.unexpected).toEqual([]);
+  });
+});
+
+test("WEB-1308: switching from typing to talking and back loads the security check's stand-in once only, and the typed text still sends", async ({
+  page,
+  voice,
+}) => {
+  const scripts: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).hostname === "challenges.cloudflare.com") scripts.push(request.url());
+  });
+  await capture(page, "en");
+  await expect.poll(() => turnstileRenders(page).then((renders) => renders.length)).toBe(1);
+  for (let round = 0; round < 2; round++) {
+    await demo(page).getByRole("button", { name: VOICE.typeInstead.en, exact: true }).click();
+    await expect(textBox(page, "en")).toBeFocused();
+    await demo(page).getByRole("button", { name: WP69_COPY.talkInstead.en, exact: true }).click();
+    await expect(recordButton(page)).toBeVisible();
+  }
+  await demo(page).getByRole("button", { name: VOICE.typeInstead.en, exact: true }).click();
+  await textBox(page, "en").fill(TYPED);
+  await page.waitForTimeout(500);
+  expect(await turnstileRenders(page), "Turnstile rendered once").toHaveLength(1);
+  expect(scripts, "Turnstile's script loaded once").toHaveLength(1);
+  await sendTyped(page);
+  await expect(stage(page, "review")).toBeVisible({ timeout: 15_000 });
+  expect(voice.requests.draft).toBe(1);
+  expect(await turnstileRenders(page), "still once").toHaveLength(1);
+  expect(voice.unexpected).toEqual([]);
+});
+
+test("WEB-1308: voice mode's order is unchanged: the recorder, the privacy line, the check, Type instead, the fine print", async ({
+  page,
+  voice,
+}) => {
+  for (const language of LANGUAGES) {
+    await capture(page, language);
+    const order = await documentOrder(page, [
+      ".voice-recorder",
+      ".voice-privacy",
+      ".voice-verification",
+      ".voice-mode-link",
+      ".voice-fine",
+    ]);
+    for (const row of order) {
+      expect(row.present, `${language}: ${row.selector} in voice mode`).toBe(true);
+      if (row.afterPrevious !== null) expect(row.afterPrevious, `${language}: ${row.selector} after the one before`).toBe(true);
+    }
+    const captureStage = stage(page, "capture");
+    await expect(captureStage.locator(".voice-privacy"), `${language}: one privacy line`).toHaveCount(1);
+    await expect(captureStage.locator(".voice-text-pro"), `${language}: no Pro note while talking`).toHaveCount(0);
+    let previous = await edges(captureStage.locator(".voice-recorder"));
+    for (const selector of [".voice-privacy", ".voice-mode-link", ".voice-fine"]) {
+      const next = await edges(captureStage.locator(selector));
+      expect(next.top, `${language}: ${selector} under what comes before it`).toBeGreaterThanOrEqual(previous.bottom - 1);
+      previous = next;
+    }
+  }
+  expect(voice.unexpected).toEqual([]);
+});
+
+test("WEB-1309: the offline and previous-failure alerts read the plan's words in each language", async ({
+  page,
+  voice,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "The words are the same on both projects.");
+  test.setTimeout(120_000);
+  for (const language of LANGUAGES) {
+    expect(SITE[language].voice.errors.offline, `${language}: errors.offline`).toBe(WP69_COPY.offline[language]);
+    expect(SITE[language].voice.errors.sayAgain, `${language}: errors.sayAgain`).toBe(WP69_COPY.sayAgain[language]);
+    for (const [draft, expected] of [
+      ["offline", WP69_COPY.offline],
+      [serverError("previous_failure"), WP69_COPY.sayAgain],
+    ] as const) {
+      voice.remaining = 3;
+      voice.resetAt = null;
+      voice.draft = draft;
+      await typeThought(page, language);
+      await sendTyped(page);
+      await expect(demo(page).getByRole("alert"), `${language}: ${typeof draft === "string" ? draft : draft.code}`).toHaveText(
+        expected[language],
+        { timeout: 15_000 },
+      );
+    }
+  }
+  expect(voice.unexpected).toEqual([]);
+});
+
+test("WEB-1309: a typed result has no ‘See what I said’; a spoken result has it, with its summary in each language", async ({
+  page,
+  voice,
+}) => {
+  test.setTimeout(120_000);
+  for (const language of LANGUAGES) {
+    voice.remaining = 3;
+    voice.resetAt = null;
+    await typeAndSend(page, language);
+    await expect(demo(page).locator(".voice-task-card").first(), language).toBeVisible();
+    await expect(demo(page).locator("details.voice-transcript"), `${language}: typed, no transcript`).toHaveCount(0);
+    await expect(demo(page).getByText(VOICE.seeWhatISaid[language]), `${language}: typed`).toHaveCount(0);
+    voice.remaining = 3;
+    voice.resetAt = null;
+    await recordAndSend(page, language);
+    await expect(stage(page, "review"), language).toBeVisible({ timeout: 15_000 });
+    const details = demo(page).locator("details.voice-transcript");
+    await expect(details, `${language}: spoken, one transcript`).toHaveCount(1);
+    await expect(details.locator("summary"), language).toHaveText(VOICE.seeWhatISaid[language]);
+  }
+  expect(voice.unexpected).toEqual([]);
+});
+
+test("WEB-1303: with 0 tasks, typed and spoken, the stage heading is the app's sentence in each language; src/ has none of the old ones", async ({
+  page,
+  voice,
+}) => {
+  test.setTimeout(120_000);
+  for (const language of LANGUAGES) {
+    expect(SITE[language].voice.noTasks, `${language}: noTasks`).toBe(WP69_COPY.noTasks[language]);
+    for (const how of ["typed", "spoken"] as const) {
+      voice.remaining = 3;
+      voice.resetAt = null;
+      voice.draft = { tasks: [] };
+      if (how === "typed") await typeAndSend(page, language);
+      else await recordAndSend(page, language);
+      const heading = stage(page, "review").locator("h3.voice-message");
+      await expect(heading, `${language} ${how}`).toBeVisible({ timeout: 15_000 });
+      expect(flat(await heading.textContent()), `${language} ${how}: the heading`).toBe(WP69_COPY.noTasks[language]);
+      await expect(stage(page, "review").getByRole("heading", { level: 3 }), `${language} ${how}: one heading`).toHaveCount(1);
+    }
+  }
+  const found: string[] = [];
+  const walk = (folder: string) => {
+    for (const name of readdirSync(folder)) {
+      const file = path.join(folder, name);
+      if (statSync(file).isDirectory()) walk(file);
+      else {
+        const text = readFileSync(file, "utf8");
+        for (const word of WP69_COPY.oldNoTasks) if (text.includes(word)) found.push(`${path.relative(ROOT, file)}: ${word}`);
+      }
+    }
+  };
+  walk(path.join(ROOT, "src"));
+  expect(found).toEqual([]);
+  expect(voice.unexpected).toEqual([]);
+});
+
+// Thursday 29 October 2026 at 09:00 in Madrid (CET, after the clocks changed on the 25th).
+const THURSDAY_09 = new Date("2026-10-29T09:00:00+01:00");
+const WP69_DATED = [
+  { ...TASKS[2], title: "Call the dentist", date: "2026-10-30", time: "10:00" },
+  { ...TASKS[2], title: "Buy bread", date: "2026-10-29", time: "17:00" },
+  { ...TASKS[2], title: "Water the plants", date: "2026-11-01", time: "10:00" },
+  { ...TASKS[2], title: "Book a table", date: null, time: null },
+];
+const WP69_LINES: Record<Language, [string, string]> = {
+  en: ["Tomorrow · 10:00 AM", "Today · 5:00 PM"],
+  es: ["Mañana · 10:00", "Hoy · 17:00"],
+  ca: ["Demà · 10:00", "Avui · 17:00"],
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP69 Today and Tomorrow, in Madrid`, () => {
+    test.use({ colorScheme: theme, timezoneId: "Europe/Madrid" });
+
+    test(`WEB-1307: on a fake clock, the cards read Today and Tomorrow, the weekday date three days ahead and No date; the date line and the question are 16 px, the date in ink and its icon green; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(120_000);
+      await page.clock.setFixedTime(THURSDAY_09);
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        expect(t.today, `${language}: today`).toBe(WP69_COPY.today[language]);
+        expect(t.tomorrow, `${language}: tomorrow`).toBe(WP69_COPY.tomorrow[language]);
+        voice.remaining = 3;
+        voice.resetAt = null;
+        voice.draft = { tasks: WP69_DATED };
+        await typeAndSend(page, language);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        const lines = demo(page).locator(".voice-task-card .voice-task-schedule");
+        await expect(lines, language).toHaveCount(4);
+        const read = (await lines.allTextContents()).map(flat);
+        // Three days ahead: the weekday date, as the page writes any other day.
+        const ahead = flat(
+          await page.evaluate((language) => {
+            const at = new Date(2026, 10, 1, 10, 0);
+            const day = new Intl.DateTimeFormat(language, { weekday: "short", day: "numeric", month: "short" }).format(at);
+            const time = new Intl.DateTimeFormat(language, { hour: "numeric", minute: "2-digit" }).format(at);
+            return `${day} · ${time}`;
+          }, language),
+        );
+        expect(read, `${language}: the four date lines`).toEqual([
+          WP69_LINES[language][0],
+          WP69_LINES[language][1],
+          ahead,
+          VOICE.noDate[language],
+        ]);
+        if (language === "en") expect(read[2], "en: three days ahead").toBe("Sun, Nov 1 · 10:00 AM");
+        expect(read[2], `${language}: three days ahead isn't Today or Tomorrow`).not.toMatch(
+          new RegExp(`^(${WP69_COPY.today[language]}|${WP69_COPY.tomorrow[language]})\\b`),
+        );
+        // Sizes and colours: the date line and the question at 16 px; the date in ink, its icon green.
+        const ink = await inkColour(page);
+        const look = await lines.first().evaluate((line) => ({
+          size: getComputedStyle(line).fontSize,
+          colour: getComputedStyle(line).color,
+          icon: getComputedStyle(line.querySelector("svg")!).color,
+        }));
+        expect(look.size, `${language}: the date line's size`).toBe("16px");
+        expect(look.colour, `${language}: the date line's colour`).toBe(ink);
+        expect(look.icon, `${language}: the calendar icon's colour`).toBe(GREEN[theme]);
+        voice.draft = { tasks: TASKS };
+        voice.remaining = 3;
+        voice.resetAt = null;
+        await typeAndSend(page, language);
+        const question = demo(page).locator(".voice-question");
+        await expect(question, language).toHaveCount(1);
+        expect(await question.evaluate((element) => getComputedStyle(element).fontSize), `${language}: the question's size`).toBe("16px");
+        expect(await axeViolations(page), `${language}: axe on the result`).toEqual([]);
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+  });
+}
+// ---- Run 2026-10-28-site: WP263 (WEB-1315) ----
+// WD30: a demo try that fails on our side is given back; a result with no task still counts.
+// The stub gives the try back on invalid_draft and unavailable, as the server now does; the
+// server's own give-back is proven against the Firestore emulator (tests/voice-store.integration.ts).
+
+const WP263_COPY = {
+  invalidDraft: {
+    en: "We couldn’t turn that into tasks. Say what you need to do, and when.",
+    es: "No hemos podido convertirlo en tareas. Di qué tienes que hacer y cuándo.",
+    ca: "No ho hem pogut convertir en tasques. Digues què has de fer i quan.",
+  } as Copy,
+  fullTries: { en: "3 of 3 tries left", es: "3 de 3 intentos disponibles", ca: "3 de 3 intents disponibles" } as Copy,
+  noTasksEnd: { en: "That used a try.", es: "Ha contado como un intento.", ca: "Ha comptat com un intent." } as Copy,
+};
+const WP263_GONE = ["and it used a try", "y ha contado como un intento", "i ha comptat com un intent"];
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP263 a failed try given back`, () => {
+    test.use({ colorScheme: theme });
+
+    for (const [code, status, message] of [
+      ["invalid_draft", 422, "invalidDraft"],
+      ["unavailable", 503, "notAnswering"],
+    ] as const) {
+      test(`WEB-1315: typing, a draft answered ${status} ${code} shows errors.${message}, the status is asked again after the draft, and the badge says 3 of 3 tries left; axe finds nothing (${theme})`, async ({
+        page,
+        voice,
+      }) => {
+        test.setTimeout(120_000);
+        const error = serverError(code, status);
+        const calls: string[] = [];
+        page.on("request", (request) => {
+          const found = /\/api\/voice\/(status|draft)\//.exec(request.url());
+          if (found) calls.push(found[1]);
+        });
+        for (const language of LANGUAGES) {
+          const t = SITE[language].voice;
+          if (code === "invalid_draft")
+            expect(t.errors.invalidDraft, `${language}: invalidDraft's words`).toBe(WP263_COPY.invalidDraft[language]);
+          voice.remaining = 3;
+          voice.resetAt = null;
+          voice.draft = error;
+          voice.remainingAfterError = null;
+          await typeThought(page, language);
+          await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+          await expect(triesBadge(page), `${language}: the badge before sending`).toHaveText(WP263_COPY.fullTries[language]);
+          calls.length = 0;
+          voice.requests.status = 0;
+          voice.requests.draft = 0;
+          await sendTyped(page);
+          const alert = demo(page).getByRole("alert");
+          await expect(alert, language).toHaveText(t.errors[message], { timeout: 15_000 });
+          await expect
+            .poll(() => voice.requests.status, { message: `${language}: the status after the draft` })
+            .toBeGreaterThanOrEqual(1);
+          expect(voice.requests.draft, `${language}: one draft request`).toBe(1);
+          expect(calls.indexOf("draft"), `${language}: the draft request was sent`).toBeGreaterThanOrEqual(0);
+          expect(
+            calls.lastIndexOf("status"),
+            `${language}: a status request after the draft request (${calls.join(", ")})`,
+          ).toBeGreaterThan(calls.indexOf("draft"));
+          await expect(triesBadge(page), `${language}: the badge after the failure`).toHaveText(
+            WP263_COPY.fullTries[language],
+          );
+          expect(await axeViolations(page), `${language}: axe after ${code}`).toEqual([]);
+        }
+        expect(voice.unexpected).toEqual([]);
+      });
+    }
+  });
+}
+
+test("WEB-1315: no string in src/ says a failed request used a try, and noTasks still ends ‘That used a try.’", async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Reads files: once is enough.");
+  const walk = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const full = path.join(dir, name);
+      return statSync(full).isDirectory() ? walk(full) : [full];
+    });
+  const found: string[] = [];
+  for (const file of walk(path.join(ROOT, "src"))) {
+    const text = readFileSync(file, "utf8");
+    for (const words of WP263_GONE)
+      if (text.includes(words)) found.push(`${path.relative(ROOT, file)}: ${words}`);
+  }
+  expect(found).toEqual([]);
+  for (const language of LANGUAGES) {
+    const noTasks = flat(SITE[language].voice.noTasks);
+    expect(noTasks.endsWith(WP263_COPY.noTasksEnd[language]), `${language}: ${noTasks}`).toBe(true);
+  }
+});
+
+test("WEB-1315: the README says a request that ends without a result gives the try back, and no longer that failed calls can consume an attempt", async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Reads a file: once is enough.");
+  const readme = flat(readFileSync(path.join(ROOT, "README.md"), "utf8"));
+  expect(readme).toContain(
+    "A request that ends without a result (an AI error, a timeout, or an answer that can’t be read) gives the visitor’s try back but keeps its budget reservation and its network count; a result with no task still uses the try (WD30).",
+  );
+  expect(readme).not.toContain("Failed provider calls can still consume an attempt");
+  expect(readme).not.toMatch(/fail[a-z]*[^.]*can (still )?consume an attempt/i);
+});
+// ---- Run 2026-10-28-site: WP266 (WEB-1613) ----
+// After the last try, ‘Change the text’ gives way to the tries-used line, so a typed result
+// shows its text in details.voice-transcript, summarised ‘Original text’ (the app's
+// reviewOriginalText), never ‘See what I said’ (WEB-1309). A spoken result keeps its summary.
+// The stub answers with TRANSCRIPT as its transcript, as the AI echoes typed words, so the
+// typed tries type TRANSCRIPT itself.
+
+const WP266_COPY = {
+  originalText: { en: "Original text", es: "Texto original", ca: "Text original" } as Copy,
+  changeText: { en: "Change the text", es: "Cambiar el texto", ca: "Canvia el text" } as Copy,
+};
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP266 a typed last try keeps its text`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1613: a typed last try with no task shows the tries-used line and one ‘Original text’ that opens on the typed sentence; with tries left, ‘Change the text’ and no transcript; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(150_000);
+      for (const language of LANGUAGES) {
+        const t = SITE[language].voice;
+        expect(t.originalText, `${language}: originalText`).toBe(WP266_COPY.originalText[language]);
+        expect(t.changeText, `${language}: changeText`).toBe(WP266_COPY.changeText[language]);
+        // The last try: 1 left before, 0 after the answer, no task found.
+        voice.remaining = 1;
+        voice.resetAt = null;
+        voice.draft = { tasks: [], remainingAfter: 0 };
+        await typeAndSend(page, language, TRANSCRIPT);
+        await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+        const review = stage(page, "review");
+        await expect(review.locator("h3.voice-message"), `${language}: no task`).toBeVisible({ timeout: 15_000 });
+        await expect(review.locator(".voice-again-later"), `${language}: the tries-used line`).toContainText(
+          VOICE.triesUsedStart[language],
+        );
+        await expect(review.getByRole("button", { name: t.changeText, exact: true }), `${language}: no Change the text`).toHaveCount(0);
+        const details = review.locator("details.voice-transcript");
+        await expect(details, `${language}: one transcript`).toHaveCount(1);
+        await expect(details.locator("summary"), `${language}: its summary`).toHaveText(WP266_COPY.originalText[language]);
+        await expect(review.getByText(VOICE.seeWhatISaid[language]), `${language}: typed words aren't ‘what I said’`).toHaveCount(0);
+        const words = details.locator("p");
+        await expect(words, `${language}: closed`).toBeHidden();
+        expect(await axeViolations(page), `${language}: axe, typed last try`).toEqual([]);
+        await details.locator("summary").click();
+        await expect(details, `${language}: open`).toHaveAttribute("open", "");
+        await expect(words, `${language}: the typed sentence`).toBeVisible();
+        expect(flat(await words.textContent()), `${language}: the typed sentence`).toBe(flat(TRANSCRIPT));
+        expect(await axeViolations(page), `${language}: axe, typed last try, open`).toEqual([]);
+        // With tries left: Change the text, and no transcript.
+        voice.remaining = 3;
+        voice.resetAt = null;
+        voice.draft = { tasks: [] };
+        await typeAndSend(page, language, TRANSCRIPT);
+        await expect(review.locator("h3.voice-message"), `${language}: no task, tries left`).toBeVisible({ timeout: 15_000 });
+        await expect(review.getByRole("button", { name: t.changeText, exact: true }), `${language}: Change the text`).toBeVisible();
+        await expect(review.locator(".voice-again-later"), `${language}: no tries-used line`).toHaveCount(0);
+        await expect(review.locator("details.voice-transcript"), `${language}: no transcript with tries left`).toHaveCount(0);
+        expect(await axeViolations(page), `${language}: axe, typed with tries left`).toEqual([]);
+      }
+      expect(voice.unexpected).toEqual([]);
+    });
+
+    test(`WEB-1613: a spoken result shows ‘See what I said’ with tries left and after the last try, opening on the transcript; never ‘Original text’; axe finds nothing (${theme})`, async ({
+      page,
+      voice,
+    }) => {
+      test.setTimeout(150_000);
+      for (const language of LANGUAGES) {
+        for (const last of [false, true]) {
+          const when = last ? "the last try" : "tries left";
+          voice.remaining = last ? 1 : 3;
+          voice.resetAt = null;
+          voice.draft = last ? { tasks: [], remainingAfter: 0 } : { tasks: TASKS };
+          await recordAndSend(page, language);
+          const review = stage(page, "review");
+          await expect(review, `${language} ${when}`).toBeVisible({ timeout: 15_000 });
+          await expect(page.locator("html"), language).toHaveAttribute("data-theme", theme);
+          await expect(review.locator(".voice-again-later"), `${language} ${when}: the tries-used line`).toHaveCount(last ? 1 : 0);
+          const details = review.locator("details.voice-transcript");
+          await expect(details, `${language} ${when}: one transcript`).toHaveCount(1);
+          await expect(details.locator("summary"), `${language} ${when}: its summary`).toHaveText(VOICE.seeWhatISaid[language]);
+          await expect(review.getByText(WP266_COPY.originalText[language], { exact: true }), `${language} ${when}: no Original text`).toHaveCount(0);
+          await details.locator("summary").click();
+          await expect(details.locator("p"), `${language} ${when}: the transcript`).toBeVisible();
+          expect(flat(await details.locator("p").textContent()), `${language} ${when}: the transcript`).toBe(flat(TRANSCRIPT));
+          expect(await axeViolations(page), `${language} ${when}: axe, spoken, open`).toEqual([]);
+        }
+      }
       expect(voice.unexpected).toEqual([]);
     });
   });

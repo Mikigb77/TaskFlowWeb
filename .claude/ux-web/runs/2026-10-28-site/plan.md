@@ -311,3 +311,22 @@ Re-plan of 2026-11-01, after batch b1's round 1 (WP63–WP67). Every finding the
 ### For the main session
 - `waves.py`'s drop calls `wsl`, which doesn't exist in this Linux container, and crashes after removing the worktree. Remove each mirror with `python3 .claude/skills/ux-web/scripts/webrun.py --remove <name>`. The WP65, WP66 and WP67 worktrees and mirrors may still be there: check them before the batch commit.
 - All 20 modified files are this run's b1 work, not another session's.
+
+## Round 2 (b2)
+
+Re-plan of 2026-11-02, after batch b2's round 1 (WP68–WP73, WP261–WP264). Every finding the batch built was read as fixed, and the round check passed. Three small regressions come back, from WP69 and WP73; nothing is escalated and nothing waits on you. The full briefs are in `plan-b2-r2.json`. The two packages share no file and can run side by side.
+
+### WP266 · H · S · S2: demo result, a task's heading is its title alone; a typed last try keeps its text
+- **WEB-1612** (regression R1H-1 of WP69): the new checkbox name sits inside each task's heading, so a screen reader reads the heading as “Complete Doctor appointment Doctor appointment”. The checkbox and its circle move out of the `h4`, into the same row before it; the heading holds a label for the checkbox, so tapping the title still ticks it and the heading reads the title alone.
+- **WEB-1613** (regression R1H-2 of WP69): after a typed last try, the tries-used line replaces ‘Change the text’ and the typed sentence can't be seen. The transcript also shows when the tries are used. For typed words its summary is the app's ‘Original text’ / «Texto original» / «Text original», not ‘See what I said’, so WEB-1309 doesn't come back. That's the organizer's choice over the reviewer's literal fix, following the app (`voice_task_screen.dart:4813`).
+
+### WP267 · G · S · S1: the footer's site links as large as the legal row
+- **WEB-1614** (regression R1G-1 of WP73): the legal row went to 1rem, so “Try it with your voice” and the other site links (0.875rem) now look smaller than the legal links. `.footer-top nav a` goes to 1rem, weight 650 kept. One CSS line.
+
+### Not re-planned (infrastructure, not the site)
+- **The round's combined suite-and-renders line** ran Playwright against the source checkout's config (`Cannot find package '@playwright/test'`). Run on their own through the runner, the renders passed (269 passed, 117 skipped). The final check will hit the same thing unless the renders run as their own command inside the mirror.
+
+### For the main session
+- WP68's implementer repaired `tests/ux-web-global.spec.ts`: the WP71/WP72 merge had dropped the three closing lines of WP71's acceptance block (TS1005), which broke `npm run check` and the build.
+- `waves.py`'s drop and merge still call `wsl` and crash in this Linux container. The WP261–WP264 and WP68–WP73 mirrors under `~/twb` are still there: remove them with `python3 .claude/skills/ux-web/scripts/webrun.py --remove <name>` before the batch commit.
+- All 36 modified files are this run's b1 and b2 work, not another session's. WebKit isn't installed here, so every result is Chromium only.

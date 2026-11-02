@@ -3,7 +3,7 @@ import { preload } from "react-dom";
 import NotFoundPage from "../components/NotFoundPage";
 
 const title =
-  "Page not found · Página no encontrada · No hem trobat la pàgina — TaskFlow";
+  "Page not found · Página no encontrada · No hem trobat aquesta pàgina — TaskFlow";
 
 // The 404 has no address of its own: no canonical and no og:url.
 export const metadata: Metadata = {

@@ -322,7 +322,7 @@
   gap: 12px 26px;
   padding-block: 18px;
   border-bottom: 1px solid var(--line);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 .footer-legal a {
   display: inline-flex;

@@ -547,7 +547,7 @@ test("WEB-111: the FAQ's heading is ‘Questions’ in the page's language, with
   }
 });
 
-test("WEB-105, WEB-107, WEB-109, WEB-110: the eight questions come in order, and the voice, offline, sharing and notes answers are the app's words", async ({
+test("WEB-105, WEB-107, WEB-109, WEB-110, WEB-1404: the nine questions come in order, and the voice, repeat, offline, sharing and notes answers are the app's words", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
@@ -710,7 +710,7 @@ const OLD_CALENDAR = [
 const BULK_CARD = [/Move \d+ tasks/i, /Mover \d+ tareas/i, /como hechas/i, /Mou \d+ tasques/i];
 
 const VOICE_INDEX = 3; // The fourth question.
-const WAYS_IN_INDEX = 7; // The eighth question.
+const WAYS_IN_INDEX = 8; // The ninth question (WP264 put the repeat question fifth).
 
 // Sentences end at . ? !; words split on spaces (the plan's rule).
 const sentences = (text: string) =>
@@ -790,7 +790,7 @@ for (const theme of THEMES) {
       }
     });
 
-    test(`WEB-1001, WEB-1005: axe reports no violations on the three homes with the fourth and eighth answers open (${theme})`, async ({
+    test(`WEB-1001, WEB-1005: axe reports no violations on the three homes with the fourth and ninth answers open (${theme})`, async ({
       page,
     }) => {
       for (const language of LANGUAGES) {
@@ -819,7 +819,7 @@ test("WEB-1001: in the voice answer no sentence runs over 24 words, and the Engl
   }
 });
 
-test("WEB-1004, WEB-1005: no sentence in the voice card's paragraph or the eighth answer runs over 24 words", async ({
+test("WEB-1004, WEB-1005: no sentence in the voice card's paragraph or the ninth answer runs over 24 words", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
@@ -829,7 +829,7 @@ test("WEB-1004, WEB-1005: no sentence in the voice card's paragraph or the eight
     const item = await openAnswer(page, WAYS_IN_INDEX);
     const answer = (await item.locator("p").innerText()).trim();
     expect(answer, homeUrl(language)).toBe(WAYS_IN_ANSWER[language]);
-    expect(longestSentence(answer), `${homeUrl(language)}: the eighth answer`).toBeLessThanOrEqual(24);
+    expect(longestSentence(answer), `${homeUrl(language)}: the ninth answer`).toBeLessThanOrEqual(24);
   }
 });
 
@@ -839,22 +839,22 @@ test("WEB-1001, WEB-1003, WEB-1004: with every answer open, no home has the old 
   for (const language of LANGUAGES) {
     await page.goto(homeUrl(language));
     const text = await homeTextAllOpen(page);
-    await expect(page.locator("#questions details[open]")).toHaveCount(8);
+    await expect(page.locator("#questions details[open]")).toHaveCount(9);
     for (const phrase of [...OLD_VOICE_ANSWER, ...OLD_CALENDAR])
       expect(text, `${homeUrl(language)}: “${phrase}”`).not.toContain(phrase);
     for (const pattern of BULK_CARD) expect(text, `${homeUrl(language)}: ${pattern}`).not.toMatch(pattern);
   }
 });
 
-test("WEB-1005: the FAQ has eight questions, the first seven as before, and the eighth names the home screen and WhatsApp; its answer is 16 px or more", async ({
+test("WEB-1005, WEB-1404: the FAQ has nine questions, the first eight as before, and the ninth names the home screen and WhatsApp; its answer is 16 px or more", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
     await page.goto(homeUrl(language));
     const summaries = page.locator("#questions details summary");
-    await expect(summaries, homeUrl(language)).toHaveCount(8);
+    await expect(summaries, homeUrl(language)).toHaveCount(9);
     await expect(summaries, homeUrl(language)).toHaveText([
-      ...FAQ_ALL.slice(0, 7).map((item) => item.question[language]),
+      ...FAQ_ALL.slice(0, 8).map((item) => item.question[language]),
       WAYS_IN_QUESTION[language],
     ]);
     await expect(summaries.nth(VOICE_INDEX), homeUrl(language)).toHaveText(VOICE_QUESTION[language]);
@@ -863,7 +863,7 @@ test("WEB-1005: the FAQ has eight questions, the first seven as before, and the 
     await expect(answer, homeUrl(language)).toBeVisible();
     await expect(answer, homeUrl(language)).toHaveText(WAYS_IN_ANSWER[language]);
     const size = await answer.evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
-    expect(size, `${homeUrl(language)}: the eighth answer's size`).toBeGreaterThanOrEqual(16);
+    expect(size, `${homeUrl(language)}: the ninth answer's size`).toBeGreaterThanOrEqual(16);
   }
 });
 
@@ -900,7 +900,7 @@ test("WEB-1004: at 1440, 1000 and 720 px, and at 1440 px with the browser's text
 // The answers' fit at the narrowest width and with doubled text (the renders open only the first).
 for (const [finding, index, name] of [
   ["WEB-1001", VOICE_INDEX, "fourth"],
-  ["WEB-1005", WAYS_IN_INDEX, "eighth"],
+  ["WEB-1005", WAYS_IN_INDEX, "ninth"],
 ] as const) {
   test(`${finding}: with the ${name} answer open, /es/ and /ca/ don't scroll sideways at 320 × 800`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
@@ -1021,10 +1021,20 @@ const FREE_QUESTION: Copy = {
   es: "¿TaskFlow es gratis?",
   ca: "TaskFlow és gratuït?",
 };
-const FREE_ANSWER: Copy = {
-  en: "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
-  es: "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
-  ca: "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+// WP70 (run 2026-10-28-site): two paragraphs, Free then Pro.
+const FREE_ANSWER: Record<Language, string[]> = {
+  en: [
+    "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+  ],
+  es: [
+    "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+  ],
+  ca: [
+    "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+  ],
 };
 const FREE_REMINDERS: Copy = {
   en: "Reminders are free too, even the ones that come more and more often as the day gets closer.",
@@ -1084,9 +1094,9 @@ for (const theme of THEMES) {
         await expect(item.locator("summary"), where).toHaveText(FREE_QUESTION[language]);
         await openAnswer(page, FREE_INDEX);
         const answer = item.locator("p");
-        await expect(answer, where).toBeVisible();
+        await expect(answer.first(), where).toBeVisible();
         await expect(answer, where).toHaveText(FREE_ANSWER[language]);
-        const text = (await answer.innerText()).trim();
+        const text = (await answer.allInnerTexts()).map((paragraph) => paragraph.trim()).join(" ");
         const free = text.indexOf(FREE_REMINDERS[language]);
         const pro = text.indexOf("TaskFlow Pro");
         expect(free, `${where}: the free reminders sentence`).toBeGreaterThan(-1);
@@ -1126,8 +1136,8 @@ test("WEB-1104: no sentence of the free answer passes the old Pro sentence's lim
     const where = homeUrl(language);
     await page.goto(where);
     const item = await openAnswer(page, FREE_INDEX);
-    const answer = (await item.locator("p").innerText()).trim();
-    expect(answer, where).toBe(FREE_ANSWER[language]);
+    const answer = (await item.locator("p").allInnerTexts()).map((paragraph) => paragraph.trim()).join(" ");
+    expect(answer, where).toBe(FREE_ANSWER[language].join(" "));
     expect(longestSentence(answer), `${where}: the longest sentence`).toBeLessThanOrEqual(LONGEST_SENTENCE[language]);
     for (const added of [FREE_REMINDERS[language], PRO_SECOND[language]]) {
       expect(sentences(answer), `${where}: “${added}” is a sentence of its own`).toContain(added);
@@ -1281,5 +1291,401 @@ test("WEB-1105: the four feature cards' paragraphs wrap with text-wrap: pretty, 
       expect(parseFloat(style.lineHeight), `${where}: line height`).toBeCloseTo(16 * 1.7, 1);
       expect(style.maxWidth, `${where}: max-width`).toBe(widths[index]);
     }
+  }
+});
+
+// ---- Run 2026-10-28-site: WP70 (WEB-1401, WEB-1403) ----
+// ‘Is TaskFlow free?’ answers in two paragraphs, Free then Pro, with the Pro sentence split in two;
+// the notes answer's example is a gift idea, not a Wi-Fi password. These checks are about the
+// wording itself, so the brief's exact copy is written here.
+
+const WP70_FREE: Record<Language, [string, string]> = {
+  en: [
+    "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+  ],
+  es: [
+    "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+  ],
+  ca: [
+    "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+  ],
+};
+const WP70_FIRST_START: Copy = { en: "Yes.", es: "Sí.", ca: "Sí." };
+const WP70_SECOND_START: Copy = { en: "TaskFlow Pro is", es: "TaskFlow Pro es", ca: "TaskFlow Pro és" };
+// Every claim of the one-paragraph answer before WP70, as its words read there; the Free claims
+// belong to the first paragraph and the Pro claims to the second.
+const WP70_CLAIMS: Record<Language, { free: string[]; pro: string[] }> = {
+  en: {
+    free: [
+      "10 free dictations a month",
+      "one dictation can hold several tasks",
+      "a short form, with no limit, until they come back the next month",
+      "Reminders are free too, even the ones that come more and more often",
+    ],
+    pro: [
+      "monthly subscription that renews until you cancel it in Google Play",
+      "unlimited dictation and file space (with a safety limit of 50 dictations a day)",
+      "turns sentences you type into tasks",
+      "reminders in your own words",
+      "Its price isn’t set yet.",
+    ],
+  },
+  es: {
+    free: [
+      "10 dictados gratis al mes",
+      "en un dictado caben varias tareas",
+      "un formulario sencillo, sin límite, hasta que vuelven el mes siguiente",
+      "Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo",
+    ],
+    pro: [
+      "suscripción mensual que se renueva hasta que la cancelas en Google Play",
+      "dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día)",
+      "convierte en tareas las frases que escribes",
+      "los recordatorios con tus palabras",
+      "Su precio aún no está decidido.",
+    ],
+  },
+  ca: {
+    free: [
+      "10 dictats gratuïts al mes",
+      "en un dictat hi caben diverses tasques",
+      "un formulari senzill, sense límit, fins que tornen el mes següent",
+      "Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint",
+    ],
+    pro: [
+      "subscripció mensual que es renova fins que la cancel·les a Google Play",
+      "dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia)",
+      "converteix en tasques les frases que escrius",
+      "els recordatoris amb les teves paraules",
+      "El preu encara no està decidit.",
+    ],
+  },
+};
+const WP70_NOTES: Copy = {
+  en: "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a gift idea. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
+  es: "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como una idea para un regalo. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+  ca: "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com una idea per a un regal. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+};
+// What the notes answer still names: the Notes tab, Add a note, writing or dictating, links and a checklist.
+const WP70_NOTES_NAMES: Record<Language, string[]> = {
+  en: ["The Notes tab", "Add a note", "write or dictate it", "links", "a checklist"],
+  es: ["La pestaña Notas", "Añadir nota", "escríbela o díctala", "enlaces", "una lista de pasos"],
+  ca: ["La pestanya Notes", "Afegeix una nota", "escriu-la o dicta-la", "enllaços", "una llista de passos"],
+};
+const WP70_NOTES_INDEX = 7; // The eighth question, ‘Can I keep notes as well as tasks?’ (WP264 put the repeat question fifth).
+const WP70_ACCOUNT_INDEX = 2; // The third question, about the account, which names a password on purpose (WEB-708).
+const WP70_WIFI = /wi-?fi/i;
+const WP70_PASSWORD = /password|contraseña|contrasenya|clave/i;
+
+// Each open answer's paragraphs, trimmed.
+async function answerParagraphs(item: ReturnType<Page["locator"]>) {
+  return (await item.locator("p").allInnerTexts()).map((paragraph) => paragraph.trim());
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP70`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1401: the second answer is two paragraphs, Free then Pro, word for word, and every other answer is one (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = await openAnswer(page, FREE_INDEX);
+        const paragraphs = item.locator("p");
+        await expect(paragraphs, where).toHaveCount(2);
+        await expect(paragraphs.first(), where).toBeVisible();
+        await expect(paragraphs.last(), where).toBeVisible();
+        await expect(paragraphs, where).toHaveText(WP70_FREE[language]);
+        const [first, second] = await answerParagraphs(item);
+        expect(first.startsWith(WP70_FIRST_START[language]), `${where}: the first paragraph starts “${WP70_FIRST_START[language]}”`).toBe(true);
+        expect(second.startsWith(WP70_SECOND_START[language]), `${where}: the second paragraph starts “${WP70_SECOND_START[language]}”`).toBe(true);
+        // Every other answer is one paragraph.
+        const items = page.locator("#questions details");
+        const count = await items.count();
+        expect(count, where).toBe(FAQ_ALL.length);
+        for (let index = 0; index < count; index++) {
+          if (index === FREE_INDEX) continue;
+          await expect(items.nth(index).locator("p"), `${where}: answer ${index + 1}`).toHaveCount(1);
+        }
+      }
+    });
+
+    test(`WEB-1401: the two paragraphs are 12 px apart, and the answer still ends 24 px above the item's line (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        const item = await openAnswer(page, FREE_INDEX);
+        await expect(item.locator("p"), where).toHaveCount(2);
+        await page.evaluate(() => document.fonts.ready);
+        const spacing = await item.evaluate((details) => {
+          const [first, second] = Array.from(details.querySelectorAll("p"));
+          const px = (element: Element, property: string) => parseFloat(getComputedStyle(element).getPropertyValue(property));
+          const firstBox = first.getBoundingClientRect();
+          const secondBox = second.getBoundingClientRect();
+          const detailsBox = details.getBoundingClientRect();
+          return {
+            firstPadding: px(first, "padding-bottom"),
+            secondPadding: px(second, "padding-bottom"),
+            // From the first paragraph's text box to the second's.
+            between: secondBox.top - (firstBox.bottom - px(first, "padding-bottom")),
+            // From the second paragraph's text box to the item's bottom line.
+            after: detailsBox.bottom - px(details, "border-bottom-width") - (secondBox.bottom - px(second, "padding-bottom")),
+          };
+        });
+        expect(spacing.firstPadding, `${where}: the first paragraph's bottom padding`).toBe(12);
+        expect(spacing.between, `${where}: the space between the paragraphs`).toBeCloseTo(12, 0);
+        expect(spacing.secondPadding, `${where}: the answer's bottom padding`).toBe(24);
+        expect(spacing.after, `${where}: the space under the answer`).toBeCloseTo(24, 0);
+      }
+    });
+
+    test(`WEB-1403: the notes answer's example is a gift idea, and no answer says Wi-Fi or gives a password as an example; axe passes with it open (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const notes = await openAnswer(page, WP70_NOTES_INDEX);
+        await expect(notes.locator("p"), where).toHaveText([WP70_NOTES[language]]);
+        const [text] = await answerParagraphs(notes);
+        for (const name of WP70_NOTES_NAMES[language])
+          expect(text, `${where}: the notes answer names “${name}”`).toContain(name);
+        expect(text, `${where}: the notes answer has no password`).not.toMatch(WP70_PASSWORD);
+        expect(await axeViolations(page), `${where}: the notes answer open`).toEqual([]);
+        // Every answer, open: none says Wi-Fi, and only the account answer names a password.
+        const answers = await page
+          .locator("#questions details")
+          .evaluateAll((items) =>
+            items.map((item) => Array.from(item.querySelectorAll("p"), (p) => p.textContent ?? "").join(" ")),
+          );
+        expect(answers, where).toHaveLength(FAQ_ALL.length);
+        for (const [index, answer] of answers.entries()) {
+          expect(answer, `${where}: answer ${index + 1} says Wi-Fi`).not.toMatch(WP70_WIFI);
+          if (index !== WP70_ACCOUNT_INDEX)
+            expect(answer, `${where}: answer ${index + 1} names a password`).not.toMatch(WP70_PASSWORD);
+        }
+      }
+    });
+  });
+}
+
+test("WEB-1401: in the second paragraph no sentence is longer than 20 words", async ({ page }) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const item = await openAnswer(page, FREE_INDEX);
+    await expect(item.locator("p"), where).toHaveCount(2);
+    const [, second] = await answerParagraphs(item);
+    for (const sentence of sentences(second))
+      expect(words(sentence).length, `${where}: “${sentence}”`).toBeLessThanOrEqual(20);
+  }
+});
+
+test("WEB-1401: the two paragraphs keep every claim of the one-paragraph answer, the Free claims in the first and the Pro claims in the second", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const item = await openAnswer(page, FREE_INDEX);
+    await expect(item.locator("p"), where).toHaveCount(2);
+    const [first, second] = await answerParagraphs(item);
+    for (const claim of WP70_CLAIMS[language].free) expect(first, `${where}: Free`).toContain(claim);
+    for (const claim of WP70_CLAIMS[language].pro) expect(second, `${where}: Pro`).toContain(claim);
+    expect(second.endsWith(WP70_CLAIMS[language].pro.slice(-1)[0]), `${where}: the price sentence ends the answer`).toBe(true);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP70 axe`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1401: axe reports no violations with the second answer open, on the three homes (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = await openAnswer(page, FREE_INDEX);
+        await expect(item.locator("p"), where).toHaveCount(2);
+        await item.scrollIntoViewIfNeeded();
+        expect(await axeViolations(page), `${where}: the second answer open`).toEqual([]);
+      }
+    });
+  });
+}
+
+// ---- Run 2026-10-28-site: WP264 (WEB-1404) ----
+// WD22: the FAQ says tasks can repeat, as one item right after ‘How do I add tasks by voice?’,
+// in review F's words. These checks are about the wording itself, so the brief's exact copy is
+// written here. The other eight items are FAQ_ALL's, as WP70 left them.
+
+const WP264_INDEX = 4; // The fifth question.
+const WP264_QUESTION: Copy = {
+  en: "Can I add something that repeats?",
+  es: "¿Puedo añadir algo que se repite?",
+  ca: "Puc afegir una cosa que es repeteix?",
+};
+const WP264_ANSWER: Copy = {
+  en: "Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.",
+  es: "Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.",
+  ca: "Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.",
+};
+// Repeating tasks don't get the reminders that come more and more often (REMINDER_PLANS.md).
+const WP264_MORE_OFTEN = ["more and more often", "cada vez más a menudo", "cada cop més sovint"];
+const WP264_OTHERS = FAQ_ALL.filter((item) => item.question.en !== WP264_QUESTION.en);
+
+// Every line box of the open item's question and answer text lies inside each ancestor that
+// hides overflow, and neither ends in an ellipsis. (The open item's plus icon is turned 45°, so
+// its corners pass the summary's edge in every item; it's drawn, not text, and nothing clips it.)
+async function wp264Clipped(item: ReturnType<Page["locator"]>) {
+  return item.evaluate((details) => {
+    const found: string[] = [];
+    const hides = (value: string) => value === "hidden" || value === "clip";
+    for (const element of Array.from(details.querySelectorAll("summary, p"))) {
+      if (getComputedStyle(element).textOverflow === "ellipsis" && element.scrollWidth > element.clientWidth + 1)
+        found.push(`${element.tagName}: ends in an ellipsis`);
+      const lines: DOMRect[] = [];
+      for (const node of Array.from(element.childNodes)) {
+        if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        lines.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0));
+      }
+      if (!lines.length) found.push(`${element.tagName}: no text drawn`);
+      for (let node = element.parentElement; node && node !== document.documentElement; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        const x = hides(style.overflowX);
+        const y = hides(style.overflowY);
+        if (!x && !y) continue;
+        const box = node.getBoundingClientRect();
+        const left = box.left + node.clientLeft;
+        const top = box.top + node.clientTop;
+        for (const line of lines) {
+          if (x && (line.left < left - 1 || line.right > left + node.clientWidth + 1))
+            found.push(`${element.tagName}: a line reaches outside ${node.tagName}.${node.className} sideways`);
+          if (y && (line.top < top - 1 || line.bottom > top + node.clientHeight + 1))
+            found.push(`${element.tagName}: a line reaches outside ${node.tagName}.${node.className} vertically`);
+        }
+      }
+    }
+    return found;
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP264`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1404: the FAQ has nine questions, and the fifth, right after the voice question, asks whether something can repeat (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const summaries = page.locator("#questions details summary");
+        await expect(summaries, where).toHaveCount(9);
+        await expect(summaries.nth(WP264_INDEX - 1), where).toHaveText(VOICE_QUESTION[language]);
+        await expect(summaries.nth(WP264_INDEX), where).toHaveText(WP264_QUESTION[language]);
+        await expect(summaries.nth(WP264_INDEX), where).toBeVisible();
+      }
+    });
+
+    test(`WEB-1404: opened, the repeat answer is one paragraph in the brief's words, 16 px or more, with no link and no reminders that come more and more often; axe passes (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const item = await openAnswer(page, WP264_INDEX);
+        const paragraphs = item.locator("p");
+        await expect(paragraphs, where).toHaveCount(1);
+        await expect(paragraphs, where).toBeVisible();
+        await expect(paragraphs, where).toHaveText(WP264_ANSWER[language]);
+        expect((await paragraphs.innerText()).trim(), where).toBe(WP264_ANSWER[language]);
+        const size = await paragraphs.evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
+        expect(size, `${where}: the answer's size`).toBeGreaterThanOrEqual(16);
+        await expect(item.locator("a"), `${where}: links in the item`).toHaveCount(0);
+        const text = ((await item.textContent()) ?? "").toLowerCase();
+        for (const phrase of WP264_MORE_OFTEN) expect(text, `${where}: “${phrase}”`).not.toContain(phrase);
+        await page.evaluate(() => document.fonts.ready);
+        expect(await axeViolations(page), `${where}: the repeat answer open`).toEqual([]);
+      }
+    });
+
+    test(`WEB-1404: the other eight questions keep their order and their answers, and the home-screen question is ninth (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      for (const language of LANGUAGES) {
+        const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        const items = page.locator("#questions details");
+        await expect(items, where).toHaveCount(9);
+        const others = [0, 1, 2, 3, 5, 6, 7, 8];
+        for (const [position, index] of others.entries()) {
+          const expected = WP264_OTHERS[position];
+          const item = items.nth(index);
+          await expect(item.locator("summary"), `${where}: question ${index + 1}`).toHaveText(expected.question[language]);
+          await item.locator("summary").click();
+          await expect(item, where).toHaveAttribute("open", "");
+          await expect(item.locator("p"), `${where}: answer ${index + 1}`).toHaveText([expected.answer[language]].flat());
+        }
+        await expect(items.nth(FREE_INDEX).locator("p"), `${where}: the free answer`).toHaveText(WP70_FREE[language]);
+        await expect(items.nth(WP70_NOTES_INDEX).locator("p"), `${where}: the notes answer`).toHaveText([WP70_NOTES[language]]);
+        await expect(items.nth(8).locator("summary"), `${where}: the ninth question`).toHaveText(WAYS_IN_QUESTION[language]);
+        await expect(items.nth(8).locator("p"), `${where}: the ninth answer`).toHaveText([WAYS_IN_ANSWER[language]]);
+      }
+    });
+  });
+}
+
+test("WEB-1404: with the repeat answer open at 320 × 568, no home scrolls sideways or clips the item's text", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  for (const language of LANGUAGES) {
+    const where = `${homeUrl(language)} at 320 × 568`;
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    const item = await openAnswer(page, WP264_INDEX);
+    await expect(item.locator("p"), where).toHaveText(WP264_ANSWER[language]);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), where).toBe(false);
+    expect(await wp264Clipped(item), where).toEqual([]);
+  }
+});
+
+test("WEB-1404: on the phone with the browser's text doubled and the repeat answer open, no home scrolls sideways or clips the item's text", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone (390 × 664), as the audit's mobile-text200.");
+  await doubleTextSize(page);
+  for (const language of LANGUAGES) {
+    const where = `${homeUrl(language)} at 200% text`;
+    await page.goto(homeUrl(language));
+    await hydrated(page);
+    expect(await rootFontSize(page), `${where}: the root`).toBe(32);
+    const item = await openAnswer(page, WP264_INDEX);
+    await expect(item.locator("p"), where).toHaveText(WP264_ANSWER[language]);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await scrollsSideways(page), where).toBe(false);
+    expect(await wp264Clipped(item), where).toEqual([]);
   }
 });

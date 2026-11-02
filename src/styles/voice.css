@@ -336,7 +336,7 @@
   display: grid;
   gap: 9px;
   max-width: 740px;
-  margin: 0 auto 20px;
+  margin: 0 auto 12px;
 }
 .voice-text-label {
   font-size: 1rem;
@@ -348,11 +348,21 @@
   font-size: 0.875rem;
   color: var(--muted);
 }
+/* Typing: Done comes right under the box; the privacy line and the Pro note after it.
+   Brought into view with the box, Done keeps a little room under it. */
+.voice-submit {
+  scroll-margin-bottom: 12px;
+}
+.voice-submit + .voice-privacy {
+  margin-top: 18px;
+}
 .voice-text-pro {
-  margin: 4px 0 0;
+  max-width: 560px;
+  margin: 10px auto 0;
   font-size: 1rem;
   line-height: 1.6;
   color: var(--muted);
+  text-align: center;
 }
 .voice-mode-link,
 .voice-stop {
@@ -473,33 +483,78 @@
   overflow-wrap: anywhere;
 }
 .voice-task-card h4 {
-  margin: 0 0 8px;
+  min-width: 0;
+  margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
+/* The app's completion circle: the native checkbox, transparent, over the circle drawn
+   after it, in the same 24 px box. */
 .voice-task-toggle {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 12px;
   min-height: 44px;
+  margin: 0 0 8px;
   cursor: pointer;
 }
 .voice-task-toggle input {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.voice-task-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  box-sizing: border-box;
   width: 24px;
   height: 24px;
   margin: 10px 0;
-  accent-color: var(--green);
-  cursor: pointer;
+  border: 2px solid var(--field-edge);
+  border-radius: 50%;
+  color: var(--paper);
 }
-.voice-task-toggle input:focus-visible {
+.voice-task-circle svg {
+  visibility: hidden;
+}
+.voice-task-toggle input:checked + .voice-task-circle {
+  background: var(--green);
+  border-color: var(--green);
+}
+.voice-task-toggle input:checked + .voice-task-circle svg {
+  visibility: visible;
+}
+.voice-task-toggle input:focus-visible + .voice-task-circle {
   outline: 2px solid var(--green);
   outline-offset: 3px;
 }
-.voice-task-toggle span {
+/* Under forced colours the check still shows only when checked, on a filled circle. */
+@media (forced-colors: active) {
+  .voice-task-circle {
+    border-color: CanvasText;
+  }
+  .voice-task-toggle input:checked + .voice-task-circle {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+}
+.voice-task-title {
+  display: block;
   min-width: 0;
   padding: 10px 0;
+  cursor: pointer;
 }
 /* One full-width completion message above the entire generated task group. */
 .voice-completion {
@@ -533,13 +588,14 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 0.875rem;
-  color: var(--green);
+  font-size: 1rem;
+  color: var(--ink);
   margin: 0;
   line-height: 1.6;
 }
 .voice-task-schedule svg {
   flex-shrink: 0;
+  color: var(--green);
 }
 .voice-task-notes {
   font-size: 0.875rem;
@@ -551,7 +607,7 @@
 .voice-question {
   margin: 12px 0 0;
   padding: 12px 14px;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 /* What the app does, and that it isn't out yet. */
 .voice-handover {

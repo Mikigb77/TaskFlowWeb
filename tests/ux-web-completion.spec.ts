@@ -9,7 +9,7 @@ import { es } from "../src/content/site/es";
 import { COMPLETION_TASKS, TASKS, TYPED, VOICE_PANEL } from "./support/ux-voice";
 import { auditPage, mergeAudit, saveFragment } from "./support/ux-audit";
 import {
-  doubleTextSize, expect, homeUrl, hydrated, LANGUAGES, ROOT, settle,
+  axeViolations, contrast, doubleTextSize, expect, homeUrl, parseColor, hydrated, LANGUAGES, ROOT, settle,
   test, THEMES, type Language,
 } from "./support/ux-web";
 
@@ -66,7 +66,8 @@ async function unchangedInput(page: Page, input: Locator) {
   });
   const position = () => input.evaluate((element) => {
     const rect = element.getBoundingClientRect();
-    const style = getComputedStyle(element);
+    // WP69: the focus ring is on the completion circle drawn after the transparent input.
+    const style = getComputedStyle(element.nextElementSibling!);
     return { scrollX, scrollY, inputX: rect.x, inputY: rect.y, checked: (element as HTMLInputElement).checked, outline: `${style.outlineWidth} ${style.outlineStyle} ${style.outlineColor}` };
   });
   const before = await position();
@@ -158,7 +159,7 @@ for (const theme of THEMES) {
         const quota = await page.locator("#voice .voice-topline .voice-trial-badge").textContent();
         const storage = await page.evaluate(() => ({ local: { ...localStorage }, session: { ...sessionStorage } }));
         for (const draft of COMPLETION_TASKS) {
-          const input = page.locator(VOICE_PANEL).getByRole("checkbox", { name: draft.title, exact: true });
+          const input = page.locator(VOICE_PANEL).getByRole("checkbox", { name: SITE[language].voice.completeTask.replace("{title}", draft.title), exact: true });
           await expect(input).not.toBeChecked();
           expect(await input.evaluate((element) => element instanceof HTMLInputElement && element.type === "checkbox")).toBe(true);
           const label = input.locator("..");
@@ -167,7 +168,7 @@ for (const theme of THEMES) {
           expect(rect!.height, "label activation height").toBeGreaterThanOrEqual(44);
         }
         // Activate the title area of the label, outside the 24px native input.
-        await boxes(page).nth(2).locator("..").locator("span").click();
+        await boxes(page).nth(2).locator("..").locator(".voice-task-title").click();
         await expect(boxes(page).nth(2)).toBeChecked();
         await expect(reward(page)).toHaveCount(0);
         await boxes(page).nth(1).check();
@@ -329,7 +330,7 @@ for (const motion of ["reduce", "no-preference"] as const) for (const activation
     await revealProbe(page, input);
     if (activation === "assistive") await input.evaluate((element) => (element as HTMLInputElement).click());
     else {
-      const target = activation === "title" ? input.locator("..").locator("span") : input;
+      const target = activation === "title" ? input.locator("..").locator(".voice-task-title") : input;
       if (info.project.name === "mobile") await target.tap(); else await target.click();
     }
     await assertFeedback(page, "en");
@@ -381,7 +382,7 @@ test("WP52: pointer completion already visible cancels native motion without dis
       return result;
     } as typeof window.scrollBy;
   });
-  await input.locator("..").locator("span").click();
+  await input.locator("..").locator(".voice-task-title").click();
   await assertFeedback(page, "en");
   await page.waitForTimeout(350);
   const observed = await revealEvidence(page, input, "visible.complete");
@@ -575,7 +576,7 @@ test.describe("WP52 completion render", () => {
       }
       await boxes(page).nth(0).check();
       await boxes(page).nth(1).check();
-      await boxes(page).nth(2).locator("..").locator("span").click();
+      await boxes(page).nth(2).locator("..").locator(".voice-task-title").click();
       await page.waitForTimeout(1200);
       await assertFeedback(page, language);
       if (diagnose) {
@@ -694,3 +695,265 @@ function writeFocusedAudit(evidence: { id: string; renderedAt: string; motion: s
     "Native checkbox surfaces measure 24 × 24 CSS px. The measured title labels are the larger clickable activation targets; behavior tests activate their title text and verify keyboard focus. The collector's focus selector prints the input's empty textContent; this is not its accessible name. Named getByRole assertions independently verify task-title accessible labels. Axe cannot prove a real screen reader announces once; DOM status mutation tests cover only browser markup and updates.", "",
   ].join("\n"));
 }
+
+// ---- Run 2026-10-28-site: WP69 (WEB-1306) ----
+// The app's completion circle: a native checkbox named ‘Complete {title}’, drawn as the app's
+// round circle, filled with a check only when ticked; WD16 and WD17 unchanged.
+
+const WP69_COMPLETE: Record<Language, string> = { en: "Complete {title}", es: "Completar {title}", ca: "Completa {title}" };
+const WP69_GREEN = { light: "rgb(23, 110, 89)", dark: "rgb(158, 213, 179)" };
+// The visible circle: the aria-hidden element drawn right after the input.
+const circleOf = (input: Locator) => input.locator("xpath=following-sibling::*[1]");
+// A colour through a probe in the page's own theme.
+const tokenColour = (page: Page, token: string) =>
+  page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  }, token);
+// The circle as drawn: its box, radius, edge, fill, the card behind it, and its check.
+const circleLook = (circle: Locator) =>
+  circle.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const box = element.getBoundingClientRect();
+    let card: Element | null = element.parentElement;
+    let cardFill = "rgba(0, 0, 0, 0)";
+    while (card) {
+      const fill = getComputedStyle(card).backgroundColor;
+      if (fill !== "rgba(0, 0, 0, 0)" && fill !== "transparent") {
+        cardFill = fill;
+        break;
+      }
+      card = card.parentElement;
+    }
+    const svg = element.querySelector("svg");
+    return {
+      ariaHidden: element.getAttribute("aria-hidden"),
+      width: box.width,
+      height: box.height,
+      x: box.x,
+      y: box.y,
+      radius: style.borderTopLeftRadius,
+      edgeWidth: style.borderTopWidth,
+      edgeStyle: style.borderTopStyle,
+      edge: style.borderTopColor,
+      fill: style.backgroundColor,
+      cardFill,
+      check: !!svg && svg.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
+      checkColour: svg ? getComputedStyle(svg).color : null,
+    };
+  });
+
+for (const theme of THEMES) {
+  test.describe(`WP69 ${theme} completion circle`, () => {
+    test.use({ colorScheme: theme });
+    for (const language of LANGUAGES) {
+      test(`WEB-1306 ${language}: each toggle is a checkbox named ‘Complete {title}’, drawn as a 24 px circle with a 3:1 edge, filled with the check only when ticked; rows stay 44 px; WD17's banner shows above the list; axe finds nothing (${theme})`, async ({
+        page,
+        voice,
+      }) => {
+        test.setTimeout(120_000);
+        expect(SITE[language].voice.completeTask, `${language}: completeTask`).toBe(WP69_COMPLETE[language]);
+        await generate(page, language);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(boxes(page)).toHaveCount(TASKS.length);
+        const names = TASKS.map((task) => WP69_COMPLETE[language].replace("{title}", task.title));
+        // The accessibility tree, as a screen reader gets it.
+        const snapshot = await page.locator(`${VOICE_PANEL} .voice-drafts`).ariaSnapshot();
+        for (const name of names) expect(snapshot, `${language}: the ARIA snapshot`).toContain(`checkbox "${name}"`);
+        const paper = await tokenColour(page, "--paper");
+        for (const [index, name] of names.entries()) {
+          const input = page.locator(VOICE_PANEL).getByRole("checkbox", { name, exact: true });
+          await expect(input, name).toHaveCount(1);
+          await expect(input, name).not.toBeChecked();
+          expect(await input.evaluate((element) => element instanceof HTMLInputElement && element.type === "checkbox"), `${name}: a native checkbox`).toBe(true);
+          // The title stays the visible label.
+          await expect(input.locator(".."), name).toContainText(TASKS[index].title);
+          const row = (await input.locator("..").boundingBox())!;
+          expect(row.height, `${name}: the row's height`).toBeGreaterThanOrEqual(44);
+          const circle = circleOf(input);
+          const before = await circleLook(circle);
+          const inputBox = (await input.boundingBox())!;
+          expect(before.ariaHidden, `${name}: the circle is hidden from assistive tech`).toBe("true");
+          expect(before.width, `${name}: the circle's width`).toBeCloseTo(24, 0);
+          expect(before.height, `${name}: the circle's height`).toBeCloseTo(24, 0);
+          expect(before.radius, `${name}: the circle's radius`).toBe("50%");
+          expect(before.edgeWidth, `${name}: the edge's width`).toBe("2px");
+          expect(before.edgeStyle, `${name}: the edge's style`).toBe("solid");
+          expect(Math.abs(inputBox.x - before.x), `${name}: the input over the circle (x)`).toBeLessThanOrEqual(1);
+          expect(Math.abs(inputBox.y - before.y), `${name}: the input over the circle (y)`).toBeLessThanOrEqual(1);
+          expect(inputBox.width, `${name}: the input's width`).toBeCloseTo(24, 0);
+          expect(inputBox.height, `${name}: the input's height`).toBeCloseTo(24, 0);
+          expect(contrast(parseColor(before.edge), parseColor(before.cardFill)), `${name}: the edge (${before.edge}) against the card (${before.cardFill})`).toBeGreaterThanOrEqual(3);
+          expect(before.check, `${name}: no check while unticked`).toBe(false);
+          expect(before.fill, `${name}: no fill while unticked`).not.toBe(WP69_GREEN[theme]);
+          await input.check();
+          const after = await circleLook(circle);
+          expect(after.fill, `${name}: filled green when ticked`).toBe(WP69_GREEN[theme]);
+          expect(after.check, `${name}: the check shows when ticked`).toBe(true);
+          expect(after.checkColour, `${name}: the check in --paper`).toBe(paper);
+          if (index < names.length - 1) await expect(reward(page), `${name}: no banner before every task is done`).toHaveCount(0);
+        }
+        // Every task done: WD17's banner, above the list.
+        const banner = reward(page);
+        await expect(banner).toBeVisible();
+        const [top, list] = [(await banner.boundingBox())!, (await page.locator(`${VOICE_PANEL} .voice-drafts`).boundingBox())!];
+        expect(top.y + top.height, "the banner ends above the list").toBeLessThanOrEqual(list.y + 1);
+        expect(await axeViolations(page), `${language}: axe with every task done`).toEqual([]);
+        // Untick one: its circle empties again, and axe on the mixed state.
+        const first = page.locator(VOICE_PANEL).getByRole("checkbox", { name: names[0], exact: true });
+        await first.uncheck();
+        const emptied = await circleLook(circleOf(first));
+        expect(emptied.check, "unticked: no check").toBe(false);
+        expect(await axeViolations(page), `${language}: axe with one task not done`).toEqual([]);
+        expect(voice.unexpected).toEqual([]);
+      });
+    }
+  });
+}
+
+test.describe("WP69 completion circle, forced colours", () => {
+  test.use({ colorScheme: "light" });
+  test("WEB-1306: with forced colours, a ticked circle still differs from an unticked one, and only the ticked one shows the check", async ({
+    page,
+    voice,
+  }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+    await generate(page, "en");
+    expect(await page.evaluate(() => matchMedia("(forced-colors: active)").matches), "forced colours on").toBe(true);
+    const ticked = boxes(page).nth(0);
+    const unticked = boxes(page).nth(1);
+    await ticked.check();
+    await expect(ticked).toBeChecked();
+    await expect(unticked).not.toBeChecked();
+    const [on, off] = [await circleLook(circleOf(ticked)), await circleLook(circleOf(unticked))];
+    expect(on.check, "the ticked circle shows the check").toBe(true);
+    expect(off.check, "the unticked circle shows no check").toBe(false);
+    expect(on.fill, "the ticked circle's fill differs").not.toBe(off.fill);
+    // As drawn: the two circles' pixels differ.
+    const [onImage, offImage] = [await circleOf(ticked).screenshot(), await circleOf(unticked).screenshot()];
+    expect(onImage.equals(offImage), "the ticked and unticked circles look different").toBe(false);
+    expect(voice.unexpected).toEqual([]);
+  });
+});
+// ---- Run 2026-10-28-site: WP266 (WEB-1612) ----
+// A task's level-4 heading is its title alone; the circle's checkbox sits beside it, named
+// ‘Complete {title}’, and tapping the title (its label) still ticks it. WD17 unchanged.
+
+for (const theme of THEMES) {
+  test.describe(`WP266 ${theme} the task heading`, () => {
+    test.use({ colorScheme: theme });
+    for (const language of LANGUAGES) {
+      test(`WEB-1612 ${language}: each level-4 heading is the task's title alone and the checkbox beside it is ‘Complete {title}’; tapping the title ticks and unticks it; ticking every title shows WD17's banner above the list; rows 44 px, circle 24 px and round, focus ring on the circle, h4 18 px, circle and title where they were; axe finds nothing (${theme})`, async ({
+        page,
+        voice,
+      }) => {
+        test.setTimeout(120_000);
+        const t = SITE[language].voice;
+        expect(t.completeTask, `${language}: completeTask`).toBe(WP69_COMPLETE[language]);
+        const prefix = t.completeTask.split("{title}")[0].trim();
+        await generate(page, language);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const drafts = page.locator(`${VOICE_PANEL} .voice-drafts`);
+        await expect(boxes(page)).toHaveCount(TASKS.length);
+        // The accessibility tree, as a screen reader gets it.
+        const snapshot = await drafts.ariaSnapshot();
+        for (const task of TASKS) {
+          expect(snapshot, `${language}: the heading of ${task.title}`).toContain(`heading "${task.title}" [level=4]`);
+          expect(snapshot, `${language}: the checkbox of ${task.title}`).toContain(
+            `checkbox "${t.completeTask.replace("{title}", task.title)}"`,
+          );
+        }
+        const headingLines = snapshot.split("\n").filter((line) => /heading .*\[level=4\]/.test(line));
+        expect(headingLines, `${language}: one level-4 heading per task`).toHaveLength(TASKS.length);
+        for (const line of headingLines) expect(line, `${language}: a heading's name`).not.toContain(prefix);
+        const headings = drafts.getByRole("heading", { level: 4 });
+        await expect(headings).toHaveCount(TASKS.length);
+        const green = WP69_GREEN[theme];
+        for (const [index, task] of TASKS.entries()) {
+          const name = t.completeTask.replace("{title}", task.title);
+          const heading = headings.nth(index);
+          await expect(heading, name).toHaveAccessibleName(task.title);
+          expect(await heading.evaluate((element) => getComputedStyle(element).fontSize), `${name}: the h4's size`).toBe("18px");
+          const input = page.locator(VOICE_PANEL).getByRole("checkbox", { name, exact: true });
+          await expect(input, name).toHaveCount(1);
+          expect(await input.evaluate((element) => !element.closest("h4")), `${name}: the checkbox isn't inside the heading`).toBe(true);
+          const row = input.locator("..");
+          const title = row.locator(".voice-task-title");
+          await expect(title, name).toHaveText(task.title);
+          const rowBox = (await row.boundingBox())!;
+          expect(rowBox.height, `${name}: the row's height`).toBeGreaterThanOrEqual(44);
+          // Where things sit, as before WP266: the circle 10 px down at the row's start, the
+          // title 12 px after it from the row's top, the date line 8 px under the row.
+          const circle = circleOf(input);
+          const circleBox = (await circle.boundingBox())!;
+          const titleBox = (await title.boundingBox())!;
+          const lineBox = (await row.locator("xpath=following-sibling::*[1]").boundingBox())!;
+          expect(await row.locator("xpath=following-sibling::*[1]").getAttribute("class"), `${name}: the date line after the row`).toBe("voice-task-schedule");
+          expect(Math.abs(circleBox.x - rowBox.x), `${name}: the circle at the row's start`).toBeLessThanOrEqual(1);
+          expect(Math.abs(circleBox.y - rowBox.y - 10), `${name}: the circle 10 px down the row`).toBeLessThanOrEqual(1);
+          expect(Math.abs(titleBox.x - (circleBox.x + circleBox.width) - 12), `${name}: the title 12 px after the circle`).toBeLessThanOrEqual(1);
+          expect(Math.abs(titleBox.y - rowBox.y), `${name}: the title from the row's top`).toBeLessThanOrEqual(1);
+          expect(Math.abs(lineBox.y - (rowBox.y + rowBox.height) - 8), `${name}: the date line 8 px under the row`).toBeLessThanOrEqual(1);
+          // The circle: 24 px, round, empty until ticked.
+          const before = await circleLook(circle);
+          expect(before.width, `${name}: the circle's width`).toBeCloseTo(24, 0);
+          expect(before.height, `${name}: the circle's height`).toBeCloseTo(24, 0);
+          expect(before.radius, `${name}: the circle's radius`).toBe("50%");
+          expect(before.check, `${name}: no check while unticked`).toBe(false);
+          expect(before.fill, `${name}: no fill while unticked`).not.toBe(green);
+          // Tapping the title ticks it, and tapping it again unticks it.
+          await title.click();
+          await expect(input, `${name}: ticked by its title`).toBeChecked();
+          const ticked = await circleLook(circle);
+          expect(ticked.fill, `${name}: filled when ticked`).toBe(green);
+          expect(ticked.check, `${name}: the check when ticked`).toBe(true);
+          await title.click();
+          await expect(input, `${name}: unticked by its title`).not.toBeChecked();
+          const unticked = await circleLook(circle);
+          expect(unticked.check, `${name}: no check once unticked`).toBe(false);
+          expect(unticked.fill, `${name}: no fill once unticked`).not.toBe(green);
+        }
+        expect(await axeViolations(page), `${language}: axe on the result`).toEqual([]);
+        // Keyboard focus: the ring shows on the circle.
+        const inputs = boxes(page);
+        await inputs.nth(0).focus();
+        await page.keyboard.press("Tab");
+        await page.keyboard.press("Shift+Tab");
+        for (const index of [0, 1]) {
+          if (index === 1) await page.keyboard.press("Tab");
+          const input = inputs.nth(index);
+          await expect(input, `${language}: checkbox ${index + 1} has keyboard focus`).toBeFocused();
+          const ring = await input.evaluate((element) => {
+            const style = getComputedStyle(element.nextElementSibling!);
+            return { visible: element.matches(":focus-visible"), width: style.outlineWidth, style: style.outlineStyle };
+          });
+          expect(ring.visible, `${language}: checkbox ${index + 1} :focus-visible`).toBe(true);
+          expect(ring.style, `${language}: checkbox ${index + 1}'s ring`).not.toBe("none");
+          expect(ring.width, `${language}: checkbox ${index + 1}'s ring width`).not.toBe("0px");
+        }
+        // Every task ticked by its title: WD17's banner, above the list.
+        for (const [index, task] of TASKS.entries()) {
+          await expect(reward(page), `${task.title}: no banner yet`).toHaveCount(0);
+          await page.locator(VOICE_PANEL).locator(".voice-task-card").nth(index).locator(".voice-task-title").click();
+          await expect(inputs.nth(index), `${task.title}: ticked`).toBeChecked();
+        }
+        const banner = reward(page);
+        await expect(banner).toBeVisible();
+        await expect(banner).toContainText(t.completionTitle);
+        const [top, list] = [(await banner.boundingBox())!, (await drafts.boundingBox())!];
+        expect(top.y + top.height, "the banner ends above the list").toBeLessThanOrEqual(list.y + 1);
+        expect(await axeViolations(page), `${language}: axe with every task done`).toEqual([]);
+        expect(voice.unexpected).toEqual([]);
+      });
+    }
+  });
+}
+
+test("WEB-1612: WD17's banner title is still ‘All clear. Take a breath.’", async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Reads the copy: once is enough.");
+  expect(SITE.en.voice.completionTitle).toBe("All clear. Take a breath.");
+});

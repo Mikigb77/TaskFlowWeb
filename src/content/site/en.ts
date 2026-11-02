@@ -32,13 +32,13 @@ export const en: SiteCopy = {
     footer: {
       navigation: "Footer navigation",
       legal: "Legal and privacy",
-      privacy: "Privacy",
+      privacy: "Privacy Policy",
       terms: "Terms and Conditions",
       legalNotice: "Legal Notice",
       deleteAccount: "Delete account",
       support: "Email support",
       operator: "A product by {company}",
-      trademark: "Android is a trademark of Google LLC.",
+      trademark: "Android is a trademark of Google\u00a0LLC.",
       backToTop: "Back to top",
     },
   },
@@ -46,10 +46,11 @@ export const en: SiteCopy = {
     title: "Say it, and it’s on ",
     titleAccent: "your calendar.",
     description:
-      "Tap one button and say what you need to do, even several things at once. TaskFlow puts each one on its day and can remind you before it. An app for Android™ phones.",
+      "An app for Android™ phones: tap one button and say what you need to do, even several things at once. TaskFlow puts each one on its day and can remind you beforehand.",
     primary: "Try it with your voice",
     secondary: "What it does",
     status: "Coming soon to Google Play. You can’t download it yet.",
+    free: "Free with an account: 10 dictations a month, and tasks by hand with no limit.",
     voiceQuote: "“Tomorrow, call the dentist and buy bread.”",
     imageAlt:
       "TaskFlow on an Android phone: tomorrow’s calendar with two tasks, Call the dentist and Buy bread, and the Add a task button.",
@@ -90,8 +91,10 @@ export const en: SiteCopy = {
       },
       {
         question: "Is TaskFlow free?",
-        answer:
-          "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+        answer: [
+          "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
+          "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+        ],
       },
       {
         question: "Do I need an account?",
@@ -102,6 +105,11 @@ export const en: SiteCopy = {
         question: "How do I add tasks by voice?",
         answer:
           "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
+      },
+      {
+        question: "Can I add something that repeats?",
+        answer:
+          "Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.",
       },
       {
         question: "Can I use it offline?",
@@ -116,7 +124,7 @@ export const en: SiteCopy = {
       {
         question: "Can I keep notes as well as tasks?",
         answer:
-          "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
+          "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a gift idea. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
       },
       {
         question: "Can I add tasks from my home screen or from WhatsApp?",
@@ -186,6 +194,8 @@ export const en: SiteCopy = {
       "This browser can’t record your voice. You can type instead.",
     thingsToAdd: { one: "1 thing to add", other: "{n} things to add" },
     noDate: "No date",
+    today: "Today",
+    tomorrow: "Tomorrow",
     checkDetail: "Check this detail: {question}",
     completionTitle: "All clear. Take a breath.",
     completionBody: "Imagine a little more calm in your day.",
@@ -194,7 +204,10 @@ export const en: SiteCopy = {
     sayAgain: "Say it again",
     changeText: "Change the text",
     seeWhatISaid: "See what I said",
-    noTasks: "No tasks were found. Your words are kept. That used a try.",
+    originalText: "Original text",
+    completeTask: "Complete {title}",
+    noTasks:
+      "I didn’t find a task. Say what and when, for example: “Tomorrow, call the dentist.” That used a try.",
     triesUsed: {
       onDay:
         "You’ve used this demo’s 3 tries. You can try again on {weekday} at {time}.",
@@ -213,7 +226,7 @@ export const en: SiteCopy = {
       "The security check didn’t load. Check your connection, then tap Try again.",
     errors: {
       offline:
-        "No connection. Check Wi-Fi or mobile data and try again. What you said is kept, and trying again won’t cost an extra try.",
+        "No connection. Check Wi-Fi or mobile data and try again. Your words are kept, and trying again won’t cost an extra try.",
       offlineOpening: "No connection. Check Wi-Fi or mobile data and try again.",
       notAnswering:
         "The demo isn’t answering right now. Try again in a few minutes.",
@@ -225,12 +238,12 @@ export const en: SiteCopy = {
       unverified:
         "The security check didn’t load, so the live demo can’t run here. The example above shows what TaskFlow does.",
       invalidDraft:
-        "We couldn’t turn that into tasks, and it used a try. Say what you need to do, and when.",
+        "We couldn’t turn that into tasks. Say what you need to do, and when.",
       recording:
         "We couldn’t hear that recording. Record it again; it didn’t use a try.",
       processing:
         "Still understanding. Try again in a moment; it won’t use another try.",
-      sayAgain: "Something went wrong. Say it again.",
+      sayAgain: "Something went wrong. Please try again.",
       empty: "Say or type what you need to do first.",
     },
   },

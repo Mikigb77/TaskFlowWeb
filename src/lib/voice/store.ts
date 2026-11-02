@@ -8,6 +8,7 @@ import {
   developerWindowUntil,
   DraftResult,
   RESERVATION_MICROS,
+  withoutTry,
 } from "./policy";
 import { required, seal, unseal } from "./security";
 
@@ -120,6 +121,8 @@ export async function admit(
       month,
       createdAt: Timestamp.fromMillis(now),
       expiresAt: Timestamp.fromMillis(now + DAY),
+      // The visitor's try, given back if the request ends without a result.
+      ...(testing ? {} : { attemptAt: now }),
     });
     tx.set(meter, {
       ...stats,
@@ -147,11 +150,19 @@ export async function finish(
   },
 ) {
   const job = jobRef(id, requestId),
-    meter = db().collection("voiceMonths").doc(month);
+    meter = db().collection("voiceMonths").doc(month),
+    user = visitorRef(id);
   await db().runTransaction(async (tx) => {
-    const [j, m] = await tx.getAll(job, meter);
+    const [j, m, u] = await tx.getAll(job, meter, user);
     if (j.data()?.state !== "processing") return;
     const stats = m.data()!;
+    // A request that ends without a result is ours, not the visitor's: give
+    // the try back (WD30). The network's count and the reservation stay.
+    if (!outcome.result) {
+      const attempts: number[] = u.data()?.attempts || [];
+      const kept = withoutTry(attempts, j.data()?.attemptAt);
+      if (kept !== attempts) tx.update(user, { attempts: kept });
+    }
     // Unknown provider failures keep the full reservation charged. Never retry AI automatically.
     const cost = outcome.cost ?? RESERVATION_MICROS;
     tx.update(job, {

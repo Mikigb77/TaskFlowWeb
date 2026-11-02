@@ -8,6 +8,7 @@ const paths: Record<string, string[]> = {
   check: ["m5 12 4 4L19 6"],
   logo: ["m3 12 5 5L19 6", "m13 14 3 3 7-8"],
   menu: ["M4 7h16", "M4 12h16", "M4 17h16"],
+  close: ["M6 6l12 12", "M18 6 6 18"],
   calendar: [
     "M8 2v4M16 2v4",
     "M3 10h18",

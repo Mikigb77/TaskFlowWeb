@@ -9,12 +9,27 @@ import { copy, homePath, languages } from "../content/site";
 // hydration the address's language (/es/…, /ca/…) moves to the top as the h1. Until
 // then, not-found.tsx's script has put that block first with CSS `order`, so the
 // reorder doesn't move anything on screen. The effect keeps that mark right when the page
-// is reached without a full load.
+// is reached without a full load, and gives the tab the address's language alone (the
+// prerendered three-language title stays for visits without JavaScript).
 export default function NotFoundPage() {
   const current = useSiteLanguage();
   const order = [current, ...languages.filter((code) => code !== current)];
   useEffect(() => {
     document.documentElement.dataset.notFound = current;
+    const title = `${copy[current].notFound.title} — TaskFlow`;
+    const apply = () => {
+      if (document.title !== title) document.title = title;
+    };
+    apply();
+    // React hydrates the metadata's <title> after this effect and puts the prerendered
+    // three-language text back, so the title is set again whenever <head> changes.
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
   }, [current]);
   return (
     <section className="not-found container">

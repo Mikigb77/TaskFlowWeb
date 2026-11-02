@@ -276,12 +276,14 @@ function writeIndex() {
     "| `home-nojs.en.<desktop|mobile>.<light|dark>.<fold|full>.png` | The home with JavaScript off. Without its script the page can't follow a dark system setting, so the dark renders show what a dark-mode visitor without JavaScript gets. |",
     "| `home-menu.en.mobile.<light|dark>.fold.png`, `privacy-menu.es.mobile.light.fold.png` | The phone menu open. |",
     "| `home-faq.en.<desktop|mobile>.light.view.png` | The first FAQ answer open. |",
+    "| `home-faq-pricing.es.mobile.light.view.png` | The second FAQ answer (is it free?) open, in Spanish on the phone: its Free and Pro paragraphs. |",
+    "| `home-faq-repeat.es.mobile.light.view.png` | The fifth FAQ answer (can I add something that repeats?) open, in Spanish on the phone. |",
     "",
     "## Safari",
     "",
     hasWebkit
       ? "`<page>.<language>.mobile-webkit.<light|dark>.fold.png`: the first viewport of every page in Playwright's WebKit with the iPhone 13 profile (390 × 664 at 3×). It's Safari's engine, built for Linux, not Safari on an iPhone, so iOS's own scrolling, toolbars and fonts are still a device check."
-      : "No WebKit renders: Playwright's WebKit isn't installed in WSL. `npx playwright install webkit` would add them to the next run, once WebKit's system libraries are installed too (on Ubuntu, `sudo npx playwright install-deps webkit`; WSL here runs Kali, where they have to be installed by hand). Safari on a real iPhone stays a device check either way.",
+      : "No WebKit renders from WSL: Playwright's WebKit can't run in this Kali WSL. They're made from Windows instead, after this run: `webkit/` holds every page in WebKit (iPhone 13 and desktop, light and dark), with its own `webkit/INDEX.md` (`.claude/skills/ux-web/scripts/webkit_renders.py`, the skill's §4). Safari on a real iPhone stays a device check either way.",
     "",
     "## The audit",
     "",
@@ -726,6 +728,36 @@ if (!enabled) {
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({
         path: path.join(OUT, `home-faq.en.${testInfo.project.name}.light.view.png`),
+        animations: "disabled",
+      });
+    });
+    // WP70 (run 2026-10-28-site): the pricing answer's two paragraphs, Free then Pro, in Spanish on the phone.
+    test("state home faq pricing es light", async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "Rendered on the phone (390 × 664).");
+      await page.goto("/es/#questions");
+      await hydrated(page);
+      const item = page.locator(".faq-item").nth(1);
+      await item.locator("summary").click();
+      await page.locator(".faq-item[open]").first().waitFor();
+      await item.scrollIntoViewIfNeeded();
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({
+        path: path.join(OUT, "home-faq-pricing.es.mobile.light.view.png"),
+        animations: "disabled",
+      });
+    });
+    // WP264 (run 2026-10-28-site): the repeat answer, right after the voice answer, in Spanish on the phone.
+    test("state home faq repeat es light", async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "Rendered on the phone (390 × 664).");
+      await page.goto("/es/#questions");
+      await hydrated(page);
+      const item = page.locator(".faq-item").nth(4);
+      await item.locator("summary").click();
+      await page.locator(".faq-item[open]").first().waitFor();
+      await item.scrollIntoViewIfNeeded();
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({
+        path: path.join(OUT, "home-faq-repeat.es.mobile.light.view.png"),
         animations: "disabled",
       });
     });

@@ -7,7 +7,7 @@ export const en: LegalCopy = {
       "Privacy Policy for the TaskFlow app and website: your account, tasks, voice, files and choices.",
     summary: [
       "We don’t sell your data or show you ads.",
-      "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks.",
+      "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.",
       "You can get a copy of your data or delete it whenever you want.",
     ],
     sections: [
@@ -27,8 +27,8 @@ export const en: LegalCopy = {
         title: "2. Information we process",
         bullets: [
           "Account: email address, optional name, timezone, an internal user identifier, your password (for password accounts), stored so it can’t be read back, and login/session records. With Google sign-in, we receive your Google account identifier, your email, whether Google has verified it, and your first name, which becomes your TaskFlow name if you haven’t given one. We don’t keep your photo. Password sign-ups confirm their email with a 6-digit code that expires after 30 minutes. We do not receive your Google password or request access to Gmail or Google Drive.",
-          "Organisation: tasks, notes, dates, priorities, checklists, recurrence, completion history, projects, groups, assignments and the changes needed to synchronise them. Content is cached on your device and account content is synchronised with our servers.",
-          "Files: the files or images you choose to attach, their names, sizes, a check code that spots damaged files, ownership and related task. Files are uploaded when you use cloud backup/sharing. A document or image may itself contain personal information or embedded metadata.",
+          "Organisation: tasks, notes, dates, reminders, priorities, checklists, recurrence, completion history, projects, groups, assignments and the changes needed to synchronise them. Content is cached on your device and account content is synchronised with our servers.",
+          "Files: the files or images you choose to attach, their names, sizes, a check code that spots damaged files, ownership and related task. Files you attach upload to your account when you save the task. A document or image may itself contain personal information or embedded metadata.",
           "Collaboration: membership, roles, invitation email addresses, sender names and acceptance status. If another user invites you before you have an account, that user is the source of your invitation details; we use them to deliver and manage the invitation, not to add you to marketing lists.",
           "Voice and AI: recordings or text you submit, the text of what you said, suggested tasks and changes, language, timezone, reference date and relevant project/member names used to interpret a request. We also record usage counts and processing status to apply usage limits.",
           "Subscriptions: an opaque billing identifier, product, purchase/renewal/expiry information, store transaction references and entitlement status. RevenueCat and the relevant app store process subscription information. We do not receive your full payment-card details.",
@@ -52,7 +52,7 @@ export const en: LegalCopy = {
         id: "voice",
         title: "4. Voice, AI and sensitive information",
         paragraphs: [
-          "The microphone is used when you choose to record and grant the device permission. The mobile app can retain unfinished recordings, source text and suggested tasks locally so you can recover an interrupted capture. They are removed from that capture after all its suggested tasks have been saved or removed, or you explicitly discard it. When your phone can recognise speech by itself, your voice becomes text on the phone and no audio leaves it; only the words are sent. Otherwise the recording is sent to be turned into text online when you finish. With Pro, words you type for the AI are sent the same way. Without Pro, the task form never sends anything to the AI.",
+          "The microphone is used when you choose to record and grant the device permission. The mobile app can retain unfinished recordings, source text and suggested tasks locally so you can recover an interrupted capture. They are removed from that capture after all its suggested tasks have been saved or removed, or you explicitly discard it. When your phone can recognise speech by itself, your voice becomes text on the phone and no audio leaves it; only the words are sent. Otherwise the recording is sent to be turned into text online when you finish. With Pro, words you type for the AI, and reminders you ask for in your own words, are sent the same way. Without Pro, the task form never sends anything to the AI.",
           "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said. The app can use Google’s Gemini API, with Google Cloud’s Vertex AI as a fallback; the website demonstration uses Vertex AI. Google can process it outside the EU. Our servers do not deliberately persist raw recordings, but that does not mean Google retains no processing or security data.",
           "Google’s contractual treatment depends on the service and account tier. Paid Gemini API terms and the EEA provisions specify that prompts/responses are not used to improve Google products; unpaid services outside those provisions can involve model improvement and human review. Provider safety retention and international processing still apply. See the linked provider terms. We do not promise zero retention or EU-only processing.",
           "TaskFlow is a general planning tool, not a medical-record service or professional adviser. Avoid including health records, passwords, identity documents or other highly sensitive information in AI input. Do not record other people or upload their personal information without an appropriate legal basis. You can use manual task entry instead of AI. Review every generated date, time, assignment and note before saving.",
@@ -72,7 +72,7 @@ export const en: LegalCopy = {
         id: "sharing",
         title: "5. Sharing and service providers",
         paragraphs: [
-          "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
+          "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. Reminders aren’t shared: each person has their own. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
           "Providers receive the information needed for their function. They may act as processors under our instructions or, for their own account, payment, security or legal obligations, as independent controllers. Their own notices explain those separate activities.",
         ],
         bullets: [
@@ -136,16 +136,10 @@ export const en: LegalCopy = {
         id: "website",
         title: "8. Website demo, cookies and local storage",
         paragraphs: [
-          "Live demo: we don’t keep your recording. The text and the tasks found in it are kept encrypted for up to 24 hours, so trying again doesn’t use another try, and are then deleted automatically. The live demo sends your recording or text to Google only when you tap Done. Nothing from it is saved to an app account.",
+          "Live demo: we don’t keep your recording. The text and the tasks found in it are kept encrypted for up to 24 hours, so trying again doesn’t use another try, and are then deleted automatically. The live demo sends your recording or text to Google only when you tap Done, or when a recording reaches its one-minute limit. Nothing from it is saved to an app account.",
           "The live demo loads Cloudflare Turnstile after you open it. Cloudflare receives browser/connection signals to check automated abuse. Our essential __Host-tf-demo cookie identifies a signed browser session for the demo’s limits and lasts up to 30 days. Network limits use a coded form of your network address, which still counts as personal data.",
           "Browser/network quota records expire after 48 hours and are queued for deletion. Monthly aggregate counts, audio duration, token totals and estimated costs contain no task text or recordings.",
-          "The taskflow-theme local-storage entry remembers a light/dark preference you choose until you clear it. The bare address opens the site in your browser’s language when it’s Spanish or Catalan, and in English otherwise; we never use your location for this. If you pick a language in the language switch, the taskflow-lang cookie remembers it for up to a year, like the theme, so the site opens in that language next time. We use no advertising cookies or third-party marketing analytics. Necessary security storage and a preference explicitly requested by you are not used for advertising. You can clear browser storage, although doing so may reset preferences or affect the demo; it does not necessarily remove server-side security records. Any future non-essential tracking will require its own information and consent mechanism.",
-        ],
-        links: [
-          {
-            label: "Cloudflare Turnstile privacy information",
-            href: "https://www.cloudflare.com/privacypolicy/",
-          },
+          "The taskflow-theme local-storage entry remembers a light/dark preference you choose until you clear it. The bare address and our deletion page’s address open the site in your browser’s language when it’s Spanish or Catalan, and in English otherwise; we never use your location for this. If you pick a language in the language switch, the taskflow-lang cookie remembers it for up to a year, like the theme, so the site opens in that language next time. We use no advertising cookies or third-party marketing analytics. Necessary security storage and a preference explicitly requested by you are not used for advertising. You can clear browser storage, although doing so may reset preferences or affect the demo; it does not necessarily remove server-side security records. Any future non-essential tracking will require its own information and consent mechanism.",
         ],
       },
       {
@@ -218,7 +212,7 @@ export const en: LegalCopy = {
         id: "service",
         title: "3. What the service provides",
         paragraphs: [
-          "TaskFlow provides task/note planning, calendars, reminders, optional dictation that turns what you say into tasks, synchronisation and shared projects where enabled. Available features and any storage or AI limits are shown in the app and the offer you select. A preview or roadmap is not a promise that every planned feature is already available.",
+          "TaskFlow provides task/note planning, calendars, reminders, optional AI, synchronisation and shared projects where enabled. Available features and any storage or AI limits are shown in the app and the offer you select. A preview or roadmap is not a promise that every planned feature is already available.",
           "Some features need a compatible device, internet connection or operating-system permissions. Offline changes synchronise when connectivity and account access allow. Reminders depend on device permissions, battery settings and operating-system delivery; review important deadlines independently. TaskFlow is not an emergency service, medical adviser or guaranteed alarm system.",
           "We may maintain or update the service for security and functionality. We will provide legally required updates and give reasonable notice of a material change affecting paid service, together with any cancellation/refund rights required by law. We do not reserve a right to remove paid functionality arbitrarily.",
         ],
@@ -236,7 +230,7 @@ export const en: LegalCopy = {
         id: "ai",
         title: "5. AI suggestions",
         paragraphs: [
-          "AI capture is optional. It sends submitted input and relevant context to an AI provider as explained in the Privacy Policy. Output can omit, misinterpret or invent details. Check titles, dates, times, priorities, notes, recipients and project assignments before saving or sharing. An AI suggestion is not a professional recommendation or a guarantee of correctness.",
+          "The AI is optional. It sends submitted input and relevant context to an AI provider as explained in the Privacy Policy. Output can omit, misinterpret or invent details. Check titles, dates, times, priorities, notes, recipients and project assignments before saving or sharing. An AI suggestion is not a professional recommendation or a guarantee of correctness.",
           "You remain responsible for the instructions and content you submit and how you use reviewed suggestions. This does not exclude our legal duties regarding the quality, security or conformity of the service. Do not use the demo to submit confidential or highly sensitive information.",
         ],
       },

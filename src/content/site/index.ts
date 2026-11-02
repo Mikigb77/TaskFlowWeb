@@ -13,8 +13,11 @@ export const languageNames: Record<SiteLanguage, string> = {
   es: "Español",
   ca: "Català",
 };
-// The language switch writes this cookie; src/proxy.ts reads it on the bare address.
+// The language switch writes this cookie; src/proxy.ts reads it on the addresses below.
 export const LANGUAGE_COOKIE = "taskflow-lang";
+// The English addresses that open in the visitor's language: the bare one (WD5) and the
+// deletion page Google Play shows everyone (WD27). src/proxy.ts and the language switch.
+export const followsVisitor: readonly string[] = ["/", "/delete-account/"];
 
 // Pages the site has in all three languages, besides the home.
 const translatedPages = ["privacy", "terms", "legal", "delete-account"];

@@ -182,7 +182,7 @@ gcloud run services update taskflow-web --region=europe-southwest1 `
 
 ### Temporary developer testing
 
-The public demo stays at **three AI submissions per signed browser per rolling 24 hours**. Each submission can generate several task drafts. Starting, stopping, listening to, rerecording, or editing a recording uses no allowance; pressing **Create drafts** submits it. Replaying an existing request does not call the model or consume another attempt. Failed provider calls can still consume an attempt and retain their budget reservation.
+The public demo stays at **three AI submissions per signed browser per rolling 24 hours**. Each submission can generate several task drafts. Starting, stopping, listening to, rerecording, or editing a recording uses no allowance; pressing **Create drafts** submits it. Replaying an existing request does not call the model or consume another attempt. A request that ends without a result (an AI error, a timeout, or an answer that can’t be read) gives the visitor’s try back but keeps its budget reservation and its network count; a result with no task still uses the try (WD30).
 
 To test beyond those daily limits, open **https://taskflow.garbar.tech/?developer=1#voice**, open the live demo, and expand **Developer testing** to get that browser's testing code. From an account with Firestore write access in this project:
 

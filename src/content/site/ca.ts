@@ -4,7 +4,7 @@ export const ca: SiteCopy = {
   meta: {
     title: "TaskFlow — Digues-ho i ja és al teu calendari",
     description:
-      "Apunta el que has de fer i TaskFlow ho posa al teu calendari. Digues diverses coses alhora. Per a mòbils Android, molt aviat a Google Play.",
+      "Apunta el que has de fer i TaskFlow ho posa al teu calendari. Digues diverses coses alhora. Per a mòbils Android, properament a Google Play.",
     imageAlt:
       "El calendari de TaskFlow en un mòbil Android, amb «Trucar al dentista» i «Comprar pa» per a demà",
   },
@@ -20,7 +20,7 @@ export const ca: SiteCopy = {
     voice: "Prova-ho amb la teva veu",
     features: "Què fa",
     questions: "Preguntes",
-    comingSoon: "Molt aviat a Android",
+    comingSoon: "Properament a Android",
     menu: "Menú",
     language: "Idioma",
     appearance: "Aparença",
@@ -32,13 +32,13 @@ export const ca: SiteCopy = {
     footer: {
       navigation: "Navegació del peu de pàgina",
       legal: "Legal i privacitat",
-      privacy: "Privacitat",
+      privacy: "Política de privacitat",
       terms: "Termes i condicions",
       legalNotice: "Avís legal",
       deleteAccount: "Suprimeix el compte",
       support: "Escriu al suport",
       operator: "Un producte de {company}",
-      trademark: "Android és una marca comercial de Google LLC.",
+      trademark: "Android és una marca comercial de Google\u00a0LLC.",
       backToTop: "Torna a dalt",
     },
   },
@@ -46,11 +46,12 @@ export const ca: SiteCopy = {
     title: "Digues-ho i ja és al ",
     titleAccent: "teu calendari.",
     description:
-      "Toca un botó i digues el que has de fer, encara que siguin diverses coses alhora. TaskFlow posa cada una el seu dia i et pot avisar abans. Una aplicació per a mòbils Android™.",
+      "Una aplicació per a mòbils Android™: toca un botó i digues el que has de fer, encara que siguin diverses coses alhora. TaskFlow posa cadascuna al seu dia i et pot avisar abans.",
     primary: "Prova-ho amb la teva veu",
     secondary: "Què fa",
-    status: "Molt aviat a Google Play. Encara no es pot descarregar.",
-    voiceQuote: "«Demà, trucar al dentista i comprar pa.»",
+    status: "Properament a Google Play. Encara no es pot descarregar.",
+    free: "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.",
+    voiceQuote: "«Demà, trucar al dentista i comprar pa»",
     imageAlt:
       "TaskFlow en un mòbil Android: el calendari de demà amb dues tasques, Trucar al dentista i Comprar pa, i el botó Afegeix una tasca.",
   },
@@ -96,8 +97,10 @@ export const ca: SiteCopy = {
       },
       {
         question: "TaskFlow és gratuït?",
-        answer:
-          "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+        answer: [
+          "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
+          "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+        ],
       },
       {
         question: "Necessito un compte?",
@@ -108,6 +111,11 @@ export const ca: SiteCopy = {
         question: "Com afegeixo tasques parlant?",
         answer:
           "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
+      },
+      {
+        question: "Puc afegir una cosa que es repeteix?",
+        answer:
+          "Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.",
       },
       {
         question: "La puc fer servir sense connexió?",
@@ -122,7 +130,7 @@ export const ca: SiteCopy = {
       {
         question: "Puc desar notes a més de tasques?",
         answer:
-          "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com la contrasenya del wifi. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+          "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com una idea per a un regal. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
       },
       {
         question: "Puc afegir tasques des de la pantalla d’inici o des de WhatsApp?",
@@ -132,7 +140,7 @@ export const ca: SiteCopy = {
     ],
   },
   closing: {
-    title: "Molt aviat a Android.",
+    title: "Properament a Android.",
     body: "TaskFlow encara no és a Google Play. Mentrestant, el pots provar amb la teva veu en aquesta pàgina.",
     button: "Prova-ho amb la teva veu",
     plans:
@@ -148,7 +156,7 @@ export const ca: SiteCopy = {
     noscript: "Activa JavaScript per provar-ho amb la teva veu.",
     example: {
       label: "Per exemple, digues:",
-      quote: "«Demà, trucar al dentista i comprar pa.»",
+      quote: "«Demà, trucar al dentista i comprar pa»",
       heading: "2 coses per afegir",
       tasks: [
         { title: "Trucar al dentista", date: "Demà" },
@@ -156,7 +164,7 @@ export const ca: SiteCopy = {
       ],
     },
     privacy:
-      "El que dius o escrius va a Google només quan toques Fet. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
+      "El que dius o escrius va a Google només quan toques Fet o s’acaba el minut. No desem la gravació, i el text s’esborra automàticament passades 24 hores.",
     privacyLink: "Com fem servir les teves dades",
     fine: "Es pot equivocar amb les dates: revisa-les. Res d’això es desa a l’aplicació.",
     starting: "Un moment…",
@@ -166,13 +174,13 @@ export const ca: SiteCopy = {
     heading: "Què t’agradaria recordar?",
     talk: "Toca per parlar",
     micHint:
-      "Fins a un minut. El navegador et demanarà fer servir el micròfon.",
+      "Fins a un minut. El navegador et demanarà permís per fer servir el micròfon.",
     micWaiting: "Esperant el micròfon…",
     done: "Fet",
     tryAgain: "Torna-ho a provar",
     listening: "S’està escoltant · {time}",
     listeningStatus: "S’està escoltant",
-    tenSecondsLeft: "Queden 10 segons",
+    secondsLeft: { one: "Queda 1 segon", other: "Queden {n} segons" },
     understanding: "Entenent…",
     typeInstead: "Escriu",
     talkInstead: "Parla",
@@ -183,6 +191,8 @@ export const ca: SiteCopy = {
       "A l’aplicació, convertir frases escrites en tasques forma part de TaskFlow Pro. Sense Pro, les dius, o afegeixes cada tasca amb un formulari senzill.",
     micBlocked:
       "El micròfon està desactivat per a aquesta pàgina. Activa’l a la configuració del navegador per a aquest lloc o escriu.",
+    micDismissed:
+      "Per parlar, toca Parla i permet el micròfon quan el navegador t’ho demani. O escriu aquí.",
     micMissing:
       "No trobem cap micròfon en aquest dispositiu. Pots escriure.",
     micFailed:
@@ -191,16 +201,20 @@ export const ca: SiteCopy = {
       "Aquest navegador no pot gravar la teva veu. Pots escriure.",
     thingsToAdd: { one: "1 cosa per afegir", other: "{n} coses per afegir" },
     noDate: "Sense data",
+    today: "Avui",
+    tomorrow: "Demà",
     checkDetail: "Revisa aquesta dada: {question}",
     completionTitle: "Tot fet. Respira.",
     completionBody: "Imagina una mica més de calma en el teu dia.",
     handOver:
-      "A l’aplicació: toca Afegeix una tasca, digues-ho, toca Fet i afegeix-ho al calendari. Molt aviat a Google Play.",
+      "A l’aplicació: toca Afegeix una tasca, digues-ho, toca Fet i afegeix-ho al calendari. Properament a Google Play.",
     sayAgain: "Torna-ho a dir",
     changeText: "Canvia el text",
     seeWhatISaid: "Mostra què he dit",
+    originalText: "Text original",
+    completeTask: "Completa {title}",
     noTasks:
-      "No s’ha trobat cap tasca. Les teves paraules es conserven. Ha comptat com un intent.",
+      "No he trobat cap tasca. Digues què i quan, per exemple: «Demà, trucar al dentista». Ha comptat com un intent.",
     triesUsed: {
       onDay:
         "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar {weekday} a les {time}.",
@@ -214,14 +228,14 @@ export const ca: SiteCopy = {
     triesUsedLater:
       "Ja has fet servir els 3 intents d’aquesta demo. Hi podràs tornar a provar més tard.",
     stillUnderstanding:
-      "Encara ho estic entenent. Pot trigar fins a mig minut.",
+      "Encara ho estic entenent. Pot trigar fins a 40 segons.",
     stopWaiting: "Deixa d’esperar",
     checkTap: "Toca la comprovació de seguretat de dalt per continuar.",
     checkFailed:
       "La comprovació de seguretat no s’ha carregat. Revisa la connexió i toca Torna-ho a provar.",
     errors: {
       offline:
-        "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. El que has dit es conserva i tornar-ho a provar no et costarà cap altre intent.",
+        "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar. Les teves paraules es conserven i tornar-ho a provar no et costarà cap altre intent.",
       offlineOpening:
         "No hi ha connexió. Revisa la wifi o les dades mòbils i torna-ho a provar.",
       notAnswering:
@@ -234,12 +248,12 @@ export const ca: SiteCopy = {
       unverified:
         "La comprovació de seguretat no s’ha carregat, així que la demo en directe no pot funcionar aquí. L’exemple de dalt mostra què fa TaskFlow.",
       invalidDraft:
-        "No ho hem pogut convertir en tasques i ha comptat com un intent. Digues què has de fer i quan.",
+        "No ho hem pogut convertir en tasques. Digues què has de fer i quan.",
       recording:
-        "No hem pogut sentir l’enregistrament. Torna’l a gravar; no ha comptat com un intent.",
+        "No hem pogut sentir la gravació. Torna-la a gravar; no ha comptat com un intent.",
       processing:
         "Encara ho estic entenent. Torna-ho a provar d’aquí a un moment; no gastarà cap altre intent.",
-      sayAgain: "Alguna cosa ha fallat. Torna-ho a dir.",
+      sayAgain: "Alguna cosa ha fallat. Torna-ho a provar.",
       empty: "Primer digues o escriu què has de fer.",
     },
   },

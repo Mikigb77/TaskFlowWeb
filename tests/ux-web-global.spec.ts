@@ -30,6 +30,7 @@ import {
   watchHydration,
 } from "./support/ux-web";
 import { FOOTER, FRAME, HERO, LANGUAGE_NAMES, META, NOT_FOUND } from "./support/ux-web-copy";
+import { en as siteEn } from "../src/content/site/en";
 
 const bare = (request: APIRequestContext, headers: Record<string, string>) =>
   request.get("/", { headers, maxRedirects: 0 });
@@ -111,9 +112,10 @@ plain("WEB-2: the bare address follows the remembered choice, then the browser's
 });
 
 // WP34 replaced WP15's check 4: Next overwrites Vary on the page it renders, and the 200's
-// `no-store` already keeps every cache from serving it to anyone else, so Vary is checked
-// only on the redirects.
-plain("WEB-2: the English home for the bare address is private, never stored, and nosniff", async ({
+// `private` keeps shared caches from serving it to anyone else, so Vary is checked only on
+// the redirects. WP72 (WEB-1603): the 200 is `no-cache`, not `no-store`, so Back can restore
+// it from the back/forward cache.
+plain("WEB-2: the English home for the bare address is private, always revalidated, and nosniff", async ({
   playwright,
   baseURL,
 }) => {
@@ -129,7 +131,8 @@ plain("WEB-2: the English home for the bare address is private, never stored, an
     expect(response.status(), answer).toBe(200);
     const cacheControl = response.headers()["cache-control"] ?? "";
     expect.soft(cacheControl, `${answer}: Cache-Control`).toContain("private");
-    expect.soft(cacheControl, `${answer}: Cache-Control`).toContain("no-store");
+    expect.soft(cacheControl, `${answer}: Cache-Control`).toContain("no-cache");
+    expect.soft(cacheControl, `${answer}: Cache-Control`).not.toContain("no-store");
     expect.soft(response.headers()["x-content-type-options"], `${answer}: nosniff`).toBe("nosniff");
   }
   await request.dispose();
@@ -196,8 +199,8 @@ test("WEB-707: on each home the live demo takes the page's language, with no Eng
   }
 });
 
-plain("WEB-2: only the bare address redirects, and an unknown language is a missing page", async ({ request }) => {
-  for (const url of ["/privacy/", "/es/privacy/"]) {
+plain("WEB-2, WEB-1508: only the bare address and /delete-account/ redirect, and an unknown language is a missing page", async ({ request }) => {
+  for (const url of ["/privacy/", "/es/privacy/", "/es/delete-account/", "/ca/delete-account/"]) {
     const response = await request.get(url, { headers: { "accept-language": "ca" }, maxRedirects: 0 });
     expect(response.status(), url).toBe(200);
   }
@@ -496,7 +499,8 @@ test("WEB-307: with forced colours, the phone header's menu icon still draws", a
   test.skip(testInfo.project.name !== "mobile", "The phone header (390 × 664).");
   await page.emulateMedia({ forcedColors: "active" });
   await page.goto("/");
-  const icon = menuButton(page).locator("svg");
+  // The closed pill shows ≡; its ✕ (for the open menu) is hidden.
+  const icon = menuButton(page).locator("svg:visible");
   await expect(icon).toBeVisible();
   const strokes = await icon.evaluate((svg) =>
     [svg, ...Array.from(svg.querySelectorAll("*"))].map((element) => getComputedStyle(element).stroke),
@@ -649,10 +653,13 @@ test("WEB-306: a missing page answers 404 with its three-language title, no cano
   page,
   request,
 }) => {
-  expect((await request.get("/no-such-page/")).status()).toBe(404);
+  const served = await request.get("/no-such-page/");
+  expect(served.status()).toBe(404);
+  // The served title holds all three languages, for visits without JavaScript; after
+  // hydration the tab shows the address's language alone (WP73).
+  expect(await served.text()).toContain(`<title>${NOT_FOUND.title}</title>`);
   await page.goto("/no-such-page/");
   const tags = await head(page);
-  expect(tags.title).toBe(NOT_FOUND.title);
   expect(tags.canonical, "link[rel=canonical]").toBe(0);
   expect(tags.ogUrl, "og:url").toEqual([]);
   expect(await page.locator("body").innerText()).not.toMatch(/flow again|off track/i);
@@ -793,7 +800,7 @@ test("WEB-711: on a phone the open menu's and the footer's language links are 48
     await page.keyboard.press("Escape");
     const footer = page
       .locator("footer")
-      .getByRole("navigation", { name: FRAME.language[language], exact: true })
+      .getByRole("group", { name: FRAME.language[language], exact: true })
       .getByRole("link");
     await footer.first().scrollIntoViewIfNeeded();
     await expect(footer.first(), url).toBeVisible();
@@ -1332,3 +1339,1001 @@ test("WEB-707: without JavaScript, the server's HTML for each home marks #voice 
   }
   await context.close();
 });
+
+// ---- Run 2026-10-28-site: WP71 (WEB-1601, WEB-1602, WEB-1604): the phone menu closes like a
+// menu (Tab, Escape, Android Back, a ✕), and the header lets go on short screens ----
+
+const menuDetails = (page: Page) => page.locator("header details.header-menu");
+const SHORT = { width: 320, height: 256 };
+const PHONE = { width: 390, height: 664 };
+
+// Opens the menu from the keyboard: focus on its button, then Enter.
+async function openMenuByKeyboard(page: Page) {
+  await menuButton(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(menuDetails(page)).toHaveAttribute("open", "");
+}
+
+// The first control a visitor can Tab to after the header, in document order, and whether it
+// has focus and is the element on top at its centre.
+async function nextAfterHeader(page: Page) {
+  return page.evaluate(() => {
+    const header = document.querySelector("header.site-header")!;
+    const selector =
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+    const next = Array.from(document.querySelectorAll<HTMLElement>(selector)).find(
+      (element) =>
+        !header.contains(element) &&
+        header.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING &&
+        element.checkVisibility({ visibilityProperty: true }),
+    )!;
+    const box = next.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    const top = document.elementFromPoint(x, y);
+    return {
+      text: (next.textContent ?? "").replace(/\s+/g, " ").trim(),
+      href: next.getAttribute("href"),
+      focused: document.activeElement === next,
+      inViewport: x >= 0 && y >= 0 && x <= innerWidth && y <= innerHeight,
+      onTop: !!top && (top === next || next.contains(top)),
+      topIs: top ? `${top.tagName.toLowerCase()}.${top.className}` : null,
+    };
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP71 menu keyboard`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1601: Tab past Dark closes the menu, and focus lands on the next control, uncovered, at 390 × 664 and 320 × 256 (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664), and 320 × 256.");
+      for (const size of [PHONE, SHORT]) {
+        await page.setViewportSize(size);
+        for (const [url, language] of [
+          ["/", "en"],
+          ["/es/privacy/", "es"],
+        ] as const) {
+          const where = `${url} at ${size.width} × ${size.height}`;
+          await page.goto(url);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          await openMenuByKeyboard(page);
+          const dark = page
+            .locator("header .header-menu-panel")
+            .getByRole("button", { name: FRAME.dark[language], exact: true });
+          // Tab through the menu's controls until Dark has focus.
+          for (let presses = 0; presses < 20; presses++) {
+            if (await dark.evaluate((button) => button === document.activeElement)) break;
+            await page.keyboard.press("Tab");
+          }
+          await expect(dark, `${where}: Tab reaches ${FRAME.dark[language]}`).toBeFocused();
+          await expect(menuDetails(page), `${where}: the menu is still open on Dark`).toHaveAttribute("open", "");
+          await page.keyboard.press("Tab");
+          await expect(menuDetails(page), `${where}: Tab past Dark closes the menu`).not.toHaveAttribute("open", "");
+          const next = await nextAfterHeader(page);
+          expect(next.focused, `${where}: focus is on the next control after the header (“${next.text}”)`).toBe(true);
+          if (url === "/") {
+            expect(next.text, `${where}: the hero's primary link`).toBe(siteEn.hero.primary);
+            expect(next.href, where).toBe("#voice");
+          }
+          expect(next.inViewport, `${where}: “${next.text}” is in view`).toBe(true);
+          expect(next.onTop, `${where}: “${next.text}” is on top at its centre, not ${next.topIs}`).toBe(true);
+        }
+      }
+    });
+  });
+}
+
+test("WEB-1601: Escape closes the menu and leaves focus on a page link outside it; from inside the menu it focuses Menu; a tap on Dark still switches the theme", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  await hydrated(page);
+  // Focus on a page link, then the menu opens without taking focus (as a tap does in Safari).
+  const hero = page.locator("main .hero-buttons a.button").first();
+  await hero.focus();
+  await menuDetails(page).evaluate((details) => ((details as HTMLDetailsElement).open = true));
+  await expect(menuDetails(page)).toHaveAttribute("open", "");
+  await expect(hero).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menuDetails(page), "Escape closes the menu").not.toHaveAttribute("open", "");
+  await expect(hero, "focus stays on the page link").toBeFocused();
+
+  // With focus inside the menu, Escape closes it onto its button.
+  await openMenuByKeyboard(page);
+  await page.keyboard.press("Tab");
+  expect(
+    await menuDetails(page).evaluate((details) => details.contains(document.activeElement)),
+    "Tab moved focus into the menu",
+  ).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(menuDetails(page)).not.toHaveAttribute("open", "");
+  await expect(menuButton(page)).toBeFocused();
+
+  // A tap on Dark inside the open menu still switches the theme, and the menu stays open.
+  await menuButton(page).tap();
+  await expect(menuDetails(page)).toHaveAttribute("open", "");
+  const dark = page.getByRole("group", { name: FRAME.appearance.en, exact: true }).getByRole("button", {
+    name: FRAME.dark.en,
+    exact: true,
+  });
+  await dark.tap();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(dark).toHaveAttribute("aria-pressed", "true");
+  await expect(menuDetails(page), "the tap on Dark doesn't close the menu").toHaveAttribute("open", "");
+});
+
+// A stand-in for the browser's CloseWatcher that records every watcher the page makes.
+async function stubCloseWatcher(page: Page) {
+  await page.addInitScript(() => {
+    type Record = { active: boolean; destroyed: boolean; closed: boolean };
+    const records: Record[] = [];
+    const watchers: unknown[] = [];
+    class StubWatcher extends EventTarget {
+      onclose: ((event: Event) => void) | null = null;
+      oncancel: ((event: Event) => void) | null = null;
+      record: Record = { active: true, destroyed: false, closed: false };
+      constructor() {
+        super();
+        records.push(this.record);
+        watchers.push(this);
+      }
+      requestClose() {
+        this.close();
+      }
+      close() {
+        if (!this.record.active) return;
+        this.record.active = false;
+        this.record.closed = true;
+        const event = new Event("close");
+        this.dispatchEvent(event);
+        this.onclose?.call(this, event);
+      }
+      destroy() {
+        this.record.active = false;
+        this.record.destroyed = true;
+      }
+    }
+    Object.defineProperty(window, "CloseWatcher", { value: StubWatcher, configurable: true, writable: true });
+    Object.assign(window, { __watcherRecords: records, __watchers: watchers });
+  });
+}
+type WatcherRecord = { active: boolean; destroyed: boolean; closed: boolean };
+const watcherRecords = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __watcherRecords: WatcherRecord[] }).__watcherRecords);
+
+test("WEB-1602: with CloseWatcher, opening the menu makes one watcher; its close closes the menu; a tap outside, Escape or a link destroys it", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  await stubCloseWatcher(page);
+  await page.goto("/");
+  await hydrated(page);
+  expect(await watcherRecords(page), "no watcher while the menu is closed").toEqual([]);
+
+  // Opening the menu creates one watcher, and Android's Back (its close) closes the menu,
+  // with focus back on Menu since it was inside.
+  await openMenuByKeyboard(page);
+  await expect.poll(async () => (await watcherRecords(page)).length, "watchers after opening").toBe(1);
+  expect((await watcherRecords(page))[0].active).toBe(true);
+  await page.evaluate(() =>
+    ((window as unknown as { __watchers: { close(): void }[] }).__watchers[0]).close(),
+  );
+  await expect(menuDetails(page), "the watcher's close closes the menu").not.toHaveAttribute("open", "");
+  await expect(menuButton(page)).toBeFocused();
+  expect((await watcherRecords(page))[0].active).toBe(false);
+
+  // Each other way of closing the menu destroys its watcher, and the next opening makes a new one.
+  const panel = page.locator("header .header-menu-panel");
+  const dark = panel.getByRole("button", { name: FRAME.dark.en, exact: true });
+  const closings: [string, () => Promise<void>][] = [
+    [
+      "a tap outside",
+      async () => {
+        const box = (await panel.boundingBox())!;
+        await page.touchscreen.tap(12, Math.min(box.y + box.height + 40, page.viewportSize()!.height - 8));
+      },
+    ],
+    ["Escape", () => page.keyboard.press("Escape")],
+    [
+      "a link",
+      () => panel.getByRole("link", { name: FRAME.features.en, exact: true }).click(),
+    ],
+    [
+      "Tab past the last control",
+      async () => {
+        await dark.focus();
+        await page.keyboard.press("Tab");
+      },
+    ],
+  ];
+  for (const [index, [how, close]] of closings.entries()) {
+    await page.evaluate(() => scrollTo(0, 0));
+    await openMenuByKeyboard(page);
+    await expect
+      .poll(async () => (await watcherRecords(page)).length, `${how}: one new watcher on opening`)
+      .toBe(index + 2);
+    expect((await watcherRecords(page)).filter((record) => record.active), how).toHaveLength(1);
+    await close();
+    await expect(menuDetails(page), `${how} closes the menu`).not.toHaveAttribute("open", "");
+    await expect
+      .poll(async () => (await watcherRecords(page))[index + 1].destroyed, `${how} destroys the watcher`)
+      .toBe(true);
+    expect((await watcherRecords(page)).filter((record) => record.active), how).toEqual([]);
+  }
+});
+
+test("WEB-1602: without CloseWatcher the menu opens and closes with no error", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  await page.addInitScript(() => {
+    delete (window as { CloseWatcher?: unknown }).CloseWatcher;
+    delete (Window.prototype as { CloseWatcher?: unknown }).CloseWatcher;
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await hydrated(page);
+  expect(await page.evaluate(() => "CloseWatcher" in window)).toBe(false);
+  await openMenuByKeyboard(page);
+  await page.keyboard.press("Escape");
+  await expect(menuDetails(page)).not.toHaveAttribute("open", "");
+  await menuButton(page).click();
+  await expect(menuDetails(page)).toHaveAttribute("open", "");
+  await menuButton(page).click();
+  await expect(menuDetails(page)).not.toHaveAttribute("open", "");
+  expect(errors).toEqual([]);
+});
+
+// The paths of the icon the pill shows: ≡ is three horizontal lines, ✕ two diagonals.
+const MENU_PATHS = ["M4 7h16", "M4 12h16", "M4 17h16"];
+const CLOSE_PATHS = ["M6 6l12 12", "M18 6 6 18"];
+const shownIcon = async (page: Page) => {
+  const visible = menuButton(page).locator("svg:visible");
+  await expect(visible, "one icon shows in the pill").toHaveCount(1);
+  return visible.locator("path").evaluateAll((paths) => paths.map((p) => p.getAttribute("d")));
+};
+
+test("WEB-1602: the closed pill shows ≡ and the open one ✕, and its name stays Menu, in each language and theme", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  for (const theme of THEMES) {
+    await page.emulateMedia({ colorScheme: theme });
+    for (const language of LANGUAGES) {
+      const url = language === "en" ? "/" : `/${language}/privacy/`;
+      const where = `${url} (${theme})`;
+      await page.goto(url);
+      await hydrated(page);
+      expect(await shownIcon(page), `${where}: closed`).toEqual(MENU_PATHS);
+      await expect(menuButton(page), where).toHaveAccessibleName(FRAME.menu[language]);
+      await expect(menuButton(page), where).toHaveText(FRAME.menu[language]);
+      await openMenu(page);
+      expect(await shownIcon(page), `${where}: open`).toEqual(CLOSE_PATHS);
+      await expect(menuButton(page), `${where}: open`).toHaveAccessibleName(FRAME.menu[language]);
+      await expect(menuButton(page), `${where}: open`).toHaveText(FRAME.menu[language]);
+      // Both icons stay out of the accessibility tree.
+      expect(
+        await menuButton(page)
+          .locator("svg")
+          .evaluateAll((svgs) => svgs.map((svg) => svg.getAttribute("aria-hidden"))),
+        where,
+      ).toEqual(["true", "true"]);
+    }
+  }
+});
+
+test("WEB-1602: without JavaScript, opening the menu swaps ≡ for ✕", async ({ browser, baseURL }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The phone menu (390 × 664).");
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL,
+    viewport: PHONE,
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (route) => route.abort());
+  for (const url of ["/", "/es/privacy/"]) {
+    await page.goto(url);
+    expect(await shownIcon(page), `${url}: closed`).toEqual(MENU_PATHS);
+    await menuButton(page).click();
+    await expect(menuDetails(page), url).toHaveAttribute("open", "");
+    expect(await shownIcon(page), `${url}: open`).toEqual(CLOSE_PATHS);
+    await menuButton(page).click();
+    await expect(menuDetails(page), url).not.toHaveAttribute("open", "");
+    expect(await shownIcon(page), `${url}: closed again`).toEqual(MENU_PATHS);
+  }
+  await context.close();
+});
+
+const headerBox = (page: Page) =>
+  page.locator("header.site-header").evaluate((header) => {
+    const box = header.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom, position: getComputedStyle(header).position };
+  });
+
+for (const size of [
+  { width: 844, height: 390 },
+  { width: 320, height: 256 },
+]) {
+  test(`WEB-1604: at ${size.width} × ${size.height} the header scrolls away, and Menú opens under the header at the top of the page`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await page.goto("/es/");
+    await hydrated(page);
+    // At the top of the page, Menú opens its panel under the header.
+    await openMenu(page);
+    const header = await headerBox(page);
+    const panel = (await page.locator("header .header-menu-panel").boundingBox())!;
+    await expect(page.locator("header .header-menu-panel")).toBeVisible();
+    expect(panel.y, "the panel starts under the header").toBeGreaterThanOrEqual(header.bottom - 1);
+    expect(panel.y, "the panel is just under the header").toBeLessThanOrEqual(header.bottom + 12);
+    await page.keyboard.press("Escape");
+    await expect(menuDetails(page)).not.toHaveAttribute("open", "");
+
+    // After 600 px of scrolling the header is out of view.
+    await page.evaluate(() => scrollTo(0, 600));
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(600);
+    const scrolled = await headerBox(page);
+    expect(scrolled.position, "the header isn't sticky").not.toBe("sticky");
+    expect(scrolled.bottom, "the header is out of view").toBeLessThanOrEqual(0);
+  });
+
+  test(`WEB-1604: at ${size.width} × ${size.height} following the menu's link to #questions puts its heading within 24 px of the top`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await page.goto("/es/");
+    await hydrated(page);
+    await openMenu(page);
+    await page
+      .locator("header .header-menu-panel")
+      .getByRole("link", { name: FRAME.questions.es, exact: true })
+      .click();
+    await expect(menuDetails(page)).not.toHaveAttribute("open", "");
+    const heading = page.locator("#questions-title");
+    await expect(heading).toBeInViewport();
+    await expect
+      .poll(async () => Math.round((await heading.boundingBox())!.y), "the heading's top, from the viewport's")
+      .toBeLessThanOrEqual(24);
+    expect((await heading.boundingBox())!.y, "the heading isn't cut off").toBeGreaterThanOrEqual(0);
+  });
+}
+
+for (const size of [PHONE, { width: 720, height: 500 }]) {
+  test(`WEB-1604: at ${size.width} × ${size.height} the header is still sticky`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await hydrated(page);
+    await page.evaluate(() => scrollTo(0, 600));
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(600);
+    const header = await headerBox(page);
+    expect(header.position).toBe("sticky");
+    expect(Math.round(header.top), "the header stays at the top").toBe(0);
+    expect(header.bottom).toBeGreaterThan(0);
+  });
+}
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP71 axe`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1601, WEB-1602, WEB-1604: axe reports no violations with the menu open, at 390 × 664 and 320 × 256 (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "The phone menu.");
+      for (const size of [PHONE, SHORT])
+        for (const url of ["/", "/es/privacy/"]) {
+          await page.setViewportSize(size);
+          await page.goto(url);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          await openMenu(page);
+          expect(await axeViolations(page), `${url} at ${size.width} × ${size.height}, menu open`).toEqual([]);
+        }
+    });
+  });
+}
+
+// ---- Run 2026-10-28-site: WP72 (WEB-1603, WEB-1606, WEB-1608) ----
+// The language switch: a choice that holds before the page has hydrated, one ‘Language’
+// landmark per page, and the current language visible in forced colours. Already proved
+// elsewhere in this file: the English 200 for / is `private, no-cache` and not `no-store`
+// (‘the English home for the bare address is private, always revalidated’), the Accept-Language
+// redirects keep `private, no-store` and Vary (‘the redirects of the bare address stay on the
+// request's own origin’), axe on /, /es/privacy/ and /ca/delete-account/ with the menu closed
+// and open (‘frame axe’) and on the 404 in each language (‘WEB-306: axe, with document-title’),
+// light and dark, desktop and phone; the footer's language links 48 px tall and 8 px apart
+// on a phone (WEB-711).
+import { LEGAL_PAGES } from "./support/ux-web-copy";
+import { pageUrl } from "./support/ux-web";
+
+// The header's language switch as the visitor reaches it: in the header at 1440 px, in the
+// opened phone menu on the phone (a <details>, so it opens without JavaScript too).
+async function headerLanguages(page: Page, isMobile: boolean, language: Language) {
+  const name = { name: FRAME.language[language], exact: true };
+  if (!isMobile) return page.locator("header.site-header").getByRole("navigation", name);
+  await menuButton(page).click();
+  await expect(page.locator("header .header-menu")).toHaveAttribute("open", "");
+  return page.locator("header .header-menu-panel").getByRole("navigation", name);
+}
+const footerLanguages = (page: Page, language: Language) =>
+  page.locator("footer").getByRole("group", { name: FRAME.language[language], exact: true });
+
+// The language cookie as WD5 and privacy §8 describe it: the choice, for about a year.
+async function expectRemembered(context: import("@playwright/test").BrowserContext, value: Language, where: string) {
+  const cookie = (await context.cookies()).find((entry) => entry.name === "taskflow-lang");
+  expect(cookie?.value, `${where}: taskflow-lang`).toBe(value);
+  expect(cookie?.path, `${where}: Path`).toBe("/");
+  expect(cookie?.sameSite, `${where}: SameSite`).toBe("Lax");
+  // Max-Age 31536000, within a minute.
+  expect(Math.abs(cookie!.expires - Date.now() / 1000 - 31_536_000), `${where}: about a year`).toBeLessThan(60);
+}
+const isBareHome = (url: URL) => url.pathname === "/" && url.search === "";
+
+test.describe("WP72 a Spanish browser without JavaScript", () => {
+  // Chromium sends Accept-Language from the locale (an extra header doesn't reach navigations).
+  test.use({ javaScriptEnabled: false, locale: "es" });
+  test("WEB-1603: without JavaScript and with Accept-Language es, «English» on /es/ ends on / in English and the browser remembers it for a year", async ({
+    page,
+    context,
+    isMobile,
+  }) => {
+    for (const where of ["header", "footer"] as const) {
+      await context.clearCookies();
+      // The browser's Spanish sends the bare address to /es/ before any choice.
+      await page.goto("/");
+      await expect(page, `${where}: before the choice`).toHaveURL(/\/es\/$/);
+      const switcher = where === "header" ? await headerLanguages(page, isMobile, "es") : footerLanguages(page, "es");
+      await switcher.getByRole("link", { name: LANGUAGE_NAMES.en, exact: true }).click();
+      await expect(page, where).toHaveURL(isBareHome);
+      await expect(page.getByRole("heading", { level: 1 }), where).toHaveText(HERO.title.en);
+      await expectRemembered(context, "en", where);
+      // And it holds: the bare address now stays English for this Spanish browser.
+      await page.goto("/");
+      await expect(page, `${where}: / again`).toHaveURL(isBareHome);
+      await expect(page.getByRole("heading", { level: 1 }), `${where}: / again`).toHaveText(HERO.title.en);
+    }
+  });
+});
+
+test.describe("WP72 a Spanish browser before hydration", () => {
+  test.use({ locale: "es" });
+  test("WEB-1603: with JavaScript on, «English» clicked on /es/ before the page has hydrated ends on / in English and the browser remembers it for a year", async ({
+    page,
+    context,
+    isMobile,
+  }) => {
+    // Hold the page's scripts until after the click, so React hasn't hydrated when it lands.
+    let release!: () => void;
+    const loaded = new Promise<void>((resolve) => (release = resolve));
+    await page.route(/\/_next\/static\/.+\.js(\?.*)?$/, async (route) => {
+      await loaded;
+      await route.fallback().catch(() => undefined);
+    });
+    await page.goto("/es/", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/es\/$/);
+    // Not hydrated: the theme controls stay disabled (or absent) until React runs.
+    expect(await page.locator("button.theme-toggle:not(:disabled)").count(), "hydrated before the click").toBe(0);
+    const switcher = await headerLanguages(page, isMobile, "es");
+    await switcher.getByRole("link", { name: LANGUAGE_NAMES.en, exact: true }).click({ noWaitAfter: true });
+    // The held scripts keep the page from its load event, so wait only for the address.
+    await page.waitForURL(isBareHome, { waitUntil: "commit" });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(HERO.title.en);
+    await expectRemembered(context, "en", "before hydration");
+    release();
+    await hydrated(page);
+    await expect(page).toHaveURL(isBareHome);
+  });
+});
+
+plain("WEB-1603: /?lang=en, es or ca is the switch's choice: a 307 to the clean address that sets taskflow-lang for a year, never stored; any other lang answers like /", async ({
+  playwright,
+  baseURL,
+}) => {
+  // A fresh request context for each request, so no cookie carries from one to the next.
+  const get = async (url: string, headers: Record<string, string>) => {
+    const request = await playwright.request.newContext({ baseURL });
+    const response = await request.get(url, { headers, maxRedirects: 0 });
+    const answer = {
+      status: response.status(),
+      location: response.headers()["location"] ?? "",
+      cacheControl: response.headers()["cache-control"] ?? "",
+      vary: (response.headers()["vary"] ?? "").toLowerCase(),
+      cookies: response
+        .headersArray()
+        .filter(({ name }) => name.toLowerCase() === "set-cookie")
+        .map(({ value }) => value),
+      english: response.status() === 200 && (await response.text()).includes(HERO.description.en),
+    };
+    await request.dispose();
+    return answer;
+  };
+  const where = (location: string) => new URL(location, baseURL);
+  for (const [lang, to, browser] of [
+    ["es", "/es/", "en-US,en;q=0.9"],
+    ["ca", "/ca/", "es-ES,es;q=0.9"],
+    ["en", "/", "es-ES,es;q=0.9"],
+  ] as const) {
+    for (const proto of ["http", "https"] as const) {
+      const headers: Record<string, string> = { "accept-language": browser };
+      if (proto === "https") headers["x-forwarded-proto"] = "https";
+      const url = `/?lang=${lang}`;
+      const answer = await get(url, headers);
+      const name = `${url} (Accept-Language ${browser}, ${proto})`;
+      expect(answer.status, name).toBe(307);
+      expect(where(answer.location).pathname, `${name}: Location`).toBe(to);
+      expect(where(answer.location).search, `${name}: the clean address`).toBe("");
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("private");
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("no-store");
+      expect.soft(answer.vary, `${name}: Vary names Accept-Language`).toContain("accept-language");
+      expect.soft(answer.vary, `${name}: Vary names Cookie`).toContain("cookie");
+      const cookie = answer.cookies.filter((value) => value.startsWith("taskflow-lang="));
+      expect(cookie, `${name}: one taskflow-lang cookie`).toHaveLength(1);
+      const parts = cookie[0].split(";").map((part) => part.trim().toLowerCase());
+      expect(parts[0], `${name}: the choice`).toBe(`taskflow-lang=${lang}`);
+      expect(parts, `${name}: Path`).toContain("path=/");
+      expect(parts, `${name}: Max-Age`).toContain("max-age=31536000");
+      expect(parts, `${name}: SameSite`).toContain("samesite=lax");
+      if (proto === "https") expect(parts, `${name}: Secure`).toContain("secure");
+      else expect(parts, `${name}: no Secure on http`).not.toContain("secure");
+    }
+  }
+  // Any other value is not a choice: the answer is the bare address's own.
+  for (const headers of [
+    { "accept-language": "en-US,en;q=0.9" },
+    { "accept-language": "es-ES,es;q=0.9" },
+    { cookie: "taskflow-lang=ca", "accept-language": "en" },
+  ] as Record<string, string>[]) {
+    for (const odd of ["xx", "EN", "fr", ""]) {
+      const url = `/?lang=${odd}`;
+      const name = `${url} (${label(headers)})`;
+      const bareAnswer = await get("/", headers);
+      const answer = await get(url, headers);
+      expect(answer.status, name).toBe(bareAnswer.status);
+      if (bareAnswer.status === 307)
+        expect(where(answer.location).pathname, `${name}: Location`).toBe(where(bareAnswer.location).pathname);
+      else expect(answer.english, `${name}: the English home`).toBe(true);
+      expect(answer.cookies.filter((value) => value.startsWith("taskflow-lang=")), `${name}: no cookie`).toEqual([]);
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toBe(bareAnswer.cacheControl);
+    }
+  }
+});
+
+test("WEB-1603, WEB-1508: on /es/ and /ca/ every language switch's English link is /?lang=en, on the Spanish and Catalan delete pages /delete-account/?lang=en, and on the other legal pages the English page itself", async ({
+  page,
+}) => {
+  const englishLinks = () =>
+    page.locator('.language-switch a[hreflang="en"]').evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  for (const language of ["es", "ca"] as const) {
+    const url = homeUrl(language);
+    await page.goto(url);
+    await hydrated(page);
+    const hrefs = await englishLinks();
+    // The header's, the phone menu's and the footer's.
+    expect(hrefs.length, `${url}: switches`).toBeGreaterThanOrEqual(3);
+    expect(hrefs, url).toEqual(hrefs.map(() => "/?lang=en"));
+    for (const document of LEGAL_PAGES) {
+      const legal = pageUrl(language, document);
+      await page.goto(legal);
+      await hydrated(page);
+      const legalHrefs = await englishLinks();
+      expect(legalHrefs.length, `${legal}: switches`).toBeGreaterThanOrEqual(3);
+      const english = document === "delete-account" ? "/delete-account/?lang=en" : `/${document}/`;
+      expect(legalHrefs, legal).toEqual(legalHrefs.map(() => english));
+    }
+  }
+});
+
+test("WEB-1606: at 1440 × 1000 every page has exactly one navigation named ‘Language’, the header's, and the footer's switch is a group of the three languages", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "1440 × 1000 is the desktop project.");
+  test.setTimeout(120_000);
+  const pages: { url: string; language: Language }[] = LANGUAGES.flatMap((language) => [
+    { url: homeUrl(language), language },
+    ...LEGAL_PAGES.map((document) => ({ url: pageUrl(language, document), language })),
+    { url: `${homeUrl(language)}ux-web-missing-page/`, language },
+  ]);
+  expect(pages).toHaveLength(18);
+  for (const { url, language } of pages) {
+    await page.goto(url);
+    await hydrated(page);
+    const name = { name: FRAME.language[language], exact: true };
+    await expect(page.getByRole("navigation", name), `${url}: navigations named ${FRAME.language[language]}`).toHaveCount(1);
+    await expect(page.locator("header.site-header").getByRole("navigation", name), `${url}: the header's`).toBeVisible();
+    await expect(page.locator("footer").getByRole("navigation", name), `${url}: no footer navigation`).toHaveCount(0);
+    const group = footerLanguages(page, language);
+    await expect(group, `${url}: the footer's group`).toHaveCount(1);
+    await expect(group.getByRole("link"), `${url}: the footer's languages`).toHaveText(
+      LANGUAGES.map((code) => LANGUAGE_NAMES[code]),
+    );
+    // axe's own check for landmarks of one role sharing a name (a best practice, outside the
+    // WCAG tags the suite's axe runs).
+    const unique = await new AxeBuilder({ page }).withRules(["landmark-unique"]).analyze();
+    expect(
+      unique.violations.map((violation) => violation.nodes.map((node) => node.target.join(" "))),
+      `${url}: landmark-unique`,
+    ).toEqual([]);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP72 forced colours`, () => {
+    test.use({ colorScheme: theme });
+    test(`WEB-1608: with forced colours the current language has a 2 px solid outline in the desktop header and the open phone menu, the others none, and keyboard focus still shows its ring (${theme})`, async ({
+      page,
+      isMobile,
+    }) => {
+      await page.emulateMedia({ forcedColors: "active" });
+      for (const language of LANGUAGES) {
+        const url = homeUrl(language);
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        expect(await page.evaluate(() => matchMedia("(forced-colors: active)").matches), "forced colours").toBe(true);
+        const switcher = await headerLanguages(page, isMobile, language);
+        await expect(switcher, url).toBeVisible();
+        const where = `${url}, ${isMobile ? "phone menu" : "desktop header"}`;
+        const looks = await switcher.getByRole("link").evaluateAll((links) =>
+          links.map((link) => {
+            const style = getComputedStyle(link);
+            return {
+              name: link.textContent?.trim(),
+              current: link.getAttribute("aria-current") === "page",
+              outline: style.outlineStyle,
+              width: style.outlineWidth,
+            };
+          }),
+        );
+        expect(looks.map((look) => look.name), where).toEqual(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
+        for (const look of looks) {
+          if (look.current) expect({ outline: look.outline, width: look.width }, `${where}: ${look.name}`).toEqual({ outline: "solid", width: "2px" });
+          else expect(look.outline, `${where}: ${look.name}`).toBe("none");
+        }
+        expect(looks.filter((look) => look.current).map((look) => look.name), where).toEqual([LANGUAGE_NAMES[language]]);
+        // Reached by the keyboard, the current language shows the focus ring, not the marker.
+        const current = switcher.getByRole("link", { name: LANGUAGE_NAMES[language], exact: true });
+        for (let step = 0; step < 40 && !(await current.evaluate((link) => link === document.activeElement)); step++)
+          await page.keyboard.press("Tab");
+        const ring = await current.evaluate((link) => {
+          const style = getComputedStyle(link);
+          return {
+            focused: link === document.activeElement && link.matches(":focus-visible"),
+            outline: style.outlineStyle,
+            width: parseFloat(style.outlineWidth),
+            offset: parseFloat(style.outlineOffset),
+          };
+        });
+        expect(ring.focused, `${where}: reached by Tab`).toBe(true);
+        expect(ring.outline, `${where}: the focus ring`).not.toBe("none");
+        expect(ring.width, `${where}: the focus ring's width`).toBeGreaterThanOrEqual(2);
+        // The focus ring sits outside the link; the forced-colours marker sits inside (-2 px).
+        expect(ring.offset, `${where}: the focus ring's offset`).toBeGreaterThan(0);
+      }
+    });
+  });
+}
+
+// ---- Run 2026-10-28-site: WP261 (WEB-1508) ----
+// /delete-account/, the deletion address Google Play shows everyone, opens in the visitor's
+// language as / does (WD27): a saved choice first, then the browser's, never the location.
+// Already proved elsewhere: /es/privacy/, /es/delete-account/ and /ca/delete-account/ never
+// redirect (‘WEB-2, WEB-1508: only the bare address and /delete-account/ redirect’); every
+// switch's English link on the Spanish and Catalan delete pages is /delete-account/?lang=en,
+// on /es/privacy/ still /privacy/ (‘WEB-1603, WEB-1508: on /es/ and /ca/ every language
+// switch's English link’); each legal page shows one ‘In force since’ date, company.json's
+// version (WEB-213, ux-web-legal.spec.ts), which docs/LEGAL_RELEASE.md names (WEB-109, ibid.).
+// Vary is checked on the redirects only, as for / since WP34 (2026-10-18-site, plan.md: Next 16
+// overwrites Vary on the page it renders; the 200's `private` keeps shared caches out).
+import { readdirSync } from "node:fs";
+
+const DELETE = "/delete-account/";
+const DELETE_H1: Record<Language, string> = {
+  en: "Delete your TaskFlow account.",
+  es: "Elimina tu cuenta de TaskFlow.",
+  ca: "Suprimeix el teu compte de TaskFlow.",
+};
+// The delete page's own switch on a phone, the pill in its top row (WP65).
+const DOCUMENT_LANGUAGE: Record<Language, string> = {
+  en: "Document language",
+  es: "Idioma del documento",
+  ca: "Idioma del document",
+};
+// WEB-2's cases, sent to /delete-account/, and where each must end.
+const DELETE_CASES: { headers: Record<string, string>; to: string | null }[] = [
+  { headers: { "accept-language": "es-ES,es;q=0.9" }, to: "/es/delete-account/" },
+  { headers: { "accept-language": "ca-ES,ca;q=0.9,es;q=0.8" }, to: "/ca/delete-account/" },
+  { headers: { "accept-language": "en-US,en;q=0.9,es;q=0.8" }, to: null },
+  { headers: {}, to: null },
+  { headers: { "accept-language": "fr-FR" }, to: null },
+  { headers: { cookie: "taskflow-lang=en", "accept-language": "es-ES" }, to: null },
+  { headers: { cookie: "taskflow-lang=ca", "accept-language": "en" }, to: "/ca/delete-account/" },
+];
+
+// One request from a fresh context (no Accept-Language of its own, no cookie carried over).
+async function deleteAnswer(
+  playwright: import("@playwright/test").PlaywrightWorkerArgs["playwright"],
+  baseURL: string | undefined,
+  url: string,
+  headers: Record<string, string>,
+) {
+  const request = await playwright.request.newContext({ baseURL });
+  const response = await request.get(url, { headers, maxRedirects: 0 });
+  const answer = {
+    status: response.status(),
+    location: response.headers()["location"] ?? "",
+    cacheControl: response.headers()["cache-control"] ?? "",
+    vary: (response.headers()["vary"] ?? "").toLowerCase(),
+    nosniff: response.headers()["x-content-type-options"] ?? "",
+    cookies: response
+      .headersArray()
+      .filter(({ name }) => name.toLowerCase() === "set-cookie")
+      .map(({ value }) => value),
+    english: response.status() === 200 && (await response.text()).includes(DELETE_H1.en),
+  };
+  await request.dispose();
+  return answer;
+}
+
+plain("WEB-1508: /delete-account/ follows the remembered choice, then the browser's language, as / does", async ({
+  playwright,
+  baseURL,
+}) => {
+  const origin = new URL(baseURL!).origin;
+  for (const { headers, to } of DELETE_CASES) {
+    const answer = await deleteAnswer(playwright, baseURL, DELETE, headers);
+    const name = `${DELETE} (${label(headers) || "no Accept-Language"}) → ${answer.status}`;
+    if (to) {
+      expect(answer.status, name).toBe(307);
+      expect(answer.location, `${name}: Location`).toBe(`${origin}${to}`);
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("private");
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("no-store");
+      expect.soft(answer.vary, `${name}: Vary names Accept-Language`).toContain("accept-language");
+      expect.soft(answer.vary, `${name}: Vary names Cookie`).toContain("cookie");
+    } else {
+      expect(answer.status, name).toBe(200);
+      expect(answer.english, `${name}: the English delete page`).toBe(true);
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("private");
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("no-cache");
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).not.toContain("no-store");
+      expect.soft(answer.nosniff, `${name}: nosniff`).toBe("nosniff");
+    }
+    expect(answer.cookies.filter((value) => value.startsWith("taskflow-lang=")), `${name}: no cookie set`).toEqual([]);
+  }
+});
+
+plain("WEB-1508: behind the edge worker, /delete-account/'s redirect starts with the origin the worker sent", async ({
+  baseURL,
+}) => {
+  const { request: send } = await import("node:http");
+  const server = new URL(baseURL!);
+  const location = await new Promise<string>((resolve, reject) => {
+    const outgoing = send(
+      {
+        host: server.hostname,
+        port: server.port,
+        path: DELETE,
+        headers: {
+          host: "taskflow-web-example.a.run.app",
+          "x-forwarded-proto": "https",
+          "accept-language": "es-ES",
+        },
+      },
+      (response) => {
+        response.resume();
+        resolve(String(response.headers.location ?? ""));
+      },
+    );
+    outgoing.on("error", reject);
+    outgoing.end();
+  });
+  expect(location).toBe("https://taskflow-web-example.a.run.app/es/delete-account/");
+});
+
+plain("WEB-1508: /delete-account/?lang=en, es or ca is the switch's choice: a 307 to the clean address in that language that sets taskflow-lang for a year; any other lang answers like /delete-account/", async ({
+  playwright,
+  baseURL,
+}) => {
+  const where = (location: string) => new URL(location, baseURL);
+  for (const [lang, to, browser] of [
+    ["es", "/es/delete-account/", "en-US,en;q=0.9"],
+    ["ca", "/ca/delete-account/", "es-ES,es;q=0.9"],
+    ["en", "/delete-account/", "es-ES"],
+  ] as const) {
+    const url = `${DELETE}?lang=${lang}`;
+    const answer = await deleteAnswer(playwright, baseURL, url, { "accept-language": browser });
+    const name = `${url} (Accept-Language ${browser})`;
+    expect(answer.status, name).toBe(307);
+    expect(where(answer.location).pathname, `${name}: Location`).toBe(to);
+    expect(where(answer.location).search, `${name}: the clean address`).toBe("");
+    expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("private");
+    expect.soft(answer.cacheControl, `${name}: Cache-Control`).toContain("no-store");
+    expect.soft(answer.vary, `${name}: Vary names Accept-Language`).toContain("accept-language");
+    expect.soft(answer.vary, `${name}: Vary names Cookie`).toContain("cookie");
+    const cookie = answer.cookies.filter((value) => value.startsWith("taskflow-lang="));
+    expect(cookie, `${name}: one taskflow-lang cookie`).toHaveLength(1);
+    const parts = cookie[0].split(";").map((part) => part.trim().toLowerCase());
+    expect(parts[0], `${name}: the choice`).toBe(`taskflow-lang=${lang}`);
+    expect(parts, `${name}: Path`).toContain("path=/");
+    expect(parts, `${name}: Max-Age`).toContain("max-age=31536000");
+    expect(parts, `${name}: SameSite`).toContain("samesite=lax");
+  }
+  // ?lang=en from a Spanish browser, followed: the cookie it sets keeps the page English.
+  const request = await playwright.request.newContext({ baseURL });
+  const followed = await request.get(`${DELETE}?lang=en`, { headers: { "accept-language": "es-ES" } });
+  expect(new URL(followed.url()).pathname, "?lang=en followed").toBe(DELETE);
+  expect(new URL(followed.url()).search, "?lang=en followed: the clean address").toBe("");
+  expect(followed.status(), "?lang=en followed").toBe(200);
+  expect(await followed.text(), "?lang=en followed: the English page").toContain(DELETE_H1.en);
+  await request.dispose();
+  // Any other value is not a choice: the answer is /delete-account/'s own.
+  for (const headers of [
+    { "accept-language": "en-US,en;q=0.9" },
+    { "accept-language": "es-ES,es;q=0.9" },
+    { cookie: "taskflow-lang=ca", "accept-language": "en" },
+  ] as Record<string, string>[]) {
+    for (const odd of ["xx", "EN", "fr", ""]) {
+      const url = `${DELETE}?lang=${odd}`;
+      const name = `${url} (${label(headers)})`;
+      const plainAnswer = await deleteAnswer(playwright, baseURL, DELETE, headers);
+      const answer = await deleteAnswer(playwright, baseURL, url, headers);
+      expect(answer.status, name).toBe(plainAnswer.status);
+      if (plainAnswer.status === 307)
+        expect(where(answer.location).pathname, `${name}: Location`).toBe(where(plainAnswer.location).pathname);
+      else expect(answer.english, `${name}: the English delete page`).toBe(true);
+      expect(answer.cookies.filter((value) => value.startsWith("taskflow-lang=")), `${name}: no cookie`).toEqual([]);
+      expect.soft(answer.cacheControl, `${name}: Cache-Control`).toBe(plainAnswer.cacheControl);
+    }
+  }
+});
+
+plain("WEB-1508: /delete-account without the slash, from a Spanish browser, ends on /es/delete-account/", async ({
+  playwright,
+  baseURL,
+}) => {
+  const request = await playwright.request.newContext({ baseURL });
+  const response = await request.get("/delete-account", { headers: { "accept-language": "es-ES" } });
+  expect(new URL(response.url()).pathname).toBe("/es/delete-account/");
+  expect(response.status()).toBe(200);
+  expect(await response.text()).toContain(DELETE_H1.es);
+  await request.dispose();
+});
+
+plain("WEB-1508: the other legal pages and the Spanish and Catalan delete pages answer 200 whatever the language or cookie", async ({
+  playwright,
+  baseURL,
+}) => {
+  for (const url of ["/es/delete-account/", "/ca/delete-account/", "/privacy/", "/es/privacy/", "/terms/"])
+    for (const headers of [
+      {},
+      { "accept-language": "es-ES,es;q=0.9" },
+      { "accept-language": "ca-ES,ca;q=0.9" },
+      { "accept-language": "en-US,en;q=0.9" },
+      { cookie: "taskflow-lang=es" },
+      { cookie: "taskflow-lang=ca", "accept-language": "es-ES" },
+      { cookie: "taskflow-lang=en", "accept-language": "ca-ES" },
+    ] as Record<string, string>[]) {
+      const answer = await deleteAnswer(playwright, baseURL, url, headers);
+      expect(answer.status, `${url} (${label(headers) || "no Accept-Language"})`).toBe(200);
+    }
+});
+
+// The delete page's language switch as the acceptance names it: the header's on desktop,
+// the page's own pill on a phone.
+const deleteSwitch = (page: Page, isMobile: boolean, language: Language) =>
+  isMobile
+    ? page.getByRole("main").getByRole("navigation", { name: DOCUMENT_LANGUAGE[language], exact: true })
+    : page.locator("header.site-header").getByRole("navigation", { name: FRAME.language[language], exact: true });
+
+test.describe("WP261 a Spanish browser", () => {
+  test.use({ locale: "es-ES" });
+  test("WEB-1508: in a Spanish browser, /delete-account/ opens /es/delete-account/ in Spanish, with «Español» as the current language", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto(DELETE);
+    await expect(page).toHaveURL((url) => url.pathname === "/es/delete-account/");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(DELETE_H1.es);
+    const switcher = deleteSwitch(page, isMobile, "es");
+    await expect(switcher).toBeVisible();
+    await expect(switcher.getByRole("link", { name: LANGUAGE_NAMES.es, exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(switcher.locator('a[aria-current="page"]')).toHaveCount(1);
+  });
+});
+
+test.describe("WP261 a Spanish browser without JavaScript", () => {
+  test.use({ javaScriptEnabled: false, locale: "es-ES" });
+  test("WEB-1508: without JavaScript, «English» on the Spanish delete page ends on /delete-account/ in English, remembers it for a year, and /delete-account/ then stays English", async ({
+    page,
+    context,
+    isMobile,
+  }) => {
+    await page.goto(DELETE);
+    await expect(page, "before the choice").toHaveURL((url) => url.pathname === "/es/delete-account/");
+    await deleteSwitch(page, isMobile, "es").getByRole("link", { name: LANGUAGE_NAMES.en, exact: true }).click();
+    await expect(page).toHaveURL((url) => url.pathname === DELETE && url.search === "");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(DELETE_H1.en);
+    await expectRemembered(context, "en", "after «English»");
+    await page.goto(DELETE);
+    await expect(page, "/delete-account/ again").toHaveURL((url) => url.pathname === DELETE && url.search === "");
+    await expect(page.getByRole("heading", { level: 1 }), "/delete-account/ again").toHaveText(DELETE_H1.en);
+  });
+});
+
+// The organizer's wording for §8's sentence: the check is about the wording.
+const WP261_SECTION_8: Record<Language, { now: string; gone: string }> = {
+  en: {
+    now: "The bare address and our deletion page’s address open the site in your browser’s language when it’s Spanish or Catalan, and in English otherwise; we never use your location for this.",
+    gone: "The bare address opens the site",
+  },
+  es: {
+    now: "La dirección principal y la de la página de supresión abren la web en el idioma de tu navegador si es español o catalán, y en inglés si no; nunca usamos tu ubicación para ello.",
+    gone: "La dirección principal abre la web",
+  },
+  ca: {
+    now: "L’adreça principal i la de la pàgina de supressió obren el web en l’idioma del navegador si és castellà o català, i en anglès si no; no fem servir mai la teva ubicació per a això.",
+    gone: "L’adreça principal obre el web",
+  },
+};
+
+test("WEB-1508: privacy §8's last paragraph says the bare address and the deletion page's address follow the browser's language, in each language", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const url = pageUrl(language, "privacy");
+    await page.goto(url);
+    const section = page.locator("section", { has: page.getByRole("heading", { level: 2, name: /^8\./ }) });
+    await expect(section, url).toHaveCount(1);
+    const last = ((await section.locator("p").last().textContent()) ?? "").replace(/\s+/g, " ");
+    expect(last, `${url} §8's last paragraph`).toContain(WP261_SECTION_8[language].now);
+    expect(last, `${url} §8's last paragraph`).not.toContain(WP261_SECTION_8[language].gone);
+  }
+});
+
+plain("WEB-1508: src/content/legal/ no longer says only the bare address follows the browser's language", () => {
+  const folder = path.join(ROOT, "src", "content", "legal");
+  const files = readdirSync(folder).filter((file) => /\.(ts|tsx|json)$/.test(file));
+  expect(files.length).toBeGreaterThan(0);
+  for (const file of files) {
+    const text = readFileSync(path.join(folder, file), "utf8");
+    for (const { gone } of Object.values(WP261_SECTION_8)) expect(text, `${file}: “${gone}”`).not.toContain(gone);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP261 axe`, () => {
+    test.use({ colorScheme: theme });
+    for (const [locale, language] of [
+      ["es-ES", "es"],
+      ["ca-ES", "ca"],
+    ] as const) {
+      test.describe(`${locale} browser`, () => {
+        test.use({ locale });
+        test(`WEB-1508: axe reports no violations on /${language}/delete-account/ reached through /delete-account/ (${theme})`, async ({
+          page,
+        }) => {
+          await page.goto(DELETE);
+          await expect(page).toHaveURL((url) => url.pathname === `/${language}/delete-account/`);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          expect(await axeViolations(page)).toEqual([]);
+        });
+      });
+    }
+    test(`WEB-1508: axe reports no violations on the three privacy pages (${theme})`, async ({ page }) => {
+      for (const language of LANGUAGES) {
+        const url = pageUrl(language, "privacy");
+        await page.goto(url);
+        await hydrated(page);
+        await expect(page.locator("html"), url).toHaveAttribute("data-theme", theme);
+        expect(await axeViolations(page), url).toEqual([]);
+      }
+    });
+  });
+}

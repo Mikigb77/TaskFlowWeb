@@ -22,7 +22,8 @@ from playwright.sync_api import Error, sync_playwright  # noqa: E402
 BASE = os.environ.get("UX_WEB_BASE", "http://localhost:3000").rstrip("/")
 OUT = Path(__file__).resolve().parents[4] / "artifacts" / "ux-web" / "webkit"  # the website repo's root
 PAGES = [
-    ("home", "en", "/"),
+    # The bare address picks the language from Accept-Language, so each context says English.
+    ("home", "en", "/"), ("home", "es", "/es/"), ("home", "ca", "/ca/"),
     *[(page, language, f"/{page}/" if language == "en" else f"/{language}/{page}/")
       for page in ("privacy", "terms", "legal", "delete-account") for language in ("en", "es", "ca")],
     ("not-found", "en", "/ux-renders-missing-page/"),
@@ -49,7 +50,7 @@ def main():
             }
             for device, options in devices.items():
                 for theme in ("light", "dark"):
-                    context = browser.new_context(**options, color_scheme=theme)
+                    context = browser.new_context(**options, color_scheme=theme, locale="en-US")
                     for page_name, language, path in PAGES:
                         page = context.new_page()
                         errors = []

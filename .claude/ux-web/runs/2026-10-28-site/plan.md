@@ -2,30 +2,33 @@
 
 **In short.** Nothing the site says about the app is false today, in any of its three languages. The reviewers found 40 things to fix (11 packages) and 13 questions only you can answer. No package waits on an answer.
 
-**To approve:**
-- say "approve";
-- strike any package you don't want ("skip WP67");
-- answer any question ("WD22 yes, WD23 a").
+**Approved on 2026-10-31.** You answered "do everything": every package WP63–WP73, and WD22–WD34 all as recommended (`.claude/ux-web/DECISIONS.md`, 2026-10-31). Nothing waits for you.
 
-A question you answer with a change gets its own package in a second plan (`/ux-web plan 2026-10-28-site`). WD28's sentence can join WP66's legal edit if you answer it before the fix run.
+**Re-planned on 2026-11-01**, to build your answers:
+- WD28's sentence joins WP66's legal edit (WEB-1509).
+- Four new packages build the answers that change the site: WP261 (WD27), WP262 (WD23), WP263 (WD30) and WP264 (WD22).
+- The other eight answers build nothing on the site now: see the table.
+- That makes 45 things to fix, in 15 packages.
 
 ## Your questions (WD22–WD34)
 
-| | Question | Recommended |
-|---|---|---|
-| WD22 | Tell visitors that tasks can repeat? | Yes, as one FAQ item |
-| WD23 | Say what's free in the hero, in the first phone screen? | Yes: WD2's free line under the hero's status |
-| WD24 | Give visitors a way to hear when TaskFlow launches? | Not on the site yet; settle the package ID now |
-| WD25 | Reminders in your own words are listed as Pro, though a dictation gives them free. Change it? | No: keep it, as the app says it |
-| WD26 | Show the app's reminder preview instead of the calendar card's drawing? | Yes, at the pre-launch re-render |
-| WD27 | Should Play's deletion link open in the visitor's language? | Yes, for that one address |
-| WD28 | Say in the privacy policy that reminders aren't shared? | Yes, in the app's own sentence |
-| WD29 | Family sharing against "18 and over": ask the lawyer? | Yes, at the legal sign-off |
-| WD30 | Give back a demo try that fails on our side? | Yes; keep "no task" counted |
-| WD31 | Before launch, let crawlers see the pages' noindex? | Yes, if the site is reachable before launch |
-| WD32 | Say that "your calendar" means TaskFlow's? | Not now; ask in the five-person test |
-| WD33 | Show reminders in the demo's result? | Not now |
-| WD34 | Give the app the demo's "All clear. Take a breath."? | Yes, through /ux |
+All thirteen were answered on 2026-10-31, as recommended.
+
+| | Question | Your answer | Builds |
+|---|---|---|---|
+| WD22 | Tell visitors that tasks can repeat? | Yes, as one FAQ item | WP264 |
+| WD23 | Say what's free in the hero, in the first phone screen? | Yes: WD2's free line under the hero's status | WP262 |
+| WD24 | Give visitors a way to hear when TaskFlow launches? | Not on the site yet; settling the package ID moves up your launch list | Nothing now |
+| WD25 | Reminders in your own words are listed as Pro, though a dictation gives them free. Change it? | No: keep it, as the app says it | Nothing |
+| WD26 | Show the app's reminder preview instead of the calendar card's drawing? | Yes, at the pre-launch re-render | Nothing now |
+| WD27 | Should Play's deletion link open in the visitor's language? | Yes, for that one address | WP261 |
+| WD28 | Say in the privacy policy that reminders aren't shared? | Yes, in the app's own sentence | WP66 |
+| WD29 | Family sharing against "18 and over": ask the lawyer? | Yes, at the legal sign-off | Nothing now |
+| WD30 | Give back a demo try that fails on our side? | Yes; keep "no task" counted | WP263 |
+| WD31 | Before launch, let crawlers see the pages' noindex? | Yes, if the site is reachable before launch | Nothing now: a launch-checklist item |
+| WD32 | Say that "your calendar" means TaskFlow's? | Not now; ask in the five-person test | Nothing |
+| WD33 | Show reminders in the demo's result? | Not now | Nothing |
+| WD34 | Give the app the demo's "All clear. Take a breath."? | Yes, through /ux | The app, not the site |
 
 ### WD22: tell visitors that tasks can repeat? (WEB-1404, review F)
 - **Today:**
@@ -41,6 +44,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - Repeating tasks don't get the "more and more often" reminders, so the two must never be said together.
   - The demo can't show a repeat.
 - **Recommendation:** yes, as this FAQ item only.
+- **Answered 2026-10-31:** yes, as recommended. WP264 adds the item.
 
 ### WD23: say what's free in the first screen? (WEB-1209, reviews H1 and F)
 - **Today:**
@@ -55,6 +59,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - **(b)** Review F's: the status line starts with "Free with an account." It's shorter, but "free" goes without its limit.
   - **(c)** Keep WD2's placement.
 - **Recommendation:** (a). The words are already decided, so there's no new claim, and the limit stays next to "free".
+- **Answered 2026-10-31:** (a). WP262 adds the line.
 
 ### WD24: a way to hear when TaskFlow launches? (WEB-1208, reviews H1 and F)
 - **Today:**
@@ -66,6 +71,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - **(b)** Settle the package ID now (your steps are in `App/docs/PACKAGE_ID.md`), so pre-registration can open. Then the closing button and the hero's status become Google's "Pre-register" badge in Spanish and a text link in Catalan.
   - **(c)** An email list. It means new personal data, a privacy change and a legal check.
 - **Recommendation:** (a) on the site, and move (b) up your launch list: the first upload needs the final ID anyway. Nothing to build now.
+- **Answered 2026-10-31:** (a), and settling the package ID moves up your launch list. Nothing is built.
 
 ### WD25: reminders in your own words, Pro or free? (WEB-1405, review F)
 - **Today:**
@@ -75,11 +81,13 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - **(a)** Keep it as it is.
   - **(b)** Add to the free sentence: "…and the ones you ask for while dictating." (ES «…y los que pides al dictar.», CA «…i els que demanes en dictar.»)
 - **Recommendation:** (a). The site and the app agree, and the free way only works inside the 10 dictations. Revisit if the app's Pro screen changes.
+- **Answered 2026-10-31:** (a). Nothing changes.
 
 ### WD26: the app's reminder preview instead of a drawing? (WEB-1406, review F)
 - **Today:** the calendar card's drawing ("A fresh start", "Some time outside") isn't an app screen, and the card's newest claim, reminders that come more often, is only described.
 - **Proposal:** the app's own Normal preview: the dots up to the day, and «13 avisos · próximo: mañana, 09:00». It would be rendered for each language and theme, like the hero's phone. It replaces the drawing; it isn't a new section.
 - **Recommendation:** yes, at the pre-launch re-render (WD13), not now.
+- **Answered 2026-10-31:** yes, at the pre-launch re-render. Nothing is built in this run.
 
 ### WD27: Play's deletion link in the visitor's language? (WEB-1508, reviews L and G)
 - **Today:**
@@ -91,6 +99,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - **(b)** Give Play `/es/delete-account/`. English and Catalan speakers would then land on Spanish.
   - **(c)** Only WP65.
 - **Recommendation:** (a), as both reviewers recommend. The guide normally lets only the bare address choose a language, but Play takes a single URL, with no field per language.
+- **Answered 2026-10-31:** (a). WP261 builds it, after WP65, WP66 and WP72. Privacy §8 says which address follows the browser's language, so WP261 also adds the deletion page to that one sentence, inside WP66's new version and your one sign-off.
 
 ### WD28: privacy says reminders aren't shared? (WEB-1509, review L)
 - **Today:** every reminder is personal (your decision of 2026-10-23). The app says so in its sharing help; the site doesn't.
@@ -100,10 +109,12 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - CA: «Els recordatoris no es comparteixen: cada persona té els seus.»
 - It's true for everyone in a project, readers too. It doesn't touch the app's open D9, which is about readers choosing their reminders.
 - **Recommendation:** yes. It's a legal edit, so it can join WP66's version change if you answer before the fix run.
+- **Answered 2026-10-31:** yes. It joins WP66, in the same new version. Since then the app lets a reader choose their own reminders (D9); reminders stay personal for everyone, so the sentence holds.
 
 ### WD29: family sharing against "18 and over" (WEB-1510, review L, a legal check)
 - **Today:** the family answer invites "someone" by email, while the terms and the privacy policy say TaskFlow is only for people 18 and over. A parent may invite a 15-year-old.
 - **Recommendation:** ask the lawyer at the legal sign-off (WD3). If 18 and over stays, the family answer should say to invite an adult; we'd write it then.
+- **Answered 2026-10-31:** for the lawyer at the legal sign-off. Nothing changes now.
 
 ### WD30: give back a demo try that fails on our side? (WEB-1315, review H2)
 - **Today:**
@@ -114,6 +125,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - Yes, when the failure is ours: an AI error, a timeout, an unreadable answer. That's a change in the site's own server code.
   - Keep "no task" counted: it protects the demo's budget, and the message says so.
   - WP64 doesn't depend on your answer.
+- **Answered 2026-10-31:** yes. WP263 builds it, after WP64. An answer from the AI that doesn't fit the demo's format (`invalid_draft`) counts as unreadable, so it gives the try back too, as in the app.
 
 ### WD31: before launch, let crawlers see the noindex? (WEB-1610, review G)
 - **Today:**
@@ -123,6 +135,7 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - Whenever the site is reachable before launch, allow crawling and keep the noindex.
   - At launch, switch indexing on as planned.
   - It's a launch-checklist item: nothing is deployed now.
+- **Answered 2026-10-31:** yes, as a launch-checklist item. Nothing is built or deployed now.
 
 ### WD32: say that "your calendar" means TaskFlow's? (WEB-1210, review H1)
 - **Today:**
@@ -132,20 +145,25 @@ A question you answer with a change gets its own package in a second plan (`/ux-
   - Not now.
   - In the five-person test, ask "Where do you expect these tasks to appear?"
   - If anyone says Google Calendar, add one clause to the calendar card: "Your tasks stay in TaskFlow; your phone’s events show beside them."
+- **Answered 2026-10-31:** not now; ask in the five-person test.
 
 ### WD33: show reminders in the demo's result? (WEB-1316, review H2)
 - **Today:** the app keeps a reminder said while dictating, but the demo neither sets nor shows one.
 - **Recommendation:** not now. The demo teaches one thing: say it, and see it on its day. The calendar card and the FAQ already tell about reminders.
+- **Answered 2026-10-31:** not now.
 
 ### WD34: give the app the demo's completion moment? (WEB-1317, review H2, an app question)
 - **Today:** the demo says "All clear. Take a breath." when every task is ticked (WD16, WD17), but ticking off the day's last task in the app shows nothing like it.
 - **Recommendation:**
   - Yes, through /ux: the same line in Calendar when the day's last task is ticked.
   - Until then the demo keeps its line. It describes a feeling, not a feature.
+- **Answered 2026-10-31:** yes, through the app's /ux (the app's DECISIONS.md, 2026-10-31). Nothing changes on the site.
 
 ## Packages, in run order
 
 Nine packages run side by side in the first wave: WP63, WP65–WP68 and WP70–WP73. WP64 runs next, then WP69, because the three demo packages share one file.
+
+The four packages added on 2026-11-01 each run after the packages they build on: WP261, WP262 and WP264 beside WP64 in the second wave, and WP263 beside WP69 in the third.
 
 ### WP63 · H · L · S3: the demo while recording
 - **WEB-1302** (S3) You can't stop a recording without sending it. Close demo now works while recording, and throws the recording away. The line under the microphone adds "or the minute is up". Privacy §8's half is in WP66.
@@ -176,6 +194,7 @@ Nine packages run side by side in the first wave: WP63, WP65–WP68 and WP70–W
 - **WEB-1302** (S3, the legal half) §8 says the demo sends your words only when you tap Done. It now adds "or when a recording reaches its one-minute limit".
 - **WEB-1503** (S1) The English terms say "dictation into tasks" and "AI capture". They now say "optional AI" and "The AI is optional", as the Spanish and Catalan do.
 - **WEB-1506** (S1) English §8 has an extra Cloudflare link with the wrong label. It's removed.
+- **WEB-1509** (S1, your WD28, added 2026-11-01) Privacy §5 never says reminders aren't shared. It now adds the app's own sentence after "They can also show just one person's tasks.": "Reminders aren’t shared: each person has their own."
 
 ### WP67 · H · M · S2: the hero and closing layout (CSS only)
 - **WEB-1201** (S2) The centred hero pushes the button and "You can't download it yet" below a laptop's fold. The hero is now aligned to the top.
@@ -214,6 +233,23 @@ Nine packages run side by side in the first wave: WP63, WP65–WP68 and WP70–W
 - **WEB-1607** (S1) The 404's title reads three languages, English first. It's now in the address's language.
 - **WEB-1609** (S1) Lines end on a lone word: «LLC.» in the footer, "website." on the 404. Those words now stay with the rest of the line.
 
+**Added on 2026-11-01, from your answers:**
+
+### WP261 · L · M · S3: Play's deletion link in the visitor's language (WD27; after WP65, WP66 and WP72)
+- **WEB-1508** (S3) Play's one deletion address always opens in English. `/delete-account/` now does what the bare address does: the language chosen in the switch first, then the browser's language, never the location. English stays at that address.
+  - Privacy §8 says which address follows the browser's language, so its sentence now names the deletion page too. It goes in WP66's new version, for your one sign-off.
+
+### WP262 · H · S · S2: what's free, in the first screen (WD23; after WP67, WP68 and WP70)
+- **WEB-1209** (S2) Nothing about cost shows in the first screen. A line under the hero's status now says, in WD2's words: "Free with an account: 10 dictations a month, and tasks by hand with no limit."
+
+### WP263 · H · M · S2: a demo try that fails on our side is given back (WD30; after WP64)
+- **WEB-1315** (S2) A try that fails on our side is spent. An AI error, a timeout or an answer that can't be read now gives the visitor's try back; a result with no task still counts.
+  - Failures still count toward the network's 12 a day and the monthly budget, so they can't run up the bill.
+  - The one message that said a failed request "used a try" drops those words.
+
+### WP264 · F · S · S2: tasks that repeat (WD22; after WP70)
+- **WEB-1404** (S2) The site never says tasks can repeat. A new FAQ item after "How do I add tasks by voice?" says so, in review F's words: "Can I add something that repeats?"
+
 ## Skipped
 - **WEB-1402** is the same «muy pronto» finding as WEB-1206, found by review F. It's merged into WEB-1206 (WP68).
 
@@ -236,7 +272,11 @@ Nine packages run side by side in the first wave: WP63, WP65–WP68 and WP70–W
 - **The shared AI budget** of 200 a day (WD14). Raise it before launch, or "unlimited, with a limit of 50 a day" won't hold.
 - **A rhythm said to the live demo.** Still open from 2026-10-22: say «Presentar el proyecto en 3 semanas, recuérdamelo cada 3 días». If it makes a second «Recordar…» task, tell the loop.
 - **The legal sign-off** (WD3) of WP66's new version. It replaces the pending 22 October one.
+  - Since the re-plan, it also covers WD28's sentence in privacy §5 and WP261's sentence in §8.
+  - Ask the lawyer about WD29 there: may a family invite someone under 18?
 - **Native Spanish and Catalan reads.** Each package's device checks list the sentences.
+- **The package ID** (WD24) moves up your launch list. Your steps are in the app repo's `App/docs/PACKAGE_ID.md`.
+- **Crawling before launch** (WD31), on your launch checklist: whenever the site is reachable before launch, robots.txt should allow crawling while every page keeps its noindex. At launch, set `SITE_INDEXABLE=true` as planned.
 
 ## For the main session (outside the site)
 - **The app (/ux):**
@@ -252,5 +292,41 @@ Nine packages run side by side in the first wave: WP63, WP65–WP68 and WP70–W
   - `INDEX.md` still says there are no WebKit renders.
   - The demo's states are rendered only in English, at two sizes, with no completion state.
 - **WEB-302's device check:** add a WhatsApp preview of the bare `taskflow.garbar.tech` sent from a Spanish phone.
+- **After WP261,** the WebKit renders named `delete-account.en.*` will show the Spanish page, as the `home.en.*` ones already do, because the owner's Windows WebKit sends a Spanish language.
+- **Package numbers.** The new packages start at WP261, as asked. The site's ledger stops at WP73: the "WP260" in the reviews is the Article 29 Working Party's transparency guidance, not a package. WP74–WP260 are simply unused; nothing needs renumbering.
 
 The full briefs, acceptance checks and device checks are in `plan.json`.
+
+## Round 2 (b1)
+
+Re-plan of 2026-11-01, after batch b1's round 1 (WP63–WP67). Every finding the batch built was read as fixed, and the round check passed. One regression comes back, from WP63; nothing is escalated and nothing waits on you. The full brief is in `plan-b1-r2.json`.
+
+### WP265 · H · S · S2: the listening circle reads as a picture (CSS only)
+- **WEB-1611** (regression R1H-1 of WP63): while recording, the new level circle is a filled green disc with a white microphone, the idle "Tap to talk" button pixel for pixel, in the same place. Someone who tapped it to start taps it again to stop, and nothing happens; Done is about 90 px lower. Fix in `src/styles/voice.css` only: a transparent fill, a 2 px green ring and a green outline microphone, as the app draws its "mic that isn't a button". The halo that follows the voice, the hidden status and the focus order stay as they are. Of the reviewer's two options, the ring, because it matches the app and a mint fill would merge into the mint halo.
+
+### Not re-planned (infrastructure, not the site)
+- **The workflow's combined suite-and-renders line** ran the renders in the source checkout instead of the build mirror: they failed, and the line's `rm -rf` deleted the checkout's `artifacts/ux-web`. The tester re-ran the renders on their own (266 passed). The final check will hit the same thing unless the workflow wraps the whole line in `( … )` or changes directory inside the renders subshell.
+- **Next.js's first build stops with a security advisory** (`SecurityFatalError`, recommending `next upgrade --agent=security`); a retry builds. Upgrading Next.js changes dependencies, so it's your call: nothing was upgraded.
+
+### For the main session
+- `waves.py`'s drop calls `wsl`, which doesn't exist in this Linux container, and crashes after removing the worktree. Remove each mirror with `python3 .claude/skills/ux-web/scripts/webrun.py --remove <name>`. The WP65, WP66 and WP67 worktrees and mirrors may still be there: check them before the batch commit.
+- All 20 modified files are this run's b1 work, not another session's.
+
+## Round 2 (b2)
+
+Re-plan of 2026-11-02, after batch b2's round 1 (WP68–WP73, WP261–WP264). Every finding the batch built was read as fixed, and the round check passed. Three small regressions come back, from WP69 and WP73; nothing is escalated and nothing waits on you. The full briefs are in `plan-b2-r2.json`. The two packages share no file and can run side by side.
+
+### WP266 · H · S · S2: demo result, a task's heading is its title alone; a typed last try keeps its text
+- **WEB-1612** (regression R1H-1 of WP69): the new checkbox name sits inside each task's heading, so a screen reader reads the heading as “Complete Doctor appointment Doctor appointment”. The checkbox and its circle move out of the `h4`, into the same row before it; the heading holds a label for the checkbox, so tapping the title still ticks it and the heading reads the title alone.
+- **WEB-1613** (regression R1H-2 of WP69): after a typed last try, the tries-used line replaces ‘Change the text’ and the typed sentence can't be seen. The transcript also shows when the tries are used. For typed words its summary is the app's ‘Original text’ / «Texto original» / «Text original», not ‘See what I said’, so WEB-1309 doesn't come back. That's the organizer's choice over the reviewer's literal fix, following the app (`voice_task_screen.dart:4813`).
+
+### WP267 · G · S · S1: the footer's site links as large as the legal row
+- **WEB-1614** (regression R1G-1 of WP73): the legal row went to 1rem, so “Try it with your voice” and the other site links (0.875rem) now look smaller than the legal links. `.footer-top nav a` goes to 1rem, weight 650 kept. One CSS line.
+
+### Not re-planned (infrastructure, not the site)
+- **The round's combined suite-and-renders line** ran Playwright against the source checkout's config (`Cannot find package '@playwright/test'`). Run on their own through the runner, the renders passed (269 passed, 117 skipped). The final check will hit the same thing unless the renders run as their own command inside the mirror.
+
+### For the main session
+- WP68's implementer repaired `tests/ux-web-global.spec.ts`: the WP71/WP72 merge had dropped the three closing lines of WP71's acceptance block (TS1005), which broke `npm run check` and the build.
+- `waves.py`'s drop and merge still call `wsl` and crash in this Linux container. The WP261–WP264 and WP68–WP73 mirrors under `~/twb` are still there: remove them with `python3 .claude/skills/ux-web/scripts/webrun.py --remove <name>` before the batch commit.
+- All 36 modified files are this run's b1 and b2 work, not another session's. WebKit isn't installed here, so every result is Chromium only.

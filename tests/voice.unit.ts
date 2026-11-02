@@ -12,6 +12,7 @@ import {
   RESERVATION_MICROS,
   resultSchema,
   validateWav,
+  withoutTry,
 } from "../src/lib/voice/policy";
 import {
   checkRequest,
@@ -288,4 +289,17 @@ test("edge blocks burst, oversized and cross-origin uploads without contacting o
     ).status,
     429,
   );
+});
+
+// ---- Run 2026-10-28-site: WP263 (WEB-1315) ----
+test("WEB-1315: withoutTry removes exactly one entry equal to the time, keeps the others in order, and is unchanged when the time isn't there", () => {
+  const attempts = [500, 100, 300, 100, 200];
+  assert.deepEqual(withoutTry(attempts, 100), [500, 300, 100, 200]);
+  assert.deepEqual(withoutTry(attempts, 200), [500, 100, 300, 100]);
+  assert.deepEqual(withoutTry(attempts, 500), [100, 300, 100, 200]);
+  assert.deepEqual(attempts, [500, 100, 300, 100, 200], "the input list is not changed");
+  assert.deepEqual(withoutTry(attempts, 400), attempts);
+  assert.deepEqual(withoutTry(attempts, undefined), attempts, "no try recorded (a developer window)");
+  assert.deepEqual(withoutTry([], 100), []);
+  assert.deepEqual(withoutTry([100], 100), []);
 });

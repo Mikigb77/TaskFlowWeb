@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Snapshot 2026-10-22 (after run 2026-10-22-changes) (English lines in `src/content/site/en.ts` / `src/content/legal/en.ts`; ES/CA mirror them). Re-grep before citing.
+Snapshot 2026-11-02 (after run 2026-10-28-site b2; FAQ now 9 items, questions at en.ts 88/93/100/105/110/115/120/125/130) (English lines in `src/content/site/en.ts` / `src/content/legal/en.ts`; ES/CA mirror them). Re-grep before citing.
 
 | Feature claimed | Site (en) | Source of truth |
 |---|---|---|
@@ -17,9 +17,15 @@ Snapshot 2026-10-22 (after run 2026-10-22-changes) (English lines in `src/conten
 | Phone calendars shown beside tasks, stay on the phone | en.ts ~61; privacy §9 permissions | App device-calendar bridge |
 | Notes tab: Add a note, write or dictate, links/checklist | FAQ ~117-119 | ARB `notes`, `addNote`, `notesEmptyHelp`, `noteTitleHint` |
 | Files on tasks, backed up, 6 MB each | en.ts ~76 | free-tier plan / backend limits |
+| Repeating tasks: say "every Monday"/"every day at 9", or More details › Repeat; "TaskFlow can remind you" (no escalating plan) | FAQ item 5 en.ts:110-114 (es 110-114, ca 116-120) | `../TaskFlow/Backend/core/ai.py:82-85`, `app_en.arb:266,286` (Repeat, More details), `REMINDER_PLANS.md:23` |
+| Hero free line: "Free with an account: 10 dictations a month, and tasks by hand with no limit." | en.ts:53 `hero.free` | free-tier-plan.md (same as FAQ free) |
+| Notes example "like a gift idea" | FAQ notes en.ts ~127 | `app_en.arb:90` `notesEmptyHelp` |
+| Demo task completion: "Complete {title}"; Today/Tomorrow; "Original text"; no-tasks copy | `voice.completeTask`, `today`/`tomorrow`, `originalText`, `noTasks` | `app_en.arb:2028` completeNamedTask, `:19` reviewOriginalText, `:1763` captureNoTasks |
+| Failed demo request doesn't use a try; empty result does | `voice.errors.*`, `noTasks` | `src/lib/voice/store.ts` admit/finish, `policy.ts:59-67` `withoutTry` |
+| `/delete-account/` opens in visitor's language | privacy §8 legal en.ts:142 | `src/proxy.ts`, WD27 |
 | Offline use | features offline card ~78, FAQ ~107 | IMPLEMENTATION_STATUS |
 | Sharing with family | FAQ ~112 | sharing docs, ARBs |
-| Free: 10 dictations/month; form unlimited after; "Reminders are free too, even the ones that come more and more often…" (WD21); Pro: unlimited dictation + files, 50/day safety limit, then separate sentence "It also turns sentences you type into tasks, and lets you ask for reminders in your own words."; monthly, price not set (price sentence last) | FAQ "Is TaskFlow free?" en.ts:94, es.ts:94, ca.ts:100 | free-tier-plan.md, REVENUECAT_SETUP.md, `REMINDER_PLANS.md:13, 90-105` (own words Pro only, 402), `reminder_plan_sheet.dart:454-461`, `app_en.arb` `billingReasonReminderPlans` |
+| Free (FAQ item 2 is now two paragraphs, Free then Pro, en.ts:94-97): 10 dictations/month; form unlimited after; "Reminders are free too, even the ones that come more and more often…" (WD21); Pro: unlimited dictation + files, 50/day safety limit, then separate sentence "It also turns sentences you type into tasks, and lets you ask for reminders in your own words."; monthly, price not set (price sentence last) | FAQ "Is TaskFlow free?" en.ts:94, es.ts:94, ca.ts:100 | free-tier-plan.md, REVENUECAT_SETUP.md, `REMINDER_PLANS.md:13, 90-105` (own words Pro only, 402), `reminder_plan_sheet.dart:454-461`, `app_en.arb` `billingReasonReminderPlans` |
 | Live demo: 3 tries; recording not kept; quota records only | demo badge; privacy §8 #website | `src/lib/voice/policy.ts` |
 | Google sign-in keeps first name only, no photo (NOT "no surname": falls back to full `name`) | privacy §2 #data | `../TaskFlow/Backend/core/google_auth.py:42-45` |
 | 6-digit email code, 30 min | privacy §2 | `../TaskFlow/Backend/docs/EMAIL_VERIFICATION.md:3` |
@@ -28,16 +34,13 @@ Snapshot 2026-10-22 (after run 2026-10-22-changes) (English lines in `src/conten
 | Demo privacy line: "What you say or type goes to Google only when you tap Done…recording not kept…text deleted after 24 hours" | site en.ts:148 `voice.privacy` | privacy §8, FAQ ("sent to Google"), `src/lib/voice/policy.ts` |
 | Usage limits (not "allowances") collected/applied | privacy §2 #data, terms §2/§3/§6 | free-tier-plan.md |
 | Privacy: voice text sent "to add, find or change tasks"; returns "suggested tasks and changes" | privacy summary 02, §2 ~33, §4 ~55-56 | same as voice-commands row |
-| Legal effective date 2026-10-22 (pending owner WD3 sign-off) | `company.json:10` version, `docs/LEGAL_RELEASE.md:3` | ux-web DECISIONS WD3 |
+| Legal effective date 2026-11-01 (pending owner WD3 sign-off) | `company.json:10` version, `docs/LEGAL_RELEASE.md:3` | ux-web DECISIONS WD3 |
 | Account deletion; RevenueCat record deleted best-effort; backups expire on their own | privacy §7, delete-account #scope/#timing | `../TaskFlow/Backend/docs/ACCOUNT_DELETION.md:32` |
 | Resend sends automatic email | privacy §5 | CLAUDE.md Email |
 | Language cookie up to 1 year, never location | privacy §8 | `LanguageSwitch.tsx:17`, `src/proxy.ts:4-10` |
 | No Apple/iOS anywhere in legal | — | removed (WEB-210); re-flag any "Apple" |
 | Empty-dictation error = app's `captureEmptyInput` | demo `errors.empty` | app_en.arb ~1530 |
 
-Still-leftover wording (unflagged, re-grepped 2026-10-22):
-- terms §3 (legal en.ts ~221) "optional dictation that turns what you say into tasks": incomplete now that voice finds/changes tasks; next legal edit (moves version, WD3).
-- terms §5 (legal en.ts ~239) "AI capture is optional": jargon.
-- demo hand-over (en.ts ~191) and status (~52) "Coming soon to Google Play" vs header `comingSoon` (~23) and closing title (~129) "Coming soon to Android".
+Leftover wording: terms §3 "optional dictation…" and §5 "AI capture is optional" no longer found (re-grepped 2026-11-02). Availability still split by design: hero/status/FAQ/demo hand-over say "Google Play", header/menu/closing say "Android".
 
 Related: [[site-map]].

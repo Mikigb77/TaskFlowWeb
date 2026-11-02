@@ -122,12 +122,12 @@ export default function LegalPage({
       lang={language}
     >
       <div className="legal-utility">
-        <a href={homePath(language)} className="inline-link">
-          <Icon name="back" size={16} /> {t.back}
-        </a>
         {document !== "delete-account" && (
-          <LanguageSwitch className="legal-languages" label={t.language} />
+          <a href={homePath(language)} className="inline-link">
+            <Icon name="back" size={16} /> {t.back}
+          </a>
         )}
+        <LanguageSwitch className="legal-languages" label={t.language} />
       </div>
       <header className="legal-hero">
         <h1>{content.title}</h1>
@@ -164,11 +164,6 @@ export default function LegalPage({
             lead={t.requestEmail}
           />
         </section>
-      )}
-      {document === "delete-account" && (
-        <div className="legal-utility legal-utility--languages">
-          <LanguageSwitch className="legal-languages" label={t.language} />
-        </div>
       )}
       <ul className="legal-summary" aria-label={t.summary}>
         {content.summary.map((line, index) => (

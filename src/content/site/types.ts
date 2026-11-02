@@ -55,6 +55,8 @@ export type SiteCopy = {
     primary: string;
     secondary: string;
     status: string;
+    // WD2's free half under the status line (WD23): the same words as the first sentence of `closing.plans`.
+    free: string;
     voiceQuote: string;
     imageAlt: string;
   };
@@ -73,7 +75,8 @@ export type SiteCopy = {
   };
   faq: {
     title: string;
-    items: { question: string; answer: string }[];
+    // An answer is one paragraph, or several, each its own <p>.
+    items: { question: string; answer: string | string[] }[];
   };
   closing: {
     title: string;
@@ -126,7 +129,9 @@ export type SiteCopy = {
     listening: string;
     // Spoken once each: when listening starts, at 50 s (also shown), and when sent.
     listeningStatus: string;
-    tenSecondsLeft: string;
+    // From 50 s, the seconds still to go, shown each second and spoken once at 10; `{n}` is
+    // the count (the app's captureTimeLeft).
+    secondsLeft: { one: string; other: string };
     understanding: string;
     // The links between talking and typing (the app's captureTypeInstead, and back).
     typeInstead: string;
@@ -140,6 +145,8 @@ export type SiteCopy = {
     textPro: string;
     // Microphone errors, by the error's name; each is followed by the text box.
     micBlocked: string;
+    // NotAllowedError after a dismissed prompt: the browser asks again on the next tap.
+    micDismissed: string;
     micMissing: string;
     micFailed: string;
     micUnsupported: string;
@@ -147,6 +154,9 @@ export type SiteCopy = {
     thingsToAdd: { one: string; other: string };
     // A task's date line without a date (the app's noDate).
     noDate: string;
+    // A task's date line on the visitor's today or tomorrow (the app's today and tomorrow).
+    today: string;
+    tomorrow: string;
     // A question from the AI; `{question}` is its text (the app's reviewResolve).
     checkDetail: string;
     // Local demo feedback when every generated task is checked.
@@ -159,7 +169,11 @@ export type SiteCopy = {
     changeText: string;
     // The transcript's summary (the app's reviewOriginal).
     seeWhatISaid: string;
-    // A result with no tasks (the app's captureNoTasks).
+    // A typed result's transcript summary (the app's reviewOriginalText).
+    originalText: string;
+    // A task's completion circle's name; `{title}` is the task's title (the app's completeNamedTask).
+    completeTask: string;
+    // A result with no tasks: the app's captureNoTasks as of 2026-10-20, then the demo's own clause.
     noTasks: string;
     // Every try used. `{weekday}` and `{time}` come from resetAt, in the page's language:
     // `today` when it falls on the visitor's date, `AtOne` when the hour shown is 1.

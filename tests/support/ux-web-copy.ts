@@ -22,14 +22,19 @@ export const HERO = {
   } as Copy,
   calendarWord: { en: "calendar", es: "calendario", ca: "calendari" } as Copy,
   description: {
-    en: "Tap one button and say what you need to do, even several things at once. TaskFlow puts each one on its day and can remind you before it. An app for Android™ phones.",
-    es: "Toca un botón y di lo que tienes que hacer, aunque sean varias cosas a la vez. TaskFlow pone cada una en su día y puede avisarte antes. Una app para móviles Android™.",
-    ca: "Toca un botó i digues el que has de fer, encara que siguin diverses coses alhora. TaskFlow posa cada una el seu dia i et pot avisar abans. Una aplicació per a mòbils Android™.",
+    en: "An app for Android™ phones: tap one button and say what you need to do, even several things at once. TaskFlow puts each one on its day and can remind you beforehand.",
+    es: "Una app para móviles Android™: toca un botón y di lo que tienes que hacer, aunque sean varias cosas a la vez. TaskFlow pone cada una en su día y puede avisarte antes.",
+    ca: "Una aplicació per a mòbils Android™: toca un botó i digues el que has de fer, encara que siguin diverses coses alhora. TaskFlow posa cadascuna al seu dia i et pot avisar abans.",
   } as Copy,
   status: {
     en: "Coming soon to Google Play. You can’t download it yet.",
-    es: "Muy pronto en Google Play. Todavía no se puede descargar.",
-    ca: "Molt aviat a Google Play. Encara no es pot descarregar.",
+    es: "Próximamente en Google Play. Todavía no se puede descargar.",
+    ca: "Properament a Google Play. Encara no es pot descarregar.",
+  } as Copy,
+  free: {
+    en: "Free with an account: 10 dictations a month, and tasks by hand with no limit.",
+    es: "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.",
+    ca: "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.",
   } as Copy,
   altWord: { en: "dentist", es: "dentista", ca: "dentista" } as Copy,
 };
@@ -93,8 +98,8 @@ export const FEATURES = {
 export const CLOSING = {
   title: {
     en: "Coming soon to Android.",
-    es: "Muy pronto en Android.",
-    ca: "Molt aviat a Android.",
+    es: "Próximamente en Android.",
+    ca: "Properament a Android.",
   } as Copy,
   body: {
     en: "TaskFlow isn’t on Google Play yet. Until then, you can try it with your voice on this page.",
@@ -112,7 +117,8 @@ export const CLOSING = {
 // The FAQ's first three items (WP18). The pricing answer carries WD14's safety-limit
 // clause (decided 2026-10-19, after the plan) right after "unlimited dictation and file space".
 // WP60 adds the free reminders and Pro's reminders in your own words, and ends the Pro sentence after that clause.
-export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
+// WP70 (run 2026-10-28-site) splits the pricing answer in two paragraphs, Free then Pro.
+export const FAQ_FIRST: { question: Copy; answer: Record<Language, string | string[]> }[] = [
   {
     question: {
       en: "Can I download TaskFlow yet?",
@@ -132,9 +138,18 @@ export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
       ca: "TaskFlow és gratuït?",
     },
     answer: {
-      en: "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer. TaskFlow Pro, a monthly subscription that renews until you cancel it in Google Play, gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
-      es: "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día. TaskFlow Pro, una suscripción mensual que se renueva hasta que la cancelas en Google Play, te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
-      ca: "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia. TaskFlow Pro, una subscripció mensual que es renova fins que la cancel·les a Google Play, et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+      en: [
+        "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
+        "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+      ],
+      es: [
+        "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
+        "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+      ],
+      ca: [
+        "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
+        "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+      ],
     },
   },
   {
@@ -151,7 +166,8 @@ export const FAQ_FIRST: { question: Copy; answer: Copy }[] = [
   },
 ];
 
-// WP19: the FAQ's heading, and its last five items in the order the plan gives.
+// WP19: the FAQ's heading, and its last six items in the order the plan gives
+// (WP264, WD22: the repeat item right after the voice item).
 export const FAQ_TITLE: Copy = { en: "Questions", es: "Preguntas", ca: "Preguntes" };
 export const FAQ_REST: { question: Copy; answer: Copy }[] = [
   {
@@ -164,6 +180,18 @@ export const FAQ_REST: { question: Copy; answer: Copy }[] = [
       en: "Tap Add a task and say what you need to do, in your own words; several things at once is fine. Tap Done, and TaskFlow shows one task for each, with its day and time. Add them all with one tap. You can also ask what you have this week, or move, change, complete or delete tasks by voice, even all of yesterday’s at once. TaskFlow shows the change first, and you can undo it. It needs the internet: your words are sent to Google.",
       es: "Toca Añadir tarea y di lo que tienes que hacer, con tus palabras; puedes decir varias cosas a la vez. Toca Listo y TaskFlow te muestra una tarea por cada cosa, con su día y su hora. Añádelas todas con un toque. También puedes preguntar qué tienes esta semana, o mover, cambiar, completar o eliminar tareas hablando, incluso todas las de ayer a la vez. TaskFlow te enseña el cambio antes y puedes deshacerlo. Necesita internet: tus palabras se envían a Google.",
       ca: "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
+    },
+  },
+  {
+    question: {
+      en: "Can I add something that repeats?",
+      es: "¿Puedo añadir algo que se repite?",
+      ca: "Puc afegir una cosa que es repeteix?",
+    },
+    answer: {
+      en: "Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.",
+      es: "Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.",
+      ca: "Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.",
     },
   },
   {
@@ -197,9 +225,9 @@ export const FAQ_REST: { question: Copy; answer: Copy }[] = [
       ca: "Puc desar notes a més de tasques?",
     },
     answer: {
-      en: "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a Wi-Fi password. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
-      es: "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como la clave del wifi. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
-      ca: "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com la contrasenya del wifi. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
+      en: "Yes. The Notes tab keeps what you want to remember that isn’t a task, like a gift idea. Tap Add a note, then write or dictate it; add links or a checklist if you like.",
+      es: "Sí. La pestaña Notas guarda lo que quieres recordar y no es una tarea, como una idea para un regalo. Toca Añadir nota y escríbela o díctala; si quieres, añade enlaces o una lista de pasos.",
+      ca: "Sí. La pestanya Notes desa el que vols recordar i no és una tasca, com una idea per a un regal. Toca Afegeix una nota i escriu-la o dicta-la; si vols, afegeix-hi enllaços o una llista de passos.",
     },
   },
   {
@@ -223,8 +251,8 @@ export const FRAME = {
   questions: FAQ_TITLE,
   comingSoon: {
     en: "Coming soon to Android",
-    es: "Muy pronto en Android",
-    ca: "Molt aviat a Android",
+    es: "Próximamente en Android",
+    ca: "Properament a Android",
   } as Copy,
   menu: { en: "Menu", es: "Menú", ca: "Menú" } as Copy,
   language: { en: "Language", es: "Idioma", ca: "Idioma" } as Copy,
@@ -260,8 +288,8 @@ export const META = {
   } as Copy,
   description: {
     en: "Note down what you need to do, and TaskFlow puts it on your calendar. Say several things at once. For Android phones, coming soon to Google Play.",
-    es: "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, muy pronto en Google Play.",
-    ca: "Apunta el que has de fer i TaskFlow ho posa al teu calendari. Digues diverses coses alhora. Per a mòbils Android, molt aviat a Google Play.",
+    es: "Apunta lo que tienes que hacer y TaskFlow lo pone en tu calendario. Di varias cosas a la vez. Para móviles Android, próximamente en Google Play.",
+    ca: "Apunta el que has de fer i TaskFlow ho posa al teu calendari. Digues diverses coses alhora. Per a mòbils Android, properament a Google Play.",
   } as Copy,
   locale: { en: "en_US", es: "es_ES", ca: "ca_ES" } as Copy,
   imageAlt: {
@@ -273,7 +301,7 @@ export const META = {
 
 // WP21: the 404, one block per language.
 export const NOT_FOUND = {
-  title: "Page not found · Página no encontrada · No hem trobat la pàgina — TaskFlow",
+  title: "Page not found · Página no encontrada · No hem trobat aquesta pàgina — TaskFlow",
   heading: {
     en: "Page not found",
     es: "Página no encontrada",
@@ -308,7 +336,7 @@ export const FOOTER = {
   } as Copy,
   legal: { en: "Legal and privacy", es: "Legal y privacidad", ca: "Legal i privacitat" } as Copy,
   links: [
-    { page: "privacy", name: { en: "Privacy", es: "Privacidad", ca: "Privacitat" } as Copy },
+    { page: "privacy", name: { en: "Privacy Policy", es: "Política de privacidad", ca: "Política de privacitat" } as Copy },
     {
       page: "terms",
       name: {
@@ -326,9 +354,9 @@ export const FOOTER = {
   support: { en: "Email support", es: "Escribir a soporte", ca: "Escriu al suport" } as Copy,
   operator: { en: "A product by ", es: "Un producto de ", ca: "Un producte de " } as Copy,
   trademark: {
-    en: "Android is a trademark of Google LLC.",
-    es: "Android es una marca comercial de Google LLC.",
-    ca: "Android és una marca comercial de Google LLC.",
+    en: "Android is a trademark of Google\u00a0LLC.",
+    es: "Android es una marca comercial de Google\u00a0LLC.",
+    ca: "Android és una marca comercial de Google\u00a0LLC.",
   } as Copy,
   backToTop: { en: "Back to top", es: "Volver arriba", ca: "Torna a dalt" } as Copy,
 };

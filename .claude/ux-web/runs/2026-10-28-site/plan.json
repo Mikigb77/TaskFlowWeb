@@ -14,7 +14,8 @@
   "Tests: the implementer updates only existing tests its change breaks; each brief names the ones it expects. web-ux-tester writes the acceptance tests in a block headed `Run 2026-10-28-site: WP## (WEB-…)` at the end of the spec file the package lists (hero: `tests/ux-web-home.spec.ts`; demo: `tests/ux-web-voice.spec.ts`, completion circles: `tests/ux-web-completion.spec.ts`; FAQ: `tests/ux-web-features.spec.ts`; legal pages: `tests/ux-web-legal.spec.ts`; header, menu and language: `tests/ux-web-global.spec.ts`; footer and 404: `tests/ux-web-frame.spec.ts`), on the desktop (1440 × 1000) and mobile (390 × 664) projects, in light and dark where a check says so, with axe on every state the package changes. Copy checks assert the brief's exact copy. Where an existing test already proves a check, name it instead of writing a second one. Demo states are found by structure (`data-stage`, classes), as `tests/support/ux-voice.ts` does; add the Spanish, Catalan, 320 px or 200%-text demo states a check names, and the renders a check names (sizes such as 1366 × 640, 844 × 390 or 320 × 256, an FAQ item open, forced colours).",
   "Checks run in WSL on its own disk through `.claude/ux-web/webrun.py`, with the command the fix workflow's prompt gives you (your copy, its name and its port). From the website root: `npm run check`; `npm run build` before any Playwright run (`SITE_URL=https://taskflow.garbar.tech` for the round check); the specs your brief names; the renders of the pages you changed (`UX_RENDERS=1 npx playwright test tests/ux-renders.spec.ts --workers=6 --grep-invert \"perf \" -g \"<page> <language>\"`, or the demo state's name). WP66 also runs `npm run legal:check`. Git runs on Windows, read only. Never call the real voice API: the demo's API is stubbed in tests. Never stop, restart or reset WSL.",
   "Today is 2026-10-29. Only WP66 edits legal text, and it moves the legal version once, to the date it runs. Nothing else here depends on a date; the demo's Today and Tomorrow (WP69) follow the visitor's own clock.",
-  "Evidence: renders and the audit in `artifacts/ux-web/` (production build with SITE_URL, 2026-10-28 and 29; `INDEX.md` maps the files; `AUDIT.md` §13 holds the demo states, `audit.json` the measured positions) and WebKit renders in `artifacts/ux-web/webkit/`, whose `home.en.*` files show the Spanish home (Windows WebKit sends a Spanish Accept-Language). The reviews are `.claude/ux-web/runs/2026-10-28-site/review-{H1,H2,F,L,G}.md`: read your findings there when a brief's evidence isn't enough."
+  "Evidence: renders and the audit in `artifacts/ux-web/` (production build with SITE_URL, 2026-10-28 and 29; `INDEX.md` maps the files; `AUDIT.md` §13 holds the demo states, `audit.json` the measured positions) and WebKit renders in `artifacts/ux-web/webkit/`, whose `home.en.*` files show the Spanish home (Windows WebKit sends a Spanish Accept-Language). The reviews are `.claude/ux-web/runs/2026-10-28-site/review-{H1,H2,F,L,G}.md`: read your findings there when a brief's evidence isn't enough.",
+  "Re-plan of 2026-11-01, for WD28's sentence in WP66 and for WP261–WP264; where it differs from the items above, this one wins. The owner answered WD22–WD34 on 2026-10-31, all as recommended (`.claude/ux-web/DECISIONS.md`). WD28 joins WP66; WP261 (WD27), WP262 (WD23), WP263 (WD30) and WP264 (WD22) build the other answers that change the site; the rest build nothing now. Besides WP66, only WP261 edits legal text: one sentence of privacy §8, inside WP66's new version (it moves the version only if it runs on a later day). The app's D9 is decided since 2026-10-31 (a reader may choose their own reminders); reminders stay personal for everyone, and the site still says nothing about who chooses them. Today is 2026-11-01. In WP261–WP264, app-repo paths start with `../TaskFlow/`, and line numbers were read on 2026-11-01 from TaskFlowWeb at ce0b2f9 (clean) and the app repo at d41f10d, both on branch `ux-in-progress`, before any package of this run: search for the text a line points at."
  ],
  "packages": [
   {
@@ -164,26 +165,28 @@
     "WEB-1507",
     "WEB-1302",
     "WEB-1503",
-    "WEB-1506"
+    "WEB-1506",
+    "WEB-1509"
    ],
    "files": [
-    "src/content/legal/en.ts:10 (privacy summary 02), :30 (§2 Organisation), :31 (§2 Files), :55 (§4), :139 (§8, the demo), :144-149 (§8's links), :221 (terms §3), :239 (terms §5)",
-    "src/content/legal/es.ts:10, :30, :31, :55, :139",
-    "src/content/legal/ca.ts:10, :30, :31, :55, :139",
+    "src/content/legal/en.ts:10 (privacy summary 02), :30 (§2 Organisation), :31 (§2 Files), :55 (§4), :75 (§5's sharing paragraph, WD28), :139 (§8, the demo), :144-149 (§8's links), :221 (terms §3), :239 (terms §5)",
+    "src/content/legal/es.ts:10, :30, :31, :55, :75, :139",
+    "src/content/legal/ca.ts:10, :30, :31, :55, :75, :139",
     "src/content/legal/company.json:10 (`version`)",
     "docs/LEGAL_RELEASE.md:3",
     "tests/legal.spec.ts:35",
     "tests/ux-web-legal.spec.ts:35-39 (§8's demo paragraph), :675-681 (the version), the tests that pin summary 02, §2 and §4 (WEB-1002 at :1487-1579, WEB-1101 at :1624-1675), and the acceptance block (web-ux-tester)"
    ],
    "brief": [
-    "A legal edit, so the owner signs it off (WD3). Five changes at the level of single sentences, in EN, ES and CA (two of them in English only), then one version move. No other legal sentence changes.",
+    "A legal edit, so the owner signs it off (WD3). Six changes at the level of single sentences, in EN, ES and CA (two of them in English only), then one version move. No other legal sentence changes. The sixth, WD28's sentence in privacy §5 (WEB-1509), joined this package in the re-plan of 2026-11-01, after the owner's answer.",
     "WEB-1502 (S2). The privacy page says your words go to Google's AI only ‘to add, find or change tasks’, but with Pro, reminders asked for in your own words go there too (`POST /api/ai/reminder-plan/`, `Backend/docs/REMINDER_PLANS.md:13, 100-115`; `Backend/core/ai.py:435-439`) and are kept on the server with the plan (`said`, up to 200 characters, `REMINDER_PLANS.md:57`; `Backend/core/models.py:242-258`). A reminder change ‘isn't a change to the task’ (`REMINDER_PLANS.md:38`), and the app's reminder sheet says nothing about Google, so this page is the only disclosure. The home's FAQ already sells the feature (WD21): this sharpens existing sentences with the FAQ's own phrase, and adds no feature claim. (1) Summary 02 (`en.ts:10`, `es.ts:10`, `ca.ts:10`) becomes exactly: EN `Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.` / ES `Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, o para pedir recordatorios con tus palabras.` / CA `Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, o per demanar recordatoris amb les teves paraules.` (2) In §4's first paragraph (`:55`), replace one sentence: EN `With Pro, words you type for the AI are sent the same way.` becomes `With Pro, words you type for the AI, and reminders you ask for in your own words, are sent the same way.`; ES `Con Pro, lo que escribes para la IA se envía igual.` becomes `Con Pro, lo que escribes para la IA y los recordatorios que pides con tus palabras se envían igual.`; CA `Amb Pro, el que escrius per a la IA s’envia igual.` becomes `Amb Pro, el que escrius per a la IA i els recordatoris que demanes amb les teves paraules s’envien igual.` The rest of §4 stays, WEB-1101's last sentence included. (3) In §2's Organisation list (`:30`), add reminders after dates: EN `tasks, notes, dates, reminders, priorities, …` / ES `tareas, notas, fechas, recordatorios, prioridades, …` / CA `tasques, notes, dates, recordatoris, prioritats, …`. Nothing else in that paragraph changes.",
     "WEB-1507 (S1). §2's Files paragraph says files upload ‘when you use cloud backup/sharing’, but the app uploads every attached file to the account when the task is saved (‘New files upload to your account after saving’, `App/lib/l10n/app_en.arb:1233`; `App/lib/services/attachment_store.dart:82, 98`), with no backup setting to turn on. Replace only that sentence (`:31`): EN `Files are uploaded when you use cloud backup/sharing.` becomes `Files you attach upload to your account when you save the task.`; ES `Se suben cuando utilizas la copia en la nube o el uso compartido.` becomes `Los archivos que adjuntas se suben a tu cuenta al guardar la tarea.`; CA `Es pugen quan utilitzes la còpia al núvol o la compartició.` becomes `Els fitxers que adjuntes es pugen al compte en desar la tasca.`",
     "WEB-1302, the legal half (S3; WP63 does the demo). §8's first paragraph (`:139` in all three files) says ‘The live demo sends your recording or text to Google only when you tap Done.’, but a recording that reaches the one-minute limit is sent too (`src/components/VoiceDemo.tsx:506`). Replace that sentence: EN `The live demo sends your recording or text to Google only when you tap Done.` becomes `The live demo sends your recording or text to Google only when you tap Done, or when a recording reaches its one-minute limit.`; ES `La demo en directo envía tu grabación o tu texto a Google solo cuando tocas Listo.` becomes `La demo en directo envía tu grabación o tu texto a Google solo cuando tocas Listo, o cuando una grabación llega a su límite de un minuto.`; CA `La demo en directe envia la gravació o el text a Google només quan toques Fet.` becomes `La demo en directe envia la gravació o el text a Google només quan toques Fet, o quan una gravació arriba al seu límit d’un minut.` These three sentences are the organizer's wording of review H2's note; WP63 gives the demo's own line, under the microphone, the shorter ‘…when you tap Done or the minute is up.’.",
     "WEB-1503 (S1). The English terms are narrower than the Spanish and Catalan ones, while §10 says the three versions convey the same terms. Terms §3 (`en.ts:221`): `…reminders, optional dictation that turns what you say into tasks, synchronisation…` becomes `…reminders, optional AI, synchronisation…`, as ES and CA say «IA opcional». Terms §5 (`en.ts:239`): `AI capture is optional.` becomes `The AI is optional.` No Spanish or Catalan change.",
     "WEB-1506 (S1). English §8 alone has a link, ‘Cloudflare Turnstile privacy information’, which opens Cloudflare's whole privacy policy, already linked in §5 as ‘Cloudflare privacy notice’. Remove §8's `links` (`en.ts:144-149`), so §8 has none in any language.",
+    "WEB-1509 (S1; WD28, answered yes on 2026-10-31, as recommended). Privacy §5 never says that reminders aren't shared, though every reminder is personal (the owner's decision of 2026-10-23; `../TaskFlow/Backend/docs/REMINDER_PLANS.md:5`) and the app says so in its sharing help (`sharedDataHelp`, `../TaskFlow/App/lib/l10n/app_en.arb:1226`, `app_es.arb:542`, `app_ca.arb:521`). In §5's first paragraph (`en.ts:75`, `es.ts:75`, `ca.ts:75`), insert the app's own sentence right after EN `They can also show just one person’s tasks.` / ES `También pueden ver solo las tareas de una persona.` / CA `També poden veure només les tasques d’una persona.`, exactly: EN `Reminders aren’t shared: each person has their own.` / ES `Los recordatorios no se comparten: cada persona tiene los suyos.` / CA `Els recordatoris no es comparteixen: cada persona té els seus.` Nothing else in §5 changes. It holds for every role: since 2026-10-31 a reader («lector») may choose their own reminders (the app's D9), and reminders stay personal for everyone; say nothing about who can choose them. It rides this package's one version move.",
     "Version: move the legal version once, to the date this package runs (2026-10-29, unless the fix run starts on a later day): `company.json:10` (`\"version\"`), `docs/LEGAL_RELEASE.md:3` (‘effective **29 October 2026**’), and the pinned dates in `tests/legal.spec.ts:35` and `tests/ux-web-legal.spec.ts:675-681`. Run `npm run legal:check`. The owner's WD3 sign-off then covers this version, in place of the pending 22 October one.",
-    "Don't touch: any other legal sentence (privacy §3's examples and §9's permission list are noted for the owner's sign-off, not this run); privacy §5's sharing paragraph (WD28 is open); the delete page's text; the home's copy; `src/components/LegalPage.tsx` and `src/styles/legal.css` (WP65 changes them in parallel)."
+    "Don't touch: any other legal sentence (privacy §3's examples and §9's permission list are noted for the owner's sign-off, not this run); the rest of privacy §5 (only WD28's sentence goes in); the delete page's text; the home's copy; `src/components/LegalPage.tsx` and `src/styles/legal.css` (WP65 changes them in parallel)."
    ],
    "acceptance": [
     "On `/privacy/`, `/es/privacy/` and `/ca/privacy/` at 1440 × 1000 and 390 × 664, light and dark: summary 02 is exactly the brief's text; no privacy summary in any language ends ‘…to add, find or change tasks.’ / «…cambiar tareas.» / «…canviar tasques.»; at 390 px, summary 02's last line has two words or more in Spanish and Catalan.",
@@ -192,11 +195,13 @@
     "§8's first paragraph contains the brief's demo sentence in each language; no legal page has a sentence ending ‘only when you tap Done.’ / «solo cuando tocas Listo.» / «només quan toques Fet.».",
     "On `/terms/`, §3 and §5 have the brief's English; `src/content/legal/en.ts` contains no ‘turns what you say into tasks’ and no ‘AI capture’; the Spanish and Catalan terms are unchanged.",
     "Privacy §8 has no links in EN, ES or CA; §5 still links Cloudflare's privacy notice in each.",
+    "On `/privacy/`, `/es/privacy/` and `/ca/privacy/`, light and dark: §5's first paragraph has, right after ‘They can also show just one person’s tasks.’ / «También pueden ver solo las tareas de una persona.» / «També poden veure només les tasques d’una persona.», exactly ‘Reminders aren’t shared: each person has their own.’ / «Los recordatorios no se comparten: cada persona tiene los suyos.» / «Els recordatoris no es comparteixen: cada persona té els seus.»; §5 still names “Created by” / «Creada por» / «Creada per», and nothing else in it changed.",
     "Every legal page's version line reads the package's date in each language (for 2026-10-29: ‘In force since 29 October 2026’ / «En vigor desde el 29 de octubre de 2026» / «En vigor des del 29 d’octubre del 2026»); `company.json` and `docs/LEGAL_RELEASE.md` agree; `npm run legal:check` passes; axe reports no violations on the privacy and terms pages, light and dark."
    ],
    "deviceChecks": [
     "The owner's WD3 sign-off of the new legal version and of the changed sentences.",
-    "A native Catalan read of summary 02's new clause «…o per demanar recordatoris amb les teves paraules», §4's «…i els recordatoris que demanes amb les teves paraules s’envien igual», §2's «Els fitxers que adjuntes es pugen al compte en desar la tasca.» and §8's «…o quan una gravació arriba al seu límit d’un minut»; a native Spanish read of §8's «…o cuando una grabación llega a su límite de un minuto»."
+    "A native Catalan read of summary 02's new clause «…o per demanar recordatoris amb les teves paraules», §4's «…i els recordatoris que demanes amb les teves paraules s’envien igual», §2's «Els fitxers que adjuntes es pugen al compte en desar la tasca.» and §8's «…o quan una gravació arriba al seu límit d’un minut»; a native Spanish read of §8's «…o cuando una grabación llega a su límite de un minuto».",
+    "The WD3 sign-off also covers WD28's §5 sentence. Its Spanish and Catalan are the app's own words (`sharedDataHelp`), so they need no native read beyond the app's."
    ],
    "dependsOn": []
   },
@@ -488,6 +493,183 @@
     "TalkBack in Catalan on a missing `/ca/` page: the title is read in Catalan only."
    ],
    "dependsOn": []
+  },
+  {
+   "id": "WP261",
+   "title": "`/delete-account/` opens in the visitor's language, like `/`: the saved choice first, then the browser's; privacy §8 says so (WD27)",
+   "area": "L",
+   "size": "M",
+   "severity": 3,
+   "findings": [
+    "WEB-1508"
+   ],
+   "files": [
+    "src/proxy.ts (all of it, as WP72 leaves it: `chosen`, the `lang` choice, the headers, `config.matcher` at :55)",
+    "src/components/LanguageSwitch.tsx (as WP72 leaves it: the English link that carries `?lang=en`; the comment at :13-14)",
+    "src/content/site/index.ts:16-17 (the cookie's comment; one list of the addresses that follow the visitor's language)",
+    "src/content/legal/en.ts:142 (privacy §8, the bare address's sentence)",
+    "src/content/legal/es.ts:142",
+    "src/content/legal/ca.ts:142",
+    "src/content/legal/company.json:10 (`version`, only if this package runs on a later day than WP66)",
+    "docs/LEGAL_RELEASE.md:3 (only if this package runs on a later day than WP66)",
+    "tests/ux-web-global.spec.ts:34-44 (`bare`, `CASES`), :100-160 (the bare address's tests), :199-205 (WEB-2, ‘only the bare address redirects’), WP72's block (the switch's English links), and the acceptance block (web-ux-tester)",
+    "tests/ux-web-legal.spec.ts (WP65's and WP66's blocks wherever they open `/delete-account/` with a Spanish or Catalan language or cookie; :675-681, the version, only if it moves)",
+    "tests/legal.spec.ts:35 (the version, only if it moves)"
+   ],
+   "brief": [
+    "WD27 (the owner, 2026-10-31, (a) as recommended): `/delete-account/`, the one deletion address Google Play shows everyone (WD13), opens in the visitor's language as `/` does: a choice saved in the language switch first, then the browser's language, never the location. English stays at `/delete-account/`. WP72 ran before you in `src/proxy.ts` and `src/components/LanguageSwitch.tsx` (the `?lang=` choice, the English answer's `private, no-cache`), WP65 in the delete page's layout (its language switch is now in the top row) and WP66 in the legal texts and their version: start from their result and keep it. This package changes routing and one legal sentence; nothing on the delete page itself changes.",
+    "WEB-1508 (S3; reviews L and G). Today only `/` follows the visitor (`src/proxy.ts:55`, `matcher: \"/\"`), so a Spanish or Catalan Leaver arriving from Play meets an English page and needs a tap on «Español» (WP65 put it in the first screen). Do for `/delete-account/` exactly what `proxy.ts` does for `/` after WP72, and nothing more. (1) The matcher also covers `/delete-account/`, as Next serves it with `trailingSlash: true` (`next.config.ts:7`); check that `/delete-account` (no slash), which Next sends to the slash form first, ends in the same place. (2) Without a valid `lang`: the saved `taskflow-lang` cookie, else the browser's Accept-Language (today's `chosen` and `preferred`), never the IP: Spanish answers 307 to `/es/delete-account/`, Catalan 307 to `/ca/delete-account/`, English the page at `/delete-account/`. (3) With `lang=en`, `es` or `ca` on `/delete-account/`: set the cookie exactly as WP72 does on `/`, and answer 307 to the clean address in that language (`/delete-account/`, `/es/delete-account/` or `/ca/delete-account/`); ignore any other value. (4) The same headers as `/`: every answer `Vary: Accept-Language, Cookie`; the 307s `Cache-Control: private, no-store`; the English 200 `private, no-cache`; the Location on the request's own origin (`origin()`, WEB-2's rule for the edge worker). (5) In `LanguageSwitch.tsx`, the English link on `/es/delete-account/` and `/ca/delete-account/` is `/delete-account/?lang=en`, as WP72 makes it `/?lang=en` on the homes, so a choice made before the page has hydrated, or without JavaScript, isn't bounced back; every other link stays as it is. (6) Keep one list of the addresses that follow the visitor's language, used by `proxy.ts` and `LanguageSwitch.tsx` (for example `export const followsVisitor = [\"/\", \"/delete-account/\"]` in `src/content/site/index.ts`, next to `LANGUAGE_COOKIE`, with a one-line comment naming WD5 and WD27). `config.matcher` must stay a literal Next can read at build time, so it repeats the two paths, with a comment pointing at the list. Update the comments that say only the bare address does this (`src/content/site/index.ts:16`, `src/proxy.ts:4-5`, `src/components/LanguageSwitch.tsx:13-14`). Canonicals, hreflang and the sitemap don't change: English stays the x-default at `/delete-account/` (`legalMetadata`), and `/es/delete-account/` and `/ca/delete-account/` never redirect.",
+    "Privacy §8 says which addresses use the browser's language (WD5: «Privacy §8 says so»), so it names the deletion page too. In §8's last paragraph (`src/content/legal/en.ts:142`, `es.ts:142`, `ca.ts:142`) replace only this sentence: EN `The bare address opens the site in your browser’s language when it’s Spanish or Catalan, and in English otherwise; we never use your location for this.` becomes `The bare address and our deletion page’s address open the site in your browser’s language when it’s Spanish or Catalan, and in English otherwise; we never use your location for this.`; ES `La dirección principal abre la web en el idioma de tu navegador si es español o catalán, y en inglés si no; nunca usamos tu ubicación para ello.` becomes `La dirección principal y la de la página de supresión abren la web en el idioma de tu navegador si es español o catalán, y en inglés si no; nunca usamos tu ubicación para ello.`; CA `L’adreça principal obre el web en l’idioma del navegador si és castellà o català, i en anglès si no; no fem servir mai la teva ubicació per a això.` becomes `L’adreça principal i la de la pàgina de supressió obren el web en l’idioma del navegador si és castellà o català, i en anglès si no; no fem servir mai la teva ubicació per a això.` These are the organizer's wording; ‘our deletion page’, «la página de supresión» and «la pàgina de supressió» are how privacy §6 already names the page (`en.ts:165`, `es.ts:159`, `ca.ts:159`). The cookie sentence after it stays: it's still true. This is a legal edit inside WP66's new version, for the owner's one WD3 sign-off: if WP66 set the version to today's date, don't move it; if this package runs on a later day, move it to today as WP66's brief says (`company.json:10`, `docs/LEGAL_RELEASE.md:3`, `tests/legal.spec.ts:35`, `tests/ux-web-legal.spec.ts:675-681`). Run `npm run legal:check`.",
+    "Tests to update, only where this change breaks them: WEB-2's ‘only the bare address redirects’ (`tests/ux-web-global.spec.ts:199-205`): now the bare address and `/delete-account/` redirect, and `/privacy/`, `/es/privacy/`, `/es/delete-account/` and `/ca/delete-account/` never do; WP72's check of the legal pages' English links (the delete pages' English link is now `/delete-account/?lang=en`); any test of WP65 or WP66 that opens `/delete-account/` with a Spanish or Catalan language or cookie and expects English. The Playwright projects send an English Accept-Language by default, so the delete page's renders stay English; on the owner's Windows WebKit, which sends Spanish, `webkit/delete-account.en.*` will now show the Spanish page, as `webkit/home.en.*` already do (a tooling note for the main session, not yours).",
+    "Don't touch: the delete page's layout and text (WP65, WP66); the other legal pages, which never redirect; the footer's, the 404's and the legal pages' own links to the delete page. An English page links `/delete-account/`, so a visitor with no saved choice whose browser prefers Spanish lands on the Spanish page there, as the logo does for `/` under WD5: that's the rule WD27 chose, so don't add `?lang` to those links. Also the home's behaviour, `localisePath`, and the edge worker (`edge/worker.ts` already rewrites a Location that starts with the origin)."
+   ],
+   "acceptance": [
+    "`GET /delete-account/` without following redirects, for each of WEB-2's cases: `Accept-Language: es-ES,es;q=0.9` → 307 to `/es/delete-account/`; `ca-ES,ca;q=0.9,es;q=0.8` → 307 to `/ca/delete-account/`; `en-US,en;q=0.9,es;q=0.8`, no Accept-Language, or `fr-FR` → 200 with the English page; the cookie `taskflow-lang=en` with `es-ES` → 200 English; the cookie `taskflow-lang=ca` with `en` → 307 to `/ca/delete-account/`.",
+    "Every 307's `Cache-Control` contains `private` and `no-store`, and its Location starts with the request's own origin (sent with Host `taskflow-web-example.a.run.app`, `X-Forwarded-Proto: https` and `es-ES`, it's `https://taskflow-web-example.a.run.app/es/delete-account/`); every answer's `Vary` names Accept-Language and Cookie; the English 200's `Cache-Control` contains `private` and `no-cache`, not `no-store`, and it keeps `X-Content-Type-Options: nosniff`.",
+    "`GET /delete-account/?lang=es` → 307 to `/es/delete-account/` with `Set-Cookie: taskflow-lang=es` (Path=/, Max-Age=31536000, SameSite=Lax); `?lang=en` with `Accept-Language: es-ES` → 307 to `/delete-account/` with `taskflow-lang=en`, and following it ends on the English page; `?lang=xx` answers as `GET /delete-account/` does. `GET /delete-account` (no slash) with `es-ES` ends, following redirects, on `/es/delete-account/`.",
+    "`/es/delete-account/`, `/ca/delete-account/`, `/privacy/`, `/es/privacy/` and `/terms/` answer 200 whatever the Accept-Language or cookie.",
+    "In a browser with `locale: \"es-ES\"`, desktop and mobile: opening `/delete-account/` shows `/es/delete-account/`, with the Spanish h1 and «Español» as the current language. With JavaScript off, clicking «English» in the page's language switch (the pill on mobile, the header's on desktop) ends on `/delete-account/` in English with the cookie `taskflow-lang=en`, and opening `/delete-account/` again stays English. On `/es/delete-account/` and `/ca/delete-account/` every switch's English link is `/delete-account/?lang=en`; on `/es/privacy/` it's still `/privacy/`.",
+    "On `/privacy/`, `/es/privacy/` and `/ca/privacy/`, §8's last paragraph holds the brief's sentence exactly; `src/content/legal/` contains no ‘The bare address opens the site’, «La dirección principal abre la web» or «L’adreça principal obre el web»; every legal page shows one version date, the same as `company.json` and `docs/LEGAL_RELEASE.md`; `npm run legal:check` passes.",
+    "axe reports no violations on `/es/delete-account/` and `/ca/delete-account/` reached through `/delete-account/`, and on the three privacy pages, light and dark."
+   ],
+   "deviceChecks": [
+    "After a deploy (the owner): on an Android phone set to Spanish, and on one set to Catalan, open `https://taskflow.garbar.tech/delete-account/` from a link, as Play shows it: the page opens in Spanish, or Catalan. Choose English, then open the link again: English.",
+    "At launch: Play Console's Data safety form accepts `/delete-account/` as the deletion URL.",
+    "A native Spanish read of «La dirección principal y la de la página de supresión abren la web en el idioma de tu navegador…» and a native Catalan read of «L’adreça principal i la de la pàgina de supressió obren el web en l’idioma del navegador…»; the owner's WD3 sign-off covers the sentence with WP66's version."
+   ],
+   "dependsOn": [
+    "WP65",
+    "WP66",
+    "WP72"
+   ]
+  },
+  {
+   "id": "WP262",
+   "title": "The hero says what's free: WD2's free line under the status, in the first phone screen (WD23)",
+   "area": "H",
+   "size": "S",
+   "severity": 2,
+   "findings": [
+    "WEB-1209"
+   ],
+   "files": [
+    "src/content/site/types.ts:57 (`hero.status`; the new `free` key after it, with a comment)",
+    "src/content/site/en.ts:52 (`hero.status`; `hero.free` after it)",
+    "src/content/site/es.ts:52",
+    "src/content/site/ca.ts:52",
+    "src/components/HomePage.tsx:28 (the status paragraph; the free line after it)",
+    "src/styles/global.css:412-417 (`.hero-status`; a `.hero-free` rule after it)",
+    "tests/support/ux-web-copy.ts:29-33 (`HERO.status`; a `free` entry after it)",
+    "tests/ux-web-home.spec.ts:128-145 (WEB-1, WEB-3: the first-viewport test lists the free line), and the acceptance block (web-ux-tester)"
+   ],
+   "brief": [
+    "WD23 (the owner, 2026-10-31, (a) as recommended): say what's free in the hero, in the first phone screen, in WD2's words. WP67 ran before you in the hero's CSS (top-aligned on desktop; left-aligned paragraphs and 58 px buttons on phones), WP68 in the hero's copy («Próximamente…», the description) and WP70 in `HomePage.tsx`'s FAQ: start from their result and keep it.",
+    "WEB-1209 (S2; reviews H1 and F). Nothing about cost is in the first screen: the free and Pro line first shows about three phone screens down, under the demo, and ‘Is TaskFlow free?’ about six. Add one line under the hero's status: WD2's free half, word for word the first sentence of `closing.plans`, so no new claim, and the limit travels with ‘free’. (1) A new key `hero.free` in `types.ts`, after `status` (`:57`), with a one-line comment (‘WD2's free half under the status line (WD23): the same words as the first sentence of `closing.plans`.’), and in the three files after `hero.status` (`en.ts:52`, `es.ts:52`, `ca.ts:52`), exactly: EN `Free with an account: 10 dictations a month, and tasks by hand with no limit.` / ES `Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.` / CA `Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.` (2) In `HomePage.tsx`, right after `<p className=\"hero-status\">` (`:28`), `<p className=\"hero-free\">{hero.free}</p>`: its own paragraph, so a screen reader reads the status, then this, then the quote card. (3) In `global.css`, after `.hero-status` (`:412-417`), `.hero-free { margin-top: 4px; color: var(--muted); font-size: 1rem; line-height: 1.5; }`: the status's size and colour, close under it, so the two read as one block. It follows `.hero-copy`'s alignment (left on phones after WP67). No icon, badge, bold, link or new colour. Pro stays where WD2 put it (under the demo, in the closing card and in the FAQ): the hero says nothing about Pro or a price.",
+    "The cost, which WD23 accepted: about two lines of the phone's first screen, and the quote card slips further below the fold (review H1). At 390 × 664 the free line must end inside the first screen in all three languages; if it doesn't in one, give the measured bottom in your notes, and don't shrink or move anything else in the hero to make room. On desktop, WP67's checks must keep passing: the button and the status line inside the viewport at 1366 × 640 and 1536 × 730 (the free line may fall below the fold at 1366 × 640).",
+    "Tests to update: WEB-1 and WEB-3's first-viewport test (`tests/ux-web-home.spec.ts:128-145`) lists the free line after the status line; add `free` to `HERO` in `tests/support/ux-web-copy.ts`, after `status` (`:29-33`).",
+    "Don't touch: the status line's wording (WP68), the H1, the description, the buttons, the quote card and the phone; the closing card's and the demo's plans lines; the FAQ."
+   ],
+   "acceptance": [
+    "On `/`, `/es/` and `/ca/` at 1440 × 1000 and 390 × 664, light and dark: right after `p.hero-status` comes one `p.hero-free`, exactly EN ‘Free with an account: 10 dictations a month, and tasks by hand with no limit.’ / ES «Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.» / CA «Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.», wholly inside the first viewport (WEB-1 and WEB-3's first-viewport test lists it after the status line).",
+    "`.hero-free` computes to the same font size, line height and colour as `.hero-status`, light and dark; its top is at most 8 px below the status line's bottom; it holds no link, icon or bold text.",
+    "`section.hero` contains no ‘Pro’ and no price or currency sign; the closing card's and the demo's plans lines still read WD2's whole line (`CLOSING.plans`).",
+    "On phones (390 × 664, 320 × 568 and `mobile-text200`), in EN, ES and CA: every line box of `.hero-free` starts within 1 px of the status line's left edge; nothing scrolls sideways or clips (`AUDIT.md` §3).",
+    "WP67's checks still pass: at 1366 × 640 and 1536 × 730 the hero's button and status line are inside the viewport; on `/es/` at 390 × 664 the status line ends inside the first viewport.",
+    "In the hero's ARIA snapshot the free line comes right after the status line and before the quote card; axe reports no violations on the three homes, light and dark. The `home.{en,es,ca}.mobile.{light,dark}.fold.png` renders show the free line."
+   ],
+   "deviceChecks": [
+    "A real phone in Spanish (the owner, or the five-person test): in the first screen, «Gratis con una cuenta: 10 dictados al mes…» reads as free with a limit, not as a trial or a catch.",
+    "TalkBack on the hero: after the status line it reads the free line, then the quote card. (The Spanish and Catalan sentences are already on the site, under the demo and in the closing card, so they need no new native read.)"
+   ],
+   "dependsOn": [
+    "WP67",
+    "WP68",
+    "WP70"
+   ]
+  },
+  {
+   "id": "WP263",
+   "title": "A demo try that fails on our side is given back; a result with no task still counts (WD30)",
+   "area": "H",
+   "size": "M",
+   "severity": 2,
+   "findings": [
+    "WEB-1315"
+   ],
+   "files": [
+    "src/app/api/voice/draft/route.ts:79-101 (`admit`, the AI call, the catch that settles a failure)",
+    "src/lib/voice/store.ts:79-137 (`admit`), :138-174 (`finish`)",
+    "src/lib/voice/policy.ts:44-57 (a helper that takes one try back, next to `allowance`)",
+    "src/content/site/en.ts:226-227 (`errors.invalidDraft`)",
+    "src/content/site/es.ts:227-228",
+    "src/content/site/ca.ts:236-237",
+    "README.md:185 (what a failed request costs; :168 stays)",
+    "tests/voice.unit.ts (the helper)",
+    "tests/voice-store.integration.ts (a failure gives the try back; a result with no task keeps it)",
+    "tests/support/ux-voice.ts:220-232 (the stub's `useTry`), :894 (the `invalid_draft` scenario's description)",
+    "tests/ux-web-voice.spec.ts:1317-1320 (`invalidDraft`), and the acceptance block (web-ux-tester)"
+   ],
+   "brief": [
+    "WD30 (the owner, 2026-10-31, yes as recommended): a demo try that fails on our side is given back: an AI error, a timeout or an unreadable answer; a result with no task still counts. This is the site's own server code (`src/app/api/voice/`, `src/lib/voice/`), one demo string and the README. WP64 ran before you: after `unavailable` the demo says ‘The demo isn’t answering right now’, keeps the words and offers Try again as a new request. WP69 runs beside you in `VoiceDemo.tsx` and its strings: keep to the lines named here.",
+    "WEB-1315 (S2; review H2). The server records a try when it admits a request, before calling the AI (`admit`, `src/lib/voice/store.ts:79-137`, which appends the time to the visitor's `attempts`), and keeps it when the call fails: the route's catch (`src/app/api/voice/draft/route.ts:92-101`) settles the job as failed with `finish(…, {})` (`store.ts:138-174`), which keeps the reservation charged but never returns the try. The app never counts a dictation the assistant didn't answer: its server deletes the reservation on any failure (`../TaskFlow/Backend/core/views.py:145-147`, ‘Failed and refused dictations never count’). Do this. (1) In `admit`, when the visitor's try is counted (not in a developer window, where `checkAdmission` adds none), keep that try's time on the job document (for example `attemptAt: now`), in the same transaction. `admit` still returns the month: the integration tests read it. (2) In `finish`, when the outcome has no result and the job is still `processing`, take that one try back in the same transaction: read the visitor's document with the job and the month (reads before writes), and remove one entry equal to `attemptAt` from its `attempts`; if it isn't there (expired, or a developer window), change nothing. Put the removal in a small pure helper next to `allowance` in `src/lib/voice/policy.ts` (for example `withoutTry(attempts, at)`), so it's unit-tested. (3) Nothing else changes. The network's attempts stay counted, so one network still makes at most 12 AI calls a day however many fail. The month's `requests`, `failed` and charged reservation stay as today: the call still cost money. A job the server never settles (a crash) keeps its try, as it keeps its reservation. `cachedJob` still answers a failed request's ID with `previous_failure`. (4) Which failures: the route already calls `finish(…, {})` for every failure after `admit`: the AI's error or quota refusal, the model's 35 s timeout (`src/lib/voice/model.ts:48`), an answer that isn't JSON (`model.ts:75`), and an answer that fails the schema (`invalid_draft`, `model.ts:76-81`). All four are ours, not the visitor's (the last two are ‘an unreadable answer’), as in the app, so all four give the try back. A result with no task (`tasks: []`) is a result: `finish` gets it, and the try stays used, as WD30 says and WP69's `noTasks` tells (‘That used a try.’).",
+    "The one string that says otherwise: `errors.invalidDraft` (`en.ts:226-227`, `es.ts:227-228`, `ca.ts:236-237`) says the failed request ‘used a try’. Subtract that clause, so the message neither claims nor promises anything about tries; the badge, fetched again after every request (`refresh()` in `VoiceDemo.tsx`), shows the count. It becomes exactly: EN `We couldn’t turn that into tasks. Say what you need to do, and when.` / ES `No hemos podido convertirlo en tareas. Di qué tienes que hacer y cuándo.` / CA `No ho hem pogut convertir en tasques. Digues què has de fer i quan.` `notAnswering`, `timeout`, `processing` and `offline` say nothing false and stay.",
+    "README.md: the sentence ‘Failed provider calls can still consume an attempt and retain their budget reservation.’ (`:185`) becomes ‘A request that ends without a result (an AI error, a timeout, or an answer that can’t be read) gives the visitor’s try back but keeps its budget reservation and its network count; a result with no task still uses the try (WD30).’ The budget sentence at `:168` stays true and stays.",
+    "Tests to update: the stub in `tests/support/ux-voice.ts:220-232` models the server, so `invalid_draft` no longer uses a try (a request still waiting, `hang`, still holds one), and the `invalid_draft` scenario's description (`:894`) says the try is given back; the pinned `invalidDraft` copy (`tests/ux-web-voice.spec.ts:1317-1320`). Run `npm run test:unit` and, against the Firestore emulator, `npm run test:quota` (`FIRESTORE_EMULATOR_HOST`, as `README.md` describes; set the emulator up if it's missing, and say in your notes if it can't run here). These tests never reach `generateDraft`, so they never call the real AI.",
+    "Don't touch: `checkAdmission`, the limits (3 a visitor, 12 a network, the monthly budget) and their copy; the client (`VoiceDemo.tsx`: WP63, WP64 and WP69); `noTasks`; privacy §8, which says nothing about failed tries."
+   ],
+   "acceptance": [
+    "`tests/voice-store.integration.ts`, against the Firestore emulator (`npm run test:quota`): after `admit` and then `finish(…, {})`, `usage(visitor)` gives `remaining` 3 and `resetAt` null; the network's document still holds that attempt; the month's `requests` is 1, `failed` 1 and `chargedMicros` equals `RESERVATION_MICROS`.",
+    "In the same file: after `admit` and `finish` with a result whose `tasks` is empty, `remaining` is 2; settling one failed request twice gives one try back, not two; a failed request in a developer window leaves the visitor's `attempts` as they were; after a failure, the same request ID still answers `previous_failure` (`cachedJob`), and a new request ID is admitted.",
+    "`tests/voice.unit.ts` (`npm run test:unit`): the helper removes exactly one entry equal to the given time, keeps the others in their order, and returns the list unchanged when the time isn't in it.",
+    "With the API stubbed (the stub now gives the try back on `invalid_draft`, as the server does), on `/`, `/es/` and `/ca/` at 390 × 664 and 1440 × 1000, light and dark, typing a sentence and pressing Done: with the draft answering `422 {\"code\":\"invalid_draft\"}`, the alert is exactly the brief's `invalidDraft`, the status is requested again after the draft request, and the badge reads ‘3 of 3 tries left’ / «3 de 3 intentos disponibles» / «3 de 3 intents disponibles»; the same badge after `503 {\"code\":\"unavailable\"}`. axe reports no violations.",
+    "`src/` contains no ‘and it used a try’, «y ha contado como un intento» or «i ha comptat com un intent»; `noTasks` still ends ‘That used a try.’ / «Ha contado como un intento.» / «Ha comptat com un intent.».",
+    "`README.md` says what the brief says, and no longer says failed calls can consume an attempt."
+   ],
+   "deviceChecks": [
+    "Only the real service fails on its own (the owner, after the next deploy): the owner report still counts failed requests and their charged reservations, and a visitor whose request failed sees the try back in the badge.",
+    "A native Spanish read of «No hemos podido convertirlo en tareas. Di qué tienes que hacer y cuándo.» and a native Catalan read of «No ho hem pogut convertir en tasques. Digues què has de fer i quan.»"
+   ],
+   "dependsOn": [
+    "WP64"
+   ]
+  },
+  {
+   "id": "WP264",
+   "title": "The FAQ says tasks can repeat: one item after the voice question, in the app's words (WD22)",
+   "area": "F",
+   "size": "S",
+   "severity": 2,
+   "findings": [
+    "WEB-1404"
+   ],
+   "files": [
+    "src/content/site/en.ts:101-105 (the voice item; the new item after it)",
+    "src/content/site/es.ts:101-105",
+    "src/content/site/ca.ts:107-111",
+    "tests/support/ux-web-copy.ts:154-215 (`FAQ_REST`: the new item after the voice item, and its comment)",
+    "tests/ux-web-features.spec.ts:550-566 (‘the eight questions’), :712-713 (`WAYS_IN_INDEX`), :849-865 (WEB-1005: eight becomes nine), :902-903, any check in WP70's block that finds an item by position, and the acceptance block (web-ux-tester)"
+   ],
+   "brief": [
+    "WD22 (the owner, 2026-10-31, yes as recommended): tell visitors that tasks can repeat, as one FAQ item after ‘How do I add tasks by voice?’, in review F's copy, and nowhere else. WP70 ran before you in the FAQ (the free answer in two paragraphs, the notes answer): start from its result and keep it.",
+    "WEB-1404 (S2; review F). The app repeats tasks in all three languages: say ‘every Monday’ or «cada día a las 9», or use More details › Repeat, and each time shows on the calendar with its own reminder (`../TaskFlow/Backend/core/ai.py:82-85, 353-357`; the app's `moreDetails` and `repeat`, `../TaskFlow/App/lib/l10n/app_en.arb:286, 266`, `app_es.arb:169, 149`, `app_ca.arb:148, 128`: ‘More details’, ‘Repeat’; «Más detalles», «Repetir»; «Més detalls», «Repetició»). The site never says so. Add one item to `faq.items`, right after the voice item (`en.ts:101-105`, `es.ts:101-105`, `ca.ts:107-111`), exactly: EN question `Can I add something that repeats?`, answer `Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.` / ES question `¿Puedo añadir algo que se repite?`, answer `Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.` / CA question `Puc afegir una cosa que es repeteix?`, answer `Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.` One string for the answer: no new key, type or markup (`HomePage.tsx` renders `faq.items` as they come).",
+    "Keep the limits WD22 set. Never pair a repeat with the reminders that come ‘more and more often’: repeating tasks don't get them (`../TaskFlow/Backend/docs/REMINDER_PLANS.md:23`), so the answer says only ‘TaskFlow can remind you’. No ‘Try it’ link near it: the demo can't show a repeat (it writes it into the notes, `src/lib/voice/model.ts:53`). No health example.",
+    "Tests to update: the FAQ now has nine questions. Add the item to `FAQ_REST` in `tests/support/ux-web-copy.ts` (`:154-215`), right after the voice item, and make its comment say six items; the order test (`tests/ux-web-features.spec.ts:550`, ‘the eight questions’); `WAYS_IN_INDEX` (`:713`) becomes 8, ‘the ninth question’; WEB-1005's test (`:849-865`) expects nine, with the home-screen question ninth, and its label at `:903`; any check WP70's tester wrote that finds an item by position (the notes item is now the eighth; the free item is still the second).",
+    "Don't touch: the other FAQ items, their wording and order; the calendar card; the demo; the FAQ's `<details>` behaviour."
+   ],
+   "acceptance": [
+    "On `/`, `/es/` and `/ca/` at 390 × 664 and 1440 × 1000, light and dark: the FAQ has nine questions; the fifth comes right after ‘How do I add tasks by voice?’ / «¿Cómo añado tareas hablando?» / «Com afegeixo tasques parlant?» and is exactly ‘Can I add something that repeats?’ / «¿Puedo añadir algo que se repite?» / «Puc afegir una cosa que es repeteix?».",
+    "Opened, its answer is one `<p>`, exactly the brief's answer in that language, at 16 px or more; it holds no link, and contains no ‘more and more often’, «cada vez más a menudo» or «cada cop més sovint».",
+    "The other eight questions keep their order and their answers as WP70 left them (the free answer's two paragraphs and the notes answer included); the home-screen question is ninth.",
+    "With the new item open, at 320 × 568 and `mobile-text200`, in EN, ES and CA: nothing scrolls sideways or clips (`AUDIT.md` §3).",
+    "A render with the new item open on `/es/` at 390 × 664, light, exists; axe reports no violations with it open, light and dark."
+   ],
+   "deviceChecks": [
+    "A native Spanish read of «¿Puedo añadir algo que se repite?» and «Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.»; a native Catalan read of «Puc afegir una cosa que es repeteix?» and «Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.»",
+    "In the app, on a phone (the owner): say «todos los lunes a las 9, sacar la basura» (and in Catalan «cada dilluns a les 9, treure les escombraries»): the task shows on every Monday, and a reminder rings for one; More details › Repeat is there under the answer's names."
+   ],
+   "dependsOn": [
+    "WP70"
+   ]
   }
  ],
  "decisions": [
@@ -498,8 +680,10 @@
     "WEB-1404"
    ],
    "recommendation": "Yes, as one new FAQ item after ‘How do I add tasks by voice?’, in review F's copy, and nowhere else: never paired with the ‘more and more often’ reminders, which repeating tasks don't get.",
-   "status": "open",
-   "context": "Review F. The app repeats tasks in all three languages: say ‘every Monday’ or «cada día a las 9», or use More details › Repeat, and each time shows on the calendar with its own reminder (`Backend/core/ai.py:82-85, 353-357`; `App/lib/l10n/app_en.arb:258, 604`). The site never says so (0 hits for repeat in `src/content/site/`); for a Comparer it's table stakes. Copy (review F): EN Q ‘Can I add something that repeats?’ A ‘Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.’ / ES «¿Puedo añadir algo que se repite?» «Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.» / CA «Puc afegir una cosa que es repeteix?» «Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.» Against: a ninth FAQ item. The live demo writes a repeat into the task's notes and can't show it, so keep the claim away from the ‘Try it’ links; avoid medical examples (privacy §4)."
+   "status": "answered 2026-10-31",
+   "context": "Review F. The app repeats tasks in all three languages: say ‘every Monday’ or «cada día a las 9», or use More details › Repeat, and each time shows on the calendar with its own reminder (`Backend/core/ai.py:82-85, 353-357`; `App/lib/l10n/app_en.arb:258, 604`). The site never says so (0 hits for repeat in `src/content/site/`); for a Comparer it's table stakes. Copy (review F): EN Q ‘Can I add something that repeats?’ A ‘Yes. Say “every Monday” or “every day at 9” when you add it, or tap More details and choose Repeat. Each time shows on your calendar, and TaskFlow can remind you.’ / ES «¿Puedo añadir algo que se repite?» «Sí. Di «todos los lunes» o «cada día a las 9» al añadirlo, o toca Más detalles y elige Repetir. Cada vez aparece en tu calendario, y TaskFlow puede recordártelo.» / CA «Puc afegir una cosa que es repeteix?» «Sí. Digues «cada dilluns» o «cada dia a les 9» quan l’afegeixis, o toca Més detalls i tria Repetició. Cada vegada surt al calendari, i TaskFlow t’ho pot recordar.» Against: a ninth FAQ item. The live demo writes a repeat into the task's notes and can't show it, so keep the claim away from the ‘Try it’ links; avoid medical examples (privacy §4).",
+   "answer": "Yes, as recommended: one FAQ item after ‘How do I add tasks by voice?’, in review F's copy, never paired with the ‘more and more often’ reminders.",
+   "builtBy": "WP264"
   },
   {
    "id": "WD23",
@@ -508,8 +692,10 @@
     "WEB-1209"
    ],
    "recommendation": "(a) Yes, review H1's: WD2's free half as a third line under the hero's status, ‘Free with an account: 10 dictations a month, and tasks by hand with no limit.’ It uses decided words, so no new claim, and the limit travels with ‘free’.",
-   "status": "open",
-   "context": "Reviews H1 and F. Today nothing about cost is in the first screen; the free and Pro line first shows about 3.2 phone screens down, under the demo, and ‘Is TaskFlow free?’ about 6.4 (WD2 placed it so). The guide asks for the cost within a line of the button and for every ‘free’ to carry its limit (CT-10, PR-2, PR-3); the Newcomer is wary of paying. (a) Review H1: a third line under the status: EN ‘Free with an account: 10 dictations a month, and tasks by hand with no limit.’ / ES «Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.» / CA «Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.» It costs about two lines of the phone's first screen, and the quote card slips below the fold. (b) Review F: the status starts ‘Free with an account.’, as in EN ‘Free with an account. Coming soon to Google Play. You can’t download it yet.’ (ES and CA likewise): shorter, but ‘free’ without its limit. (c) Keep WD2's placement. Pro stays where WD2 put it in every option."
+   "status": "answered 2026-10-31",
+   "context": "Reviews H1 and F. Today nothing about cost is in the first screen; the free and Pro line first shows about 3.2 phone screens down, under the demo, and ‘Is TaskFlow free?’ about 6.4 (WD2 placed it so). The guide asks for the cost within a line of the button and for every ‘free’ to carry its limit (CT-10, PR-2, PR-3); the Newcomer is wary of paying. (a) Review H1: a third line under the status: EN ‘Free with an account: 10 dictations a month, and tasks by hand with no limit.’ / ES «Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.» / CA «Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.» It costs about two lines of the phone's first screen, and the quote card slips below the fold. (b) Review F: the status starts ‘Free with an account.’, as in EN ‘Free with an account. Coming soon to Google Play. You can’t download it yet.’ (ES and CA likewise): shorter, but ‘free’ without its limit. (c) Keep WD2's placement. Pro stays where WD2 put it in every option.",
+   "answer": "(a), as recommended: WD2's free half as a third line under the hero's status, ‘Free with an account: 10 dictations a month, and tasks by hand with no limit.’",
+   "builtBy": "WP262"
   },
   {
    "id": "WD24",
@@ -518,8 +704,10 @@
     "WEB-1208"
    ],
    "recommendation": "Keep ‘not yet’ on the site (WD9), and move the final package ID up your launch list: it's needed for the first Play upload anyway, and it unblocks Play pre-registration. Nothing to build now.",
-   "status": "open",
-   "context": "Reviews H1 and F. Every ‘get it’ route ends at ‘Coming soon’ and loops back to the demo (the closing button, the menu's last row, the hand-over), so a convinced visitor who has tried the demo leaves with nothing. WD9 chose Play pre-registration once the package ID is final; it's still `com.example.agenda` (`App/android/app/build.gradle:52`; your steps in `App/docs/PACKAGE_ID.md`), and a package name is permanent. Options: (a) wait, as decided; (b) settle the package ID now, so pre-registration can open, after which the closing button and the hero's status become Google's ‘Pre-register’ badge in Spanish and a text link in Catalan (WD9); (c) an email list: new personal data, a privacy change and a legal check."
+   "status": "answered 2026-10-31",
+   "context": "Reviews H1 and F. Every ‘get it’ route ends at ‘Coming soon’ and loops back to the demo (the closing button, the menu's last row, the hand-over), so a convinced visitor who has tried the demo leaves with nothing. WD9 chose Play pre-registration once the package ID is final; it's still `com.example.agenda` (`App/android/app/build.gradle:52`; your steps in `App/docs/PACKAGE_ID.md`), and a package name is permanent. Options: (a) wait, as decided; (b) settle the package ID now, so pre-registration can open, after which the closing button and the hero's status become Google's ‘Pre-register’ badge in Spanish and a text link in Catalan (WD9); (c) an email list: new personal data, a privacy change and a legal check.",
+   "answer": "(a), as recommended: wait on the site, as WD9 decided. Settling the package ID moves up the owner's launch list.",
+   "builtBy": "nothing on the site now"
   },
   {
    "id": "WD25",
@@ -528,8 +716,10 @@
     "WEB-1405"
    ],
    "recommendation": "(a) Keep it as it is: site and app agree (the app's Pro screen says it), and the free route lives inside the 10 dictations. Revisit only if the app's Pro screen changes.",
-   "status": "open",
-   "context": "Review F. The FAQ lists it as Pro (WD21), as the app's Pro screen does (‘With Pro, ask for reminders in your own words:’, `App/lib/l10n/app_en.arb:3776`); a rhythm said in a dictation is honoured for free accounts too (`Backend/docs/REMINDER_PLANS.md:12`), and their reminder sheet shows it under «A tu manera». (a) Keep. (b) Add to the free sentence: EN ‘…as the day gets closer, and the ones you ask for while dictating.’ / ES «…según se acerca el día y los que pides al dictar.» / CA «…a mesura que s’acosta el dia i els que demanes en dictar.»"
+   "status": "answered 2026-10-31",
+   "context": "Review F. The FAQ lists it as Pro (WD21), as the app's Pro screen does (‘With Pro, ask for reminders in your own words:’, `App/lib/l10n/app_en.arb:3776`); a rhythm said in a dictation is honoured for free accounts too (`Backend/docs/REMINDER_PLANS.md:12`), and their reminder sheet shows it under «A tu manera». (a) Keep. (b) Add to the free sentence: EN ‘…as the day gets closer, and the ones you ask for while dictating.’ / ES «…según se acerca el día y los que pides al dictar.» / CA «…a mesura que s’acosta el dia i els que demanes en dictar.»",
+   "answer": "(a), as recommended: keep reminders in your own words listed as Pro, as the app says.",
+   "builtBy": "nothing"
   },
   {
    "id": "WD26",
@@ -538,8 +728,10 @@
     "WEB-1406"
    ],
    "recommendation": "Yes, but at the pre-launch re-render of the app's images (WD13, WEB-114), not now; no new section.",
-   "status": "open",
-   "context": "Review F. The card's drawing (‘A fresh start’, ‘Some time outside’, `src/components/HomePage.tsx:69-102`) isn't an app screen, and the card's newest claim, reminders that come more and more often, is only described. The proposal: the app's Normal preview, the dots up to the day and «13 avisos · próximo: mañana, 09:00» (`App/build/ux/reminders/sheet.strength.*`), rendered per language and theme as the hero's phone is (WD4)."
+   "status": "answered 2026-10-31",
+   "context": "Review F. The card's drawing (‘A fresh start’, ‘Some time outside’, `src/components/HomePage.tsx:69-102`) isn't an app screen, and the card's newest claim, reminders that come more and more often, is only described. The proposal: the app's Normal preview, the dots up to the day and «13 avisos · próximo: mañana, 09:00» (`App/build/ux/reminders/sheet.strength.*`), rendered per language and theme as the hero's phone is (WD4).",
+   "answer": "Yes, as recommended, at the pre-launch re-render (WD13), not now.",
+   "builtBy": "nothing now: the pre-launch re-render"
   },
   {
    "id": "WD27",
@@ -548,8 +740,10 @@
     "WEB-1508"
    ],
    "recommendation": "(a) Yes, for that one address: the saved choice first, then the browser's language, never the IP; English stays at `/delete-account/`. Both reviewers recommend it. WP65's layout fix stands with any answer.",
-   "status": "open",
-   "context": "Reviews L and G. Play gets `/delete-account/` (WD13), which serves English; WD5 lets only `/` follow the browser. WP65 moves the page's language switch into the first screen (a fix either way), so a Spanish or Catalan speaker from Play needs one extra tap and still meets an English first screen, which the guide counts as severity 3 for an entry page. Options: (a) extend WD5 to `/delete-account/` only: a 307 to `/es/delete-account/` or `/ca/delete-account/` when no saved choice says otherwise and the browser prefers Spanish or Catalan, with `Vary: Accept-Language, Cookie`, as `src/proxy.ts` does for `/`; English stays the x-default; (b) give Play `/es/delete-account/`, which sends English and Catalan speakers to Spanish; (c) only WP65. The guide's ML-1 lets only the bare address choose a language; Play's deletion field takes one URL, with no per-language field (review L)."
+   "status": "answered 2026-10-31",
+   "context": "Reviews L and G. Play gets `/delete-account/` (WD13), which serves English; WD5 lets only `/` follow the browser. WP65 moves the page's language switch into the first screen (a fix either way), so a Spanish or Catalan speaker from Play needs one extra tap and still meets an English first screen, which the guide counts as severity 3 for an entry page. Options: (a) extend WD5 to `/delete-account/` only: a 307 to `/es/delete-account/` or `/ca/delete-account/` when no saved choice says otherwise and the browser prefers Spanish or Catalan, with `Vary: Accept-Language, Cookie`, as `src/proxy.ts` does for `/`; English stays the x-default; (b) give Play `/es/delete-account/`, which sends English and Catalan speakers to Spanish; (c) only WP65. The guide's ML-1 lets only the bare address choose a language; Play's deletion field takes one URL, with no per-language field (review L).",
+   "answer": "(a), as recommended: `/delete-account/` follows the language too: a choice saved in the switch first, then the browser's language, never the location. English stays at that address.",
+   "builtBy": "WP261"
   },
   {
    "id": "WD28",
@@ -558,8 +752,10 @@
     "WEB-1509"
    ],
    "recommendation": "Yes, in the app's own sentence, after ‘They can also show just one person's tasks.’. If you answer before the fix run, it can ride WP66's version move.",
-   "status": "open",
-   "context": "Review L. Every reminder is personal (your decision of 2026-10-23), and the app says so in its sharing help (`App/lib/l10n/app_en.arb:1132`); the site doesn't. Copy: EN ‘Reminders aren’t shared: each person has their own.’ / ES «Los recordatorios no se comparten: cada persona tiene los suyos.» / CA «Els recordatoris no es comparteixen: cada persona té els seus.» True for every role, readers included (they keep their own defaults; the app's open D9 is about readers choosing reminders, which this doesn't say). It answers a family's ‘will my reminders ring on everyone's phone?’"
+   "status": "answered 2026-10-31",
+   "context": "Review L. Every reminder is personal (your decision of 2026-10-23), and the app says so in its sharing help (`App/lib/l10n/app_en.arb:1132`); the site doesn't. Copy: EN ‘Reminders aren’t shared: each person has their own.’ / ES «Los recordatorios no se comparten: cada persona tiene los suyos.» / CA «Els recordatoris no es comparteixen: cada persona té els seus.» True for every role, readers included (they keep their own defaults; the app's open D9 is about readers choosing reminders, which this doesn't say). It answers a family's ‘will my reminders ring on everyone's phone?’",
+   "answer": "Yes, as recommended, in the app's own sentence after ‘They can also show just one person's tasks.’ in privacy §5, joining WP66's legal edit.",
+   "builtBy": "WP66"
   },
   {
    "id": "WD29",
@@ -568,8 +764,10 @@
     "WEB-1510"
    ],
    "recommendation": "Yes: ask at the legal sign-off (WD3). If 18 and over stays, the family answer says to invite an adult; its wording is written then.",
-   "status": "open",
-   "context": "Review L, a legal check. The home's family answer (`src/content/site/en.ts:112-114`) invites someone by email; terms §2 and privacy §11 say TaskFlow is only for people 18 and over (`src/content/legal/en.ts:214, 183`). A parent may invite a 15-year-old."
+   "status": "answered 2026-10-31",
+   "context": "Review L, a legal check. The home's family answer (`src/content/site/en.ts:112-114`) invites someone by email; terms §2 and privacy §11 say TaskFlow is only for people 18 and over (`src/content/legal/en.ts:214, 183`). A parent may invite a 15-year-old.",
+   "answer": "For the lawyer at the legal sign-off (WD3). Nothing changes now.",
+   "builtBy": "nothing now: the legal sign-off"
   },
   {
    "id": "WD30",
@@ -578,8 +776,10 @@
     "WEB-1315"
    ],
    "recommendation": "Yes, for failures on our side, a change in the site's own API; keep a result with no task counted, since it protects the demo's budget and the copy says so. WP64 doesn't depend on the answer.",
-   "status": "open",
-   "context": "Review H2. The demo records a try before calling the AI and keeps it when the call fails or times out (`src/app/api/voice/draft/route.ts:79-100`; `src/lib/voice/store.ts:138-173`); a result with no task counts too. The app never counts a dictation the assistant didn't answer (`.claude/ux-review/DECISIONS.md:243-244`), nor an empty one (D4). WP64 keeps the visitor's words after such a failure and offers Try again, which today spends a new try."
+   "status": "answered 2026-10-31",
+   "context": "Review H2. The demo records a try before calling the AI and keeps it when the call fails or times out (`src/app/api/voice/draft/route.ts:79-100`; `src/lib/voice/store.ts:138-173`); a result with no task counts too. The app never counts a dictation the assistant didn't answer (`.claude/ux-review/DECISIONS.md:243-244`), nor an empty one (D4). WP64 keeps the visitor's words after such a failure and offers Try again, which today spends a new try.",
+   "answer": "Yes, as recommended: an AI error, a timeout or an unreadable answer gives the try back; a result with no task still counts.",
+   "builtBy": "WP263"
   },
   {
    "id": "WD31",
@@ -588,8 +788,10 @@
     "WEB-1610"
    ],
    "recommendation": "Yes, whenever the site is reachable before launch: serve `Allow: /` and keep the `noindex` meta; at launch, set `SITE_INDEXABLE=true` as planned. A launch-checklist item; nothing is deployed now (WD13).",
-   "status": "open",
-   "context": "Review G. Until `SITE_INDEXABLE`, `src/app/robots.ts:7-9` serves `Disallow: /` and every page also says `noindex`. Google Search Central: when robots.txt blocks the crawler, it never sees the `noindex`, and the page can still appear in results; link-preview bots that obey robots.txt can't draw a preview either."
+   "status": "answered 2026-10-31",
+   "context": "Review G. Until `SITE_INDEXABLE`, `src/app/robots.ts:7-9` serves `Disallow: /` and every page also says `noindex`. Google Search Central: when robots.txt blocks the crawler, it never sees the `noindex`, and the page can still appear in results; link-preview bots that obey robots.txt can't draw a preview either.",
+   "answer": "Yes, as recommended, as a launch-checklist item: whenever the site is reachable before launch, allow crawling and keep the noindex. Nothing is deployed now.",
+   "builtBy": "nothing now: the launch checklist"
   },
   {
    "id": "WD32",
@@ -598,8 +800,10 @@
     "WEB-1210"
    ],
    "recommendation": "Not now: the H1 is the app's own words. In the five-person test, ask ‘Where do you expect these tasks to appear?’; if anyone says Google Calendar, add one clause to the calendar card.",
-   "status": "open",
-   "context": "Review H1. The H1, the description and the app's pitch all say ‘on your calendar’; the app only reads the phone's calendars and never writes tasks to them (`App/android/app/src/main/kotlin/com/example/agenda/DeviceCalendarBridge.kt:18`; `App/lib/l10n/app_en.arb:164`). A Comparer who lives in Google Calendar may expect the tasks there. The clause, if needed: EN ‘Your tasks stay in TaskFlow; your phone’s events show beside them.’ (Spanish and Catalan written then)."
+   "status": "answered 2026-10-31",
+   "context": "Review H1. The H1, the description and the app's pitch all say ‘on your calendar’; the app only reads the phone's calendars and never writes tasks to them (`App/android/app/src/main/kotlin/com/example/agenda/DeviceCalendarBridge.kt:18`; `App/lib/l10n/app_en.arb:164`). A Comparer who lives in Google Calendar may expect the tasks there. The clause, if needed: EN ‘Your tasks stay in TaskFlow; your phone’s events show beside them.’ (Spanish and Catalan written then).",
+   "answer": "Not now, as recommended; ask in the five-person test.",
+   "builtBy": "nothing"
   },
   {
    "id": "WD33",
@@ -608,8 +812,10 @@
     "WEB-1316"
    ],
    "recommendation": "Not now. The demo teaches one thing, say it and see it on its day; reminders are told on the calendar card and in the FAQ (WD20, WD21).",
-   "status": "open",
-   "context": "Review H2. The app keeps a reminder said while dictating, for free accounts too (2026-10-22), and reminder plans are its newest feature; the live demo neither sets nor shows one (`src/lib/voice/model.ts:53`), so ‘remind me the day before’ seems to vanish."
+   "status": "answered 2026-10-31",
+   "context": "Review H2. The app keeps a reminder said while dictating, for free accounts too (2026-10-22), and reminder plans are its newest feature; the live demo neither sets nor shows one (`src/lib/voice/model.ts:53`), so ‘remind me the day before’ seems to vanish.",
+   "answer": "Not now, as recommended.",
+   "builtBy": "nothing"
   },
   {
    "id": "WD34",
@@ -618,8 +824,10 @@
     "WEB-1317"
    ],
    "recommendation": "Yes, through /ux in the app: the same line in Calendar when the day's last task is ticked. Until then the demo keeps its line, which describes a feeling rather than a feature.",
-   "status": "open",
-   "context": "Review H2, an app question. WD16 and WD17 gave the demo a warm completion moment, what visitors should ‘want daily from the app’; ticking off a day's last task in the app shows nothing like it, and no such string exists in `App/lib/l10n/app_en.arb`."
+   "status": "answered 2026-10-31",
+   "context": "Review H2, an app question. WD16 and WD17 gave the demo a warm completion moment, what visitors should ‘want daily from the app’; ticking off a day's last task in the app shows nothing like it, and no such string exists in `App/lib/l10n/app_en.arb`.",
+   "answer": "Yes, as recommended, through the app's /ux (the app's DECISIONS.md, 2026-10-31). The demo keeps its line.",
+   "builtBy": "the app, through /ux"
   }
  ],
  "skipped": [
@@ -635,6 +843,8 @@
   "Waves (packages that share no component file run side by side): wave 1, WP63, WP65, WP66, WP67, WP68, WP70, WP71, WP72, WP73; wave 2, WP64; wave 3, WP69. The three demo packages share `src/components/VoiceDemo.tsx` and run in a chain (WP63, WP64, WP69).",
   "Noted, not planned. Privacy §3's examples (‘The AI suggests titles, dates and priorities’) and §9's permission list, which leaves out exact alarms (‘Alarms & reminders’), are incomplete but neither false nor misleading (review F's claims 50 and 55, with no copy given), so they wait for the owner's WD3 sign-off. Review G's notes: the legal sidebar's links are 36–39 px tall on desktop (2.5.8 passes; mouse only); the legal pages' English `og:image` URL lacks the home's cache-busting hash (`src/content/legal/index.ts:200-211`), worth checking at the pre-launch re-render (WEB-114). Review H2 accepted the 14 px label «Per exemple, digues:». Lab speed was noisy on the homes (blocking-time medians 341–1120 ms; one `/es/` load 9.31 s after a 7.76 s first byte): repeat the lab runs before judging it.",
   "Owner checks (not decisions): (1) FN-4, the demo against the app: the demo runs `gemini-3.5-flash-lite` on Vertex AI (`src/lib/voice/model.ts:51`), the app gemma on AI Studio, then `gemini-3.1-flash-lite` (`Backend/config/settings.py:126-135`); say review F's three sentences in each, timing them and checking the dates. (2) D7: when «A tu manera» goes onto RevenueCat's paywall, list the site's three Pro benefits there. (3) WD14: raise the shared 200-a-day AI budget before launch, or ‘unlimited … 50 a day’ won't hold. (4) From 2026-10-22, still open: say a rhythm to the live demo («Presentar el proyecto en 3 semanas, recuérdamelo cada 3 días»); a second «Recordar…» task would show something the app doesn't do. (5) WD3: the sign-off of WP66's legal version, replacing the pending 22 October one. (6) Native Spanish and Catalan reads, listed in each package's device checks.",
-  "For the main session, outside the site. App (/ux): the Pro screen's first line (`billingIntro`, `App/lib/l10n/app_en.arb:1981`) lists less than the site's FAQ (F); the reminder sheet's «A tu manera» never says the words go to Google's AI, while capture has its privacy line (L); the invitation email links the bare root (`Backend/core/invitation_email.py:18`), so a Catalan invitee whose browser prefers Spanish lands on `/es/` (F). The other session's uncommitted `Backend/core/email_delivery.py` adds the Reply-To that privacy §1 promises, and an English-only footer to every automatic email, Spanish and Catalan ones too (L). Stale records: `.claude/ux-review/DECISIONS.md:343` and `Backend/docs/ACCOUNT_DELETION.md:67` still say the site's delete page lacks the in-app option (fixed by WEB-202 and WEB-204) (L). Tooling: `.claude/ux-web/webkit_renders.py` should set the locale or name files by the final URL (`webkit/home.en.*` show the Spanish home); `artifacts/ux-web/INDEX.md:143-145` still says there are no WebKit renders; the demo states are rendered only in English at 390 and 1440 px, with no completion state, so WEB-801 and WEB-901–903 can't be re-checked from the standard renders (H1, H2, L, G). For WEB-302's device check (G): a WhatsApp preview of the bare `taskflow.garbar.tech` sent from a Spanish phone, since `/` answers with English tags unless the preview fetcher sends a Spanish Accept-Language."
- ]
+  "For the main session, outside the site. App (/ux): the Pro screen's first line (`billingIntro`, `App/lib/l10n/app_en.arb:1981`) lists less than the site's FAQ (F); the reminder sheet's «A tu manera» never says the words go to Google's AI, while capture has its privacy line (L); the invitation email links the bare root (`Backend/core/invitation_email.py:18`), so a Catalan invitee whose browser prefers Spanish lands on `/es/` (F). The other session's uncommitted `Backend/core/email_delivery.py` adds the Reply-To that privacy §1 promises, and an English-only footer to every automatic email, Spanish and Catalan ones too (L). Stale records: `.claude/ux-review/DECISIONS.md:343` and `Backend/docs/ACCOUNT_DELETION.md:67` still say the site's delete page lacks the in-app option (fixed by WEB-202 and WEB-204) (L). Tooling: `.claude/ux-web/webkit_renders.py` should set the locale or name files by the final URL (`webkit/home.en.*` show the Spanish home); `artifacts/ux-web/INDEX.md:143-145` still says there are no WebKit renders; the demo states are rendered only in English at 390 and 1440 px, with no completion state, so WEB-801 and WEB-901–903 can't be re-checked from the standard renders (H1, H2, L, G). For WEB-302's device check (G): a WhatsApp preview of the bare `taskflow.garbar.tech` sent from a Spanish phone, since `/` answers with English tags unless the preview fetcher sends a Spanish Accept-Language.",
+  "Re-plan of 2026-11-01 (`/ux-web plan 2026-10-28-site`). The owner approved this plan on 2026-10-31 («do everything») and answered WD22–WD34, all as recommended (`.claude/ux-web/DECISIONS.md`, 2026-10-31). WD28's sentence joins WP66 (WEB-1509). Four packages build the other answers that change the site, numbered from WP261 as the main session asked; WP74–WP260 are unused (the ‘WP260’ in the reviews and the guidelines is the Article 29 Working Party's transparency guidance, not a package): WP261 (WD27, WEB-1508, S3), WP262 (WD23, WEB-1209), WP263 (WD30, WEB-1315) and WP264 (WD22, WEB-1404). WD24, WD25, WD26, WD29, WD31, WD32, WD33 and WD34 build nothing on the site now. Waves: wave 1 as before; wave 2, WP64 with WP261 (after WP65, WP66 and WP72), WP262 (after WP67, WP68 and WP70) and WP264 (after WP70); wave 3, WP69 with WP263 (after WP64). Counts: 45 findings to fix in 15 packages. The reading of WD30 that the plan applies: `invalid_draft` (an answer that fails the schema) is an unreadable answer, ours and not the visitor's, as in the app, whose server never counts a failed dictation (`../TaskFlow/Backend/core/views.py:145-147`)."
+ ],
+ "updated": "2026-11-01: the owner's answers of 2026-10-31 (WD22-WD34) turned into packages; nothing else rewritten"
 }

@@ -4,6 +4,23 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
+## 2026-10-31 — The plan of run 2026-10-28-site, approved with WD22–WD34 as recommended
+The owner answered the list of what waited on him with "do everything" (and then: "after everything finishes, make a pr and merge it onto main"). Every package WP63–WP73 is approved, and each question is answered as `runs/2026-10-28-site/plan.md` recommends:
+- **WD22, repeating tasks:** yes, as one FAQ item after "How do I add tasks by voice?", in review F's copy. Never said together with the "more and more often" reminders, which repeating tasks don't get.
+- **WD23, what's free in the first screen:** (a), a third line under the hero's status in WD2's words: "Free with an account: 10 dictations a month, and tasks by hand with no limit." (ES «Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite.», CA «Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit.»)
+- **WD24, hearing when TaskFlow launches:** (a), wait on the site, as decided (WD9). Settling the package ID moves up the owner's launch list; nothing to build.
+- **WD25, reminders in your own words:** (a), keep them listed as Pro, as the app says.
+- **WD26, the app's reminder preview instead of the calendar card's drawing:** yes, at the pre-launch re-render (WD13), not now.
+- **WD27, Play's deletion link:** (a). `/delete-account/` follows the language too: a choice saved in the switch first, then the browser's language, never the location. English stays at that address.
+- **WD28, reminders aren't shared:** yes, in the app's own sentence after "They can also show just one person's tasks." in privacy §5, joining WP66's legal edit (EN "Reminders aren’t shared: each person has their own.", ES «Los recordatorios no se comparten: cada persona tiene los suyos.», CA «Els recordatoris no es comparteixen: cada persona té els seus.»).
+- **WD29, family sharing against "18 and over":** for the lawyer at the legal sign-off (WD3). Nothing changes now.
+- **WD30, a demo try that fails on our side:** yes. An AI error, a timeout or an unreadable answer gives the try back; a result with no task still counts.
+- **WD31, crawlers and the noindex before launch:** yes, as a launch-checklist item: whenever the site is reachable before launch, allow crawling and keep the noindex. Nothing is deployed now.
+- **WD32, "your calendar":** not now; ask in the five-person test.
+- **WD33, reminders in the demo's result:** not now.
+- **WD34, the app's completion moment:** yes, through the app's /ux (the app's DECISIONS.md, 2026-10-31). The demo keeps its line.
+- Since then in the app: a reader («lector») may choose their own reminders (the app's D9, server bc80025). Reminders stay personal for everyone, so WD28's sentence holds.
+
 ## 2026-10-22 (evening) — WD20 and WD21 of run 2026-10-22-changes
 The owner answered both "yes", WD21 against the recommendation («not now»):
 - **WD20, the calendar card's reminder sentence:** yes. It says that reminders can come more often as a task's day gets closer.

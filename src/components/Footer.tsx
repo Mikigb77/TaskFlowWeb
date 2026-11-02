@@ -51,7 +51,11 @@ export default function Footer() {
           </p>
           <p>{footer.trademark}</p>
         </div>
-        <LanguageSwitch className="footer-languages" label={frame.language} />
+        <LanguageSwitch
+          className="footer-languages"
+          label={frame.language}
+          as="group"
+        />
         <a href="#main-content" className="footer-back">
           {footer.backToTop}
           <span aria-hidden="true">

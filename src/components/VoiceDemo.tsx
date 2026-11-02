@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Icon from "./Icon";
 import VoiceExample from "./VoiceExample";
 import { useSiteLanguage } from "./useSiteLanguage";
@@ -32,27 +32,42 @@ function dateFormats(language: SiteLanguage) {
   };
 }
 
-// A task's date line, as the app shows it: weekday, day and month, then the time.
+// A task's date line, as the app shows it: Today or Tomorrow by the visitor's own
+// clock, otherwise weekday, day and month; then the time.
 function dateLine(
   task: Draft,
   formats: ReturnType<typeof dateFormats>,
-  noDate: string,
+  t: Pick<Voice, "noDate" | "today" | "tomorrow">,
 ) {
-  if (!task.date) return noDate;
+  if (!task.date) return t.noDate;
   const [year, month, day] = task.date.split("-").map(Number);
   const [hour, minute] = (task.time ?? "12:00").split(":").map(Number);
   const at = new Date(year, month - 1, day, hour, minute);
-  return task.time
-    ? `${formats.day.format(at)} · ${formats.time.format(at)}`
-    : formats.day.format(at);
+  const now = new Date();
+  const tomorrow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  );
+  const label =
+    at.toDateString() === now.toDateString()
+      ? t.today
+      : at.toDateString() === tomorrow.toDateString()
+        ? t.tomorrow
+        : formats.day.format(at);
+  return task.time ? `${label} · ${formats.time.format(at)}` : label;
 }
 
 type Voice = (typeof copy)[SiteLanguage]["voice"];
 // What went wrong, in the visitor's words. `retry`: the same request can be sent again
-// with Try again, without using another try. `off`: the static example replaces the form.
+// with Try again, without using another try. `fresh`, with `retry`: Try again keeps the
+// text or the recording but sends it as a new request, with a new ID (the server answers
+// a failed request's ID only with `previous_failure`). `off`: the static example
+// replaces the form.
 type Failure = {
   message: string;
   retry?: boolean;
+  fresh?: boolean;
   off?: boolean;
   check?: boolean;
   triesUsed?: boolean;
@@ -68,8 +83,10 @@ function failureFor(t: Voice, code: unknown): Failure {
     case "paused":
     case "not_ready":
     case "budget_config":
-    case "unavailable":
       return { message: t.errors.off, off: true };
+    // One call that failed, not the demo off: Try again sends the words again, as a new request.
+    case "unavailable":
+      return { message: t.errors.notAnswering, retry: true, fresh: true };
     case "invalid_draft":
       return { message: t.errors.invalidDraft };
     case "invalid_audio":
@@ -92,6 +109,51 @@ function failureFor(t: Voice, code: unknown): Failure {
       return { message: "", check: true, retry: true };
     default:
       return { message: t.errors.notAnswering, retry: true };
+  }
+}
+
+// A request's ID, in the form the server accepts (a lower-case version-4 UUID):
+// crypto.randomUUID where the browser has it, random bytes otherwise (Safari before 15.4).
+function newRequestId() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return [
+    hex.slice(0, 4),
+    hex.slice(4, 6),
+    hex.slice(6, 8),
+    hex.slice(8, 10),
+    hex.slice(10),
+  ]
+    .map((part) => part.join(""))
+    .join("-");
+}
+
+// The page's own limit on a request, 40 s (the model's is 35 s): AbortSignal.timeout
+// where the browser has it, a timer otherwise (Safari before 16). Returns what clears it.
+const pageLimit = 40_000;
+function limitWait(expire: () => void) {
+  if (typeof AbortSignal.timeout === "function") {
+    const signal = AbortSignal.timeout(pageLimit);
+    signal.addEventListener("abort", expire);
+    return () => signal.removeEventListener("abort", expire);
+  }
+  const later = setTimeout(expire, pageLimit);
+  return () => clearTimeout(later);
+}
+
+// After a NotAllowedError: true when the browser will ask again on the next tap (its
+// prompt was dismissed); false when the microphone is blocked, or the browser can't tell.
+async function microphoneAsksAgain() {
+  try {
+    const permission = await navigator.permissions.query({
+      name: "microphone" as PermissionName,
+    });
+    return permission.state === "prompt";
+  } catch {
+    return false;
   }
 }
 
@@ -252,12 +314,16 @@ export default function VoiceDemo() {
   const panel = useRef<HTMLDivElement>(null);
   const completionBanner = useRef<HTMLDivElement>(null);
   const taskPointer = useRef<number | null>(null);
+  const taskId = useId();
   const revealCompletion = useRef(false);
   const stageHeading = useRef<HTMLHeadingElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
   const recordButton = useRef<HTMLButtonElement>(null);
+  // The circle that follows the voice while listening; its size is set without re-rendering.
+  const levelRing = useRef<HTMLSpanElement>(null);
   const textBox = useRef<HTMLTextAreaElement>(null);
+  const submitButton = useRef<HTMLButtonElement>(null);
   // Where focus goes after switching between talking and typing.
   const focusNext = useRef<"text" | "record" | null>(null);
   const warned = useRef(false);
@@ -401,7 +467,8 @@ export default function VoiceDemo() {
       waiting.current?.controller.abort();
     };
   }, []);
-  // After 10 s of waiting, say it can take up to half a minute, and offer Stop waiting.
+  // After 10 s of waiting, say it can take up to 40 s (the page's limit, pageLimit),
+  // and offer Stop waiting.
   useEffect(() => {
     setWaitedLong(false);
     if (!busy) return;
@@ -411,6 +478,23 @@ export default function VoiceDemo() {
     }, 10_000);
     return () => clearTimeout(later);
   }, [busy, t.stillUnderstanding]);
+  // Typing: keep Done in view with the text box, when the box takes focus and when a
+  // phone keyboard opens over it (WEB-1308).
+  const showDone = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (document.activeElement === textBox.current)
+        submitButton.current?.scrollIntoView({
+          block: "nearest",
+          behavior: "instant",
+        });
+    });
+  }, []);
+  useEffect(() => {
+    if (mode !== "text" || stage !== "capture") return;
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", showDone);
+    return () => viewport?.removeEventListener("resize", showDone);
+  }, [mode, stage, showDone]);
   // The security check passed after its Try again: carry on where the visitor would.
   useEffect(() => {
     if (checkFailed || !checkRetried.current) return;
@@ -450,6 +534,41 @@ export default function VoiceDemo() {
     setPending(true);
     await stop();
   }, [stop]);
+  // Close demo while listening: the microphone stops and the recording is thrown away.
+  // Nothing is sent and no try is used.
+  function discardRecording() {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
+    const active = recorder.current;
+    recorder.current = null;
+    setRecording(false);
+    setPending(false);
+    setAudio(null);
+    // stop() ends every track before it resolves; what it returns is ignored.
+    void active?.stop();
+  }
+  // While listening, the circle's halo follows the voice, read on each frame. With
+  // reduced motion it moves in three steps (silent, speaking, loud) without easing.
+  useEffect(() => {
+    if (!recording) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0,
+      shown = -1;
+    const draw = () => {
+      const raw = recorder.current?.level() ?? 0;
+      const value = reduce ? (raw < 0.25 ? 0 : raw < 0.7 ? 0.5 : 1) : raw;
+      if (value !== shown && levelRing.current) {
+        shown = value;
+        levelRing.current.style.setProperty("--level", value.toFixed(3));
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(frame);
+      levelRing.current?.style.removeProperty("--level");
+    };
+  }, [recording]);
   async function open() {
     setOpened(true);
     setLoading(true);
@@ -479,7 +598,7 @@ export default function VoiceDemo() {
     setSeconds(0);
     setAnswered(false);
     clearCompletion();
-    requestId.current = crypto.randomUUID();
+    requestId.current = newRequestId();
     if (!navigator.mediaDevices?.getUserMedia) {
       microphoneFailed(t.micUnsupported);
       return;
@@ -501,15 +620,18 @@ export default function VoiceDemo() {
         setSeconds(elapsed);
         if (elapsed >= 50 && !warned.current) {
           warned.current = true;
-          setAnnouncement(t.tenSecondsLeft);
+          setAnnouncement(secondsLeft(10));
         }
         if (elapsed >= 60) void finish();
       }, 200);
     } catch (reason) {
       const name = (reason as Error).name;
+      // Refused: a dismissed prompt asks again on the next tap; a blocked microphone doesn't.
       microphoneFailed(
         name === "NotAllowedError"
-          ? t.micBlocked
+          ? (await microphoneAsksAgain())
+            ? t.micDismissed
+            : t.micBlocked
           : name === "NotFoundError"
             ? t.micMissing
             : t.micFailed,
@@ -525,22 +647,30 @@ export default function VoiceDemo() {
     setError("");
     setAnswered(false);
     clearCompletion();
-    requestId.current ||= crypto.randomUUID();
     const current = {
       controller: new AbortController(),
       reason: "" as "" | "stop" | "close" | "timeout",
     };
     waiting.current = current;
-    // The page's own limit; the model's is 35 s.
-    const timeout = AbortSignal.timeout(40_000);
-    const expire = () => {
-      current.reason ||= "timeout";
-      current.controller.abort();
-    };
-    timeout.addEventListener("abort", expire);
+    let clearLimit = () => {};
+    // Whether fetch was called: an error before it isn't the connection.
+    let sent = false;
     let failed: Failure | null = null;
     let data: Record<string, unknown> | null = null;
+    // Whatever throws while setting up or sending ends in the catch, never a lasting wait.
     try {
+      requestId.current ||= newRequestId();
+      clearLimit = limitWait(() => {
+        current.reason ||= "timeout";
+        current.controller.abort();
+      });
+      const body = JSON.stringify({
+        ...(mode === "voice" && audio
+          ? { audio: await audioBase64(audio) }
+          : { text }),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      });
+      sent = true;
       const response = await fetch("/api/voice/draft/", {
         method: "POST",
         headers: {
@@ -548,12 +678,7 @@ export default function VoiceDemo() {
           "X-Turnstile-Token": token,
           "X-Request-Id": requestId.current,
         },
-        body: JSON.stringify({
-          ...(mode === "voice" && audio
-            ? { audio: await audioBase64(audio) }
-            : { text }),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-        }),
+        body,
         signal: current.controller.signal,
       });
       data = await readJson(response);
@@ -562,14 +687,15 @@ export default function VoiceDemo() {
     } catch (reason) {
       failed = {
         message:
-          (reason as Error).name === "TypeError"
+          sent && (reason as Error).name === "TypeError"
             ? t.errors.offline
             : t.errors.notAnswering,
         retry: true,
       };
     } finally {
-      timeout.removeEventListener("abort", expire);
-      waiting.current = null;
+      clearLimit();
+      // Close demo may already have let it go, and a new request may be waiting.
+      if (waiting.current === current) waiting.current = null;
     }
     // Stopped: by the page's limit, by Stop waiting (the still-understanding message:
     // the server carries on, and Try again resends it without another try), or by Close demo.
@@ -602,10 +728,11 @@ export default function VoiceDemo() {
       setRetryPending(!!failed.retry);
       // Anything that can't be resent starts a new request next time; a refused
       // recording can't be sent again, so only Tap to talk remains.
+      // A fresh one keeps the words, for Try again as a new request.
       if (!failed.retry) {
         requestId.current = "";
         if (mode === "voice") setAudio(null);
-      }
+      } else if (failed.fresh) requestId.current = "";
       setOff(!!failed.off);
       // The API refused the security check's token: no try used; its Try again resends.
       setCheckRefused(!!failed.check);
@@ -652,8 +779,11 @@ export default function VoiceDemo() {
       setPending(true);
     }
   }
-  // Close demo: back to the closed card, with nothing kept.
+  // Close demo: back to the closed card, with nothing kept, even mid-wait.
   function startAgain() {
+    discardRecording();
+    setBusy(false);
+    waiting.current = null;
     setAnswered(false);
     clearCompletion();
     setTasks([]);
@@ -699,6 +829,8 @@ export default function VoiceDemo() {
   // The record button is the Done button from the first tap until the recording is
   // sent, except while a recording is being resent with Try again.
   const listening = recording || (pending && mode === "voice" && !retryPending);
+  // The record button waits: for the microphone, or, as Done, to send.
+  const recordWaits = listening ? pending : loading;
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   const number = new Intl.NumberFormat(language);
   const formats = dateFormats(language);
@@ -724,11 +856,23 @@ export default function VoiceDemo() {
         .replace("{weekday}", formats.weekday.format(resetAt))
         .replace("{time}", formats.time.format(resetAt))
     : t.triesUsedLater;
+  // From 50 s: the seconds still to go, in the page's language.
+  function secondsLeft(count: number) {
+    return t.secondsLeft[
+      new Intl.PluralRules(language).select(count) === "one" ? "one" : "other"
+    ].replace("{n}", number.format(count));
+  }
   const thingsToAdd = t.thingsToAdd[
     new Intl.PluralRules(language).select(tasks.length) === "one"
       ? "one"
       : "other"
   ].replace("{n}", number.format(tasks.length));
+  const privacyLine = (
+    <p className="voice-privacy">
+      {t.privacy}{" "}
+      <a href={`${homePath(language)}privacy/#website`}>{t.privacyLink}</a>
+    </p>
+  );
   const alertBox = shownError ? (
     <p role="alert" className="voice-error" tabIndex={-1} ref={errorMessage}>
       {shownError}
@@ -776,7 +920,7 @@ export default function VoiceDemo() {
                 </span>
                 <button
                   className="text-link"
-                  disabled={recording || loading}
+                  disabled={loading}
                   onClick={() => {
                     stopWaiting("close");
                     startAgain();
@@ -793,11 +937,12 @@ export default function VoiceDemo() {
                   : announcement}
               </p>
               {stage !== "off" && stage !== "unverified" && alertBox}
-              {/* The live demo is off: the static example, with the message under it. */}
+              {/* The live demo is off: the static example, the message under it, and the hand-over. */}
               {stage === "off" && (
                 <div className="voice-off voice-stage">
                   <VoiceExample language={language} />
                   {alertBox}
+                  <p className="voice-handover">{t.handOver}</p>
                 </div>
               )}
               {/* Opening failed: the message above, and Try again. */}
@@ -852,6 +997,18 @@ export default function VoiceDemo() {
                   {mode === "voice" ? (
                     <div className="voice-recorder">
                       <p className="voice-prompt">{t.example.quote}</p>
+                      {/* While listening: the microphone, a picture whose halo follows the voice. */}
+                      {listening && (
+                        <span
+                          className="voice-level"
+                          aria-hidden="true"
+                          ref={levelRing}
+                        >
+                          <Icon name="mic" size={32} />
+                        </span>
+                      )}
+                      {/* Waiting for the microphone, and Done waiting to send, keep keyboard
+                          focus: aria-disabled, not disabled, which would drop it to the page. */}
                       <button
                         id="voice-record"
                         ref={recordButton}
@@ -864,9 +1021,13 @@ export default function VoiceDemo() {
                           listening ? undefined : "voice-record-label"
                         }
                         disabled={
-                          listening ? pending : unavailable || checkBlocked
+                          !listening && (busy || pending || checkBlocked)
                         }
-                        onClick={listening ? finish : record}
+                        aria-disabled={recordWaits || undefined}
+                        onClick={() => {
+                          if (recordWaits) return;
+                          void (listening ? finish() : record());
+                        }}
                       >
                         {listening ? t.done : <Icon name="mic" size={32} />}
                       </button>
@@ -886,7 +1047,9 @@ export default function VoiceDemo() {
                             ? t.starting
                             : recording
                               ? t.listening.replace("{time}", clock) +
-                                (seconds >= 50 ? ` · ${t.tenSecondsLeft}` : "")
+                                (seconds >= 50
+                                  ? ` · ${secondsLeft(60 - seconds)}`
+                                  : "")
                               : t.micHint}
                       </p>
                     </div>
@@ -904,6 +1067,7 @@ export default function VoiceDemo() {
                         value={text}
                         disabled={busy}
                         placeholder={t.textPlaceholder}
+                        onFocus={showDone}
                         onChange={(event) => {
                           setText(event.target.value);
                           setRetryPending(false);
@@ -916,15 +1080,12 @@ export default function VoiceDemo() {
                           .replace("{n}", number.format(text.length))
                           .replace("{max}", number.format(1500))}
                       </p>
-                      <p className="voice-text-pro">{t.textPro}</p>
                     </div>
                   )}
-                  <p className="voice-privacy">
-                    {t.privacy}{" "}
-                    <a href={`${homePath(language)}privacy/#website`}>
-                      {t.privacyLink}
-                    </a>
-                  </p>
+                  {/* Talking: the privacy line before the security check. Typing: after
+                      Done, so Done stays right under the box. The check keeps its one
+                      place among these siblings, so switching never reloads it. */}
+                  {mode === "voice" && privacyLine}
                   <Verification
                     siteKey={status.siteKey}
                     onToken={receiveToken}
@@ -954,6 +1115,7 @@ export default function VoiceDemo() {
                       {/* A request still to be retrieved is sent again with Try again,
                           without using another try. */}
                       <button
+                        ref={submitButton}
                         className="button voice-submit"
                         disabled={
                           unavailable || checkBlocked || text.trim().length < 3
@@ -962,6 +1124,8 @@ export default function VoiceDemo() {
                       >
                         {retryPending && !checkBlocked ? t.tryAgain : t.done}
                       </button>
+                      {privacyLine}
+                      <p className="voice-text-pro">{t.textPro}</p>
                     </>
                   )}
                   {/* A recording whose request is still to be retrieved: send it again
@@ -1025,34 +1189,52 @@ export default function VoiceDemo() {
                       <ul className="voice-drafts">
                         {tasks.map((task, index) => (
                           <li className="voice-task-card" key={index}>
-                            <h4>
-                              <label
-                                className="voice-task-toggle"
-                                onClickCapture={(event) => {
-                                  // Capture the actual pointer/touch click,
-                                  // including a title-label click before its
-                                  // forwarded detail-0 checkbox activation.
-                                  // toggleTask consumes the origin immediately.
-                                  if (event.detail > 0)
-                                    taskPointer.current = index;
-                                }}
-                                onKeyDownCapture={() => {
-                                  taskPointer.current = null;
-                                }}
+                            <div
+                              className="voice-task-toggle"
+                              onClickCapture={(event) => {
+                                // Capture the actual pointer/touch click,
+                                // including a title-label click before its
+                                // forwarded detail-0 checkbox activation.
+                                // toggleTask consumes the origin immediately.
+                                if (event.detail > 0)
+                                  taskPointer.current = index;
+                              }}
+                              onKeyDownCapture={() => {
+                                taskPointer.current = null;
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                id={`${taskId}-${index}`}
+                                aria-label={t.completeTask.replace(
+                                  "{title}",
+                                  task.title,
+                                )}
+                                checked={checkedTasks.includes(index)}
+                                onChange={(event) =>
+                                  toggleTask(index, event.target.checked)
+                                }
+                              />
+                              {/* The app's completion circle, drawn under the transparent input. */}
+                              <span
+                                className="voice-task-circle"
+                                aria-hidden="true"
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={checkedTasks.includes(index)}
-                                  onChange={(event) =>
-                                    toggleTask(index, event.target.checked)
-                                  }
-                                />
-                                <span>{task.title}</span>
-                              </label>
-                            </h4>
+                                <Icon name="check" size={16} />
+                              </span>
+                              {/* The heading is the title alone; tapping it still ticks the circle. */}
+                              <h4>
+                                <label
+                                  htmlFor={`${taskId}-${index}`}
+                                  className="voice-task-title"
+                                >
+                                  {task.title}
+                                </label>
+                              </h4>
+                            </div>
                             <p className="voice-task-schedule">
                               <Icon name="calendar" size={16} />
-                              {dateLine(task, formats, t.noDate)}
+                              {dateLine(task, formats, t)}
                             </p>
                             {task.notes && (
                               <p className="voice-task-notes">{task.notes}</p>
@@ -1099,10 +1281,16 @@ export default function VoiceDemo() {
                       {t.changeText}
                     </button>
                   )}
-                  <details className="voice-transcript">
-                    <summary>{t.seeWhatISaid}</summary>
-                    <p>{transcript}</p>
-                  </details>
+                  {/* A typed result shows its text here only when Change the
+                      text isn't there, after the last try. */}
+                  {(mode === "voice" || allowanceUsed) && (
+                    <details className="voice-transcript">
+                      <summary>
+                        {mode === "voice" ? t.seeWhatISaid : t.originalText}
+                      </summary>
+                      <p>{transcript}</p>
+                    </details>
+                  )}
                   <p className="voice-fine">{t.fine}</p>
                 </div>
               )}

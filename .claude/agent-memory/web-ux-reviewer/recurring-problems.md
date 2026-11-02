@@ -29,7 +29,14 @@ Regressions that fixes kept introducing; check for them in every verify.
 - **FAQ answers beyond the first aren't rendered open**: changes to later FAQ answers rest on the tester's 320 px / text-200 / axe tests; name that as the evidence level.
 - **Raster screenshots hide text from the site's audit**: axe and AUDIT §7 can't see text inside `hero-calendar-*.png` (e.g. «2 pendientes» 3.00:1, ~9 px in the desktop hero). Use the app's own audit for in-image contrast and treat legibility as a device check; a property the old image also had isn't a regression.
 
+- **Restructuring a control's markup leaks or shrinks** (2026-10-28-site): a checkbox with a new `aria-label` inside an `<h4>` made the heading read "Complete X X" (R1H-1); moving the control out then shrank the tap area from the whole row to 24 px + title text (WEB-1615). After any change to a label/input/heading structure, read the ARIA snapshot (`artifacts/ux-web/aria/`) for heading names and measure the clickable area from render geometry: `tests/support/ux-collect.ts:628-632` skips opacity-0 inputs, so AUDIT §5/§13 "Under 44 px: 0" isn't a pass for custom checkboxes. Also check `cursor: pointer` over dead space.
+- **A conditional render hides info in an edge state** (R1H-2): hiding the transcript for typed results forgot the last try, where "Change the text" isn't shown. For each new condition, walk the tries-left / tries-used / no-tasks combinations.
+- **Resizing one row inverts a hierarchy** (R1G-1): legal links grown to 1rem outranked the footer's site nav and its primary action. When a fix changes one element's size or weight, compare it with its siblings in the same region.
+- **A new state indicator looks like a control** (R1H-1 of b1): the listening circle copied the idle record button's filled disc. A non-interactive indicator must differ in fill/outline from the button it replaces in place.
+
 Evidence gaps to name, not paper over: when WSL won't start (`Wsl/Service/CreateInstance/E_UNEXPECTED`), crop.mjs and the tester's specs can't run; say the verdict rests on code + existing renders/AUDIT, and list the unrun tests as pending evidence, not as failures. Files held because another session's uncommitted work shares them can't be committed; that's a loop status, not a finding. `voice-*.panel.png` can be cut at the viewport edge (render-tool artifact): read the `view.png` too. Language of parts (`lang`) isn't in renders or AUDIT: verify by nearest `[lang]` in code and spec.
+
+`crop.mjs` needs `sharp`; when the checkout has no `node_modules`, crop with PIL and say so.
 
 Techniques that worked: compare render mtimes with source mtimes first; crop full-page renders with `crop.mjs` at the screen in question; width arithmetic from the render (chars × px vs box padding); cite AUDIT row line numbers; check the tester's spec line numbers so a fix is protected by a test; list new Catalan strings for a native read rather than judging them.
 

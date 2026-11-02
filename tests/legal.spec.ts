@@ -32,7 +32,7 @@ test("legal documents are readable without login or JavaScript in all three lang
       await expect(page.locator(".legal-draft")).toHaveCount(0);
       await expect(page.locator(".legal-version time")).toHaveAttribute(
         "datetime",
-        "2026-10-22",
+        "2026-11-01",
       );
       expect(
         await page
@@ -56,14 +56,16 @@ test("language, document and rights links keep the selected translation", async 
   page,
 }) => {
   await page.goto("/privacy/");
-  await page.getByRole("main").getByRole("link", { name: "Español", exact: true }).click();
+  // The first language switch shown: the page's on phones, the header's on desktop, where
+  // the page's is hidden (WP65, WEB-1504).
+  await page.getByRole("link", { name: "Español", exact: true }).first().click();
   await expect(page).toHaveURL(/\/es\/privacy\/$/);
   await page
     .locator(".legal-related")
     .getByRole("link", { name: "Términos y condiciones" })
     .click();
   await expect(page).toHaveURL(/\/es\/terms\/$/);
-  await page.getByRole("main").getByRole("link", { name: "Català", exact: true }).click();
+  await page.getByRole("link", { name: "Català", exact: true }).first().click();
   await expect(page).toHaveURL(/\/ca\/terms\/$/);
   await page
     .locator(".legal-related")

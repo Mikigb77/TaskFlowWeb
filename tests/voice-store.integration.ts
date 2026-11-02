@@ -183,3 +183,116 @@ test("concurrent public and developer requests stop at the remaining monthly res
     );
   }
 });
+
+// ---- Run 2026-10-28-site: WP263 (WEB-1315) ----
+// WD30: a demo try that fails on our side is given back; a result with no task still counts.
+// The month's document is shared by every test here: each test starts it afresh.
+const thisMonth = () => new Date().toISOString().slice(0, 7);
+async function freshMonth() {
+  const month = thisMonth();
+  await db.collection("voiceMonths").doc(month).delete();
+  return month;
+}
+const monthStats = async (month: string) =>
+  (await db.collection("voiceMonths").doc(month).get()).data()!;
+const visitorAttempts = async (visitor: string) =>
+  ((await db.collection("voiceVisitors").doc(visitor).get()).data()?.attempts ?? []) as number[];
+const networkAttempts = async (network: string) =>
+  ((await db.collection("voiceNetworks").doc(network).get()).data()?.attempts ?? []) as number[];
+const noTaskResult = { transcript: "Hmm, let me think.", tasks: [] };
+
+test("WEB-1315: a request that ends without a result gives the visitor's try back; the network's count, the month's request and its charged reservation stay", async () => {
+  const month = await freshMonth();
+  const visitor = randomUUID(),
+    network = randomUUID(),
+    request = randomUUID();
+  const before = Date.now();
+  assert.equal(await admit(visitor, network, request, "text", 0), month);
+  const after = Date.now();
+  assert.equal((await usage(visitor)).remaining, 2, "the try is held while the AI is called");
+  await finish(visitor, request, month, {});
+  const access = await usage(visitor);
+  assert.equal(access.remaining, 3);
+  assert.equal(access.resetAt, null);
+  assert.deepEqual(await visitorAttempts(visitor), []);
+  const net = await networkAttempts(network);
+  assert.equal(net.length, 1, "the network still holds that attempt");
+  assert.ok(net[0] >= before && net[0] <= after, "the network's attempt is the one admitted");
+  const stats = await monthStats(month);
+  assert.equal(stats.requests, 1);
+  assert.equal(stats.failed, 1);
+  assert.equal(stats.succeeded || 0, 0);
+  assert.equal(stats.chargedMicros, RESERVATION_MICROS);
+  assert.equal(stats.reservedMicros, 0);
+});
+
+test("WEB-1315: a result with no task still uses the try", async () => {
+  const month = await freshMonth();
+  const visitor = randomUUID(),
+    request = randomUUID();
+  await admit(visitor, randomUUID(), request, "text", 0);
+  await finish(visitor, request, month, { result: noTaskResult, cost: 100, input: 10, output: 5 });
+  assert.equal((await usage(visitor)).remaining, 2);
+  assert.equal((await visitorAttempts(visitor)).length, 1);
+  assert.deepEqual(await cachedJob(visitor, request), noTaskResult);
+  const stats = await monthStats(month);
+  assert.equal(stats.succeeded, 1);
+  assert.equal(stats.failed || 0, 0);
+});
+
+test("WEB-1315: settling one failed request twice gives one try back, not two", async () => {
+  const month = await freshMonth();
+  const visitor = randomUUID(),
+    request = randomUUID();
+  await admit(visitor, randomUUID(), request, "text", 0);
+  const [at] = await visitorAttempts(visitor);
+  // A second try in the same millisecond: a second give-back would find it and remove it.
+  await db.collection("voiceVisitors").doc(visitor).update({ attempts: [at, at] });
+  assert.equal((await usage(visitor)).remaining, 1);
+  await finish(visitor, request, month, {});
+  await finish(visitor, request, month, {});
+  assert.deepEqual(await visitorAttempts(visitor), [at]);
+  assert.equal((await usage(visitor)).remaining, 2);
+  const stats = await monthStats(month);
+  assert.equal(stats.failed, 1, "settled once");
+  assert.equal(stats.chargedMicros, RESERVATION_MICROS);
+});
+
+test("WEB-1315: a failed request in a developer window leaves the visitor's attempts as they were", async () => {
+  const month = await freshMonth();
+  const visitor = randomUUID(),
+    request = randomUUID(),
+    now = Date.now();
+  const attempts = [now - 2000, now - 1000];
+  await db
+    .collection("voiceVisitors")
+    .doc(visitor)
+    .set({ attempts, developerStartedAt: now - 10, developerUntil: now + 30 * 60_000 });
+  await admit(visitor, randomUUID(), request, "text", 0);
+  assert.deepEqual(await visitorAttempts(visitor), attempts, "a developer window counts no try");
+  await finish(visitor, request, month, {});
+  assert.deepEqual(await visitorAttempts(visitor), attempts);
+  assert.equal((await monthStats(month)).failed, 1);
+});
+
+test("WEB-1315: after a failure the same request ID still answers previous_failure, and a new request ID is admitted", async () => {
+  const month = await freshMonth();
+  const visitor = randomUUID(),
+    network = randomUUID(),
+    request = randomUUID();
+  await admit(visitor, network, request, "text", 0);
+  await finish(visitor, request, month, {});
+  await assert.rejects(
+    cachedJob(visitor, request),
+    (e) => e instanceof DemoError && e.code === "previous_failure",
+  );
+  await assert.rejects(
+    admit(visitor, network, request, "text", 0),
+    (e) => e instanceof DemoError && e.code === "processing",
+    "the same request ID is never admitted twice",
+  );
+  const next = randomUUID();
+  assert.equal(await admit(visitor, network, next, "text", 0), month);
+  assert.equal((await usage(visitor)).remaining, 2);
+  assert.equal((await networkAttempts(network)).length, 2);
+});

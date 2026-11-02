@@ -125,7 +125,7 @@ test("live text capture shows the tasks as the app does and the remaining tries"
   // WD16 permits local completion controls in generated results; editing stays absent.
   await expect(demo.getByRole("checkbox")).toHaveCount(2);
   for (const title of ["Doctor appointment", "Buy coffee"]) {
-    const checkbox = demo.getByRole("checkbox", { name: title, exact: true });
+    const checkbox = demo.getByRole("checkbox", { name: `Complete ${title}`, exact: true });
     await expect(checkbox).not.toBeChecked();
     expect(await checkbox.evaluate((input) => input instanceof HTMLInputElement && input.type === "checkbox")).toBe(true);
   }
@@ -266,7 +266,7 @@ test.describe("microphone capture", () => {
     expect(requests).toBe(0);
     await page.getByRole("button", { name: "Done", exact: true }).click();
     const noTasks = page.getByRole("heading", {
-      name: "No tasks were found. Your words are kept. That used a try.",
+      name: "I didn’t find a task. Say what and when, for example: “Tomorrow, call the dentist.” That used a try.",
     });
     await expect(noTasks).toBeFocused();
     await expect(page.locator("#voice .voice-results svg")).toHaveCount(0);
@@ -418,7 +418,7 @@ test("the last allowed request can be retrieved after an interrupted response", 
   await expect(page.getByText("0 of 3 tries left")).toBeVisible();
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(
-    page.getByText("No tasks were found.", { exact: false }),
+    page.getByText("I didn’t find a task.", { exact: false }),
   ).toBeVisible();
   expect(attempts).toBe(2);
   // The last try's result: no action to repeat it, but when the tries come back.

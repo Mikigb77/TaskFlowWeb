@@ -26,6 +26,7 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
             </a>
           </div>
           <p className="hero-status">{hero.status}</p>
+          <p className="hero-free">{hero.free}</p>
         </div>
         <div className="hero-art">
           <div className="hero-stage" aria-hidden="true">
@@ -147,7 +148,9 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
                   <Icon name="plus" size={18} />
                 </span>
               </summary>
-              <p>{answer}</p>
+              {[answer].flat().map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </details>
           ))}
         </div>

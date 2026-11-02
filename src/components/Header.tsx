@@ -7,6 +7,9 @@ import { AppearanceChoice, ThemeToggle } from "./ThemeProvider";
 import { useSiteLanguage } from "./useSiteLanguage";
 import { copy, homePath } from "../content/site";
 
+// The part of CloseWatcher the menu uses, declared here since TypeScript's DOM types may lack it.
+type CloseWatcherLike = { onclose: (() => void) | null; destroy(): void };
+
 export default function Header() {
   const language = useSiteLanguage();
   const { frame } = copy[language];
@@ -18,19 +21,53 @@ export default function Header() {
   ];
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && menu.current?.open) {
-        menu.current.open = false;
-        menu.current.querySelector("summary")?.focus();
+    const details = menu.current;
+    if (!details) return;
+    // Android's Back (and other close requests) close the open menu where the browser has CloseWatcher.
+    const Watcher = (
+      window as Window & { CloseWatcher?: new () => CloseWatcherLike }
+    ).CloseWatcher;
+    let watcher: CloseWatcherLike | null = null;
+    const stopWatching = () => {
+      watcher?.destroy();
+      watcher = null;
+    };
+    // Closes the menu; focus goes back to its button only if it was inside the menu.
+    const shut = () => {
+      stopWatching();
+      const inside = details.contains(document.activeElement);
+      details.open = false;
+      if (inside) details.querySelector("summary")?.focus();
+    };
+    const toggle = () => {
+      if (!details.open) stopWatching();
+      else if (Watcher && !watcher) {
+        watcher = new Watcher();
+        watcher.onclose = shut;
       }
     };
-    const outside = (event: PointerEvent) => {
-      if (menu.current?.open && !menu.current.contains(event.target as Node))
-        menu.current.open = false;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && details.open) shut();
     };
+    const outside = (event: PointerEvent) => {
+      if (details.open && !details.contains(event.target as Node))
+        details.open = false;
+    };
+    // Tab past the last control closes the menu. A null relatedTarget (Safari, on a tap that
+    // doesn't move focus) is ignored, so a tap on Dark isn't swallowed.
+    const leave = (event: FocusEvent) => {
+      const next = event.relatedTarget;
+      if (details.open && next instanceof Node && !details.contains(next))
+        details.open = false;
+    };
+    details.addEventListener("toggle", toggle);
+    details.addEventListener("focusout", leave);
     document.addEventListener("keydown", close);
     document.addEventListener("pointerdown", outside);
     return () => {
+      stopWatching();
+      details.removeEventListener("toggle", toggle);
+      details.removeEventListener("focusout", leave);
       document.removeEventListener("keydown", close);
       document.removeEventListener("pointerdown", outside);
     };
@@ -61,7 +98,8 @@ export default function Header() {
           <ThemeToggle />
           <details className="header-menu" ref={menu}>
             <summary>
-              <Icon name="menu" size={20} />
+              <Icon name="menu" size={20} className="menu-icon" />
+              <Icon name="close" size={20} className="close-icon" />
               <span>{frame.menu}</span>
             </summary>
             <div className="header-menu-panel">

@@ -7,7 +7,7 @@ These instructions are for every coding agent. Claude Code reads them through `C
 ## What the site may say
 
 - **Only what the app does today.** The app repo is the source of truth: its English ARB (`../TaskFlow/App/lib/l10n/app_en.arb`), `../TaskFlow/App/docs/`, `../TaskFlow/Backend/docs/` and its decisions (`../TaskFlow/.claude/ux-review/DECISIONS.md`). Its open decisions are open here too.
-- **Free and Pro, prices, limits and what happens to people's data are the owner's decisions,** recorded in `.claude/ux-web/DECISIONS.md` (WD2 onward). Change them only on his word.
+- **Free and Pro, prices, limits and what happens to people's data are the owner's decisions,** recorded in `.claude/ux-web/DECISIONS.md` (WD2 onward). Change them only on the owner's word.
 - **Subtract before adding.** The site needn't list every feature; it takes a visitor, truthfully, from a first visit to wanting the app.
 - **Every visible string in English, Spanish and Catalan:** `src/content/site/{en,es,ca}.ts`, and the legal texts in `src/content/legal/`. Spanish and Catalan usually run longer, so check layouts at 320 px and at text 200%.
 - **The legal pages** change with a version move and the owner's sign-off: `docs/LEGAL_RELEASE.md`.

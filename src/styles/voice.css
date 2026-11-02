@@ -511,6 +511,16 @@
   opacity: 0;
   cursor: pointer;
 }
+/* WEB-1615: the title's label stretches over the whole row (the toggle is its positioned
+   box), so a tap anywhere on it ticks the task; the 24 px input stays on top of the circle. */
+.voice-task-toggle .voice-task-title {
+  cursor: pointer;
+}
+.voice-task-toggle .voice-task-title::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
 .voice-task-circle {
   display: flex;
   align-items: center;

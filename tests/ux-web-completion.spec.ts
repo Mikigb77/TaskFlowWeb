@@ -953,6 +953,38 @@ for (const theme of THEMES) {
   });
 }
 
+// ---- WEB-1615: every point of a task's row ticks it ----
+// WP266 left only the 24 px input and the title's text clickable. The title's label now
+// stretches over the whole row, under the input that stays on the circle.
+test.describe("WEB-1615 the whole task row ticks", () => {
+  test.use({ colorScheme: "light" });
+  test("WEB-1615 es: clicks at the row's corners, in the gap, below the title and at its right end each tick and untick the task", async ({
+    page,
+    voice,
+  }) => {
+    test.setTimeout(120_000);
+    await generate(page, "es");
+    await expect(boxes(page)).toHaveCount(TASKS.length);
+    const input = boxes(page).first();
+    const row = input.locator("..");
+    const box = (await row.boundingBox())!;
+    const points: [string, number, number][] = [
+      ["top left corner", 2, 2],
+      ["bottom left corner", 2, box.height - 2],
+      ["the gap after the circle", 30, box.height / 2],
+      ["below the title", 60, box.height - 2],
+      ["the row's right end", box.width - 2, box.height / 2],
+    ];
+    for (const [where, x, y] of points) {
+      const before = await input.isChecked();
+      await page.mouse.click(box.x + x, box.y + y);
+      await expect(input, `${where} ticks`).toBeChecked({ checked: !before });
+      await page.mouse.click(box.x + x, box.y + y);
+      await expect(input, `${where} unticks`).toBeChecked({ checked: before });
+    }
+  });
+});
+
 test("WEB-1612: WD17's banner title is still ‘All clear. Take a breath.’", async ({}, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Reads the copy: once is enough.");
   expect(SITE.en.voice.completionTitle).toBe("All clear. Take a breath.");

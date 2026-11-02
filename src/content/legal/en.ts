@@ -72,7 +72,7 @@ export const en: LegalCopy = {
         id: "sharing",
         title: "5. Sharing and service providers",
         paragraphs: [
-          "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. Reminders aren’t shared: each person has their own. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
+          "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”), on tasks assigned to you, and in a task’s Activity, next to each change you made and its date; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. Reminders aren’t shared: each person has their own. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
           "Providers receive the information needed for their function. They may act as processors under our instructions or, for their own account, payment, security or legal obligations, as independent controllers. Their own notices explain those separate activities.",
         ],
         bullets: [
@@ -119,7 +119,7 @@ export const en: LegalCopy = {
         id: "retention",
         title: "7. Storage, deletion and retention",
         bullets: [
-          "Account and personal cloud content: retained while you use your account, until you delete the content or account. We never delete your tasks on our own, done or not. Deleting an individual item can leave synchronisation metadata; account deletion removes your personal database records and sessions.",
+          "Account and personal cloud content: kept while you have your account. We never delete your tasks on our own, done or not. A task, note or project you delete leaves your devices and its files are removed, but our server keeps the rest of it, hidden, until you delete your account (if it was in a shared project, it stays with that project). Account deletion removes your personal database records and sessions.",
           "Personal attachments: account deletion removes access and requests deletion of the stored files. File removal follows the database transaction; a failed storage operation requires follow-up. Files belonging to continuing shared projects remain available to their members, as shown before you confirm deletion.",
           "Shared content: tasks, notes and files in continuing shared projects remain for the other members until deleted by an authorised member or the shared space ends. Ownership transfers shown in the deletion preview take effect on confirmation; your membership, assignments and identifying activity attribution are removed. Contact support about personal information within retained shared content.",
           "Device data: successful in-app deletion clears the app’s local account data and unfinished captures. Other signed-in devices lose access and clear their account copy when they next contact the service. Independent exports, downloaded copies outside app storage and device backups require separate removal. Uninstalling alone does not delete the server account.",
@@ -365,7 +365,7 @@ export const en: LegalCopy = {
         title: "3. What is deleted and what stays",
         bullets: [
           "Deleted, on all your devices: your account, your tasks, notes and files, and projects only you use. That includes your sign-in, Google link, sessions, project and group memberships, notification settings and your count of free dictations. We also ask RevenueCat, the company that checks subscriptions for us, to delete its record of you.",
-          "Stays for the others: tasks and files you added to shared projects. Your name is taken off them, “Created by” included, but what you wrote inside them doesn’t change. Projects and groups you own pass to another member; the app tells you who before you confirm. Ask support about personal details inside shared content.",
+          "Stays for the others: tasks, notes and files you added to shared projects. Your name is taken off them, “Created by” included, but what you wrote inside them doesn’t change. Projects and groups you own pass to another member; the app tells you who before you confirm. Ask support about personal details inside shared content.",
           "Not deleted by the app: Google Play’s own record of your purchases, your emails with support, security logs, and backups, which expire on their own. Ask support to delete what can be deleted; we’ll tell you what must be kept, why and for how long. We can’t delete copies other people saved.",
         ],
       },

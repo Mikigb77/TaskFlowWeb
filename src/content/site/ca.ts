@@ -105,12 +105,12 @@ export const ca: SiteCopy = {
       {
         question: "Necessito un compte?",
         answer:
-          "Sí. Inicies la sessió una vegada: toca Continua amb Google, o fes servir el teu correu i una contrasenya, i escriu el codi de 6 xifres que t’enviem. Les tasques es desen al teu compte, així no les perds si canvies de mòbil.",
+          "Sí. La primera vegada, toca Continua amb Google; o toca Continua amb el correu, tria una contrasenya i escriu el codi de 6 xifres que t’enviem. Les tasques es desen al teu compte, així no les perds si canvies de mòbil.",
       },
       {
         question: "Com afegeixo tasques parlant?",
         answer:
-          "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Necessita internet: les teves paraules s’envien a Google.",
+          "Toca Afegeix una tasca i digues el que has de fer, amb les teves paraules; pots dir diverses coses alhora. Toca Fet i TaskFlow et mostra una tasca per cada cosa, amb el dia i l’hora. Afegeix-les totes amb un toc. També pots preguntar què tens aquesta setmana, o moure, canviar, completar o suprimir tasques parlant, fins i tot totes les d’ahir alhora. TaskFlow t’ensenya el canvi abans i el pots desfer. Per entendre el que dius necessita internet: les teves paraules s’envien a Google.",
       },
       {
         question: "Puc afegir una cosa que es repeteix?",

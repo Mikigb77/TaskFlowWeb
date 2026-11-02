@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Snapshot 2026-11-02 (after run 2026-10-28-site b2; FAQ now 9 items, questions at en.ts 88/93/100/105/110/115/120/125/130) (English lines in `src/content/site/en.ts` / `src/content/legal/en.ts`; ES/CA mirror them). Re-grep before citing.
+Snapshot 2026-11-02 (after run 2026-10-28-site b2 and 2026-11-02-changes; FAQ now 9 items, questions at en.ts 88/93/100/105/110/115/120/125/130) (English lines in `src/content/site/en.ts` / `src/content/legal/en.ts`; ES/CA mirror them). Re-grep before citing.
 
 | Feature claimed | Site (en) | Source of truth |
 |---|---|---|
@@ -34,8 +34,13 @@ Snapshot 2026-11-02 (after run 2026-10-28-site b2; FAQ now 9 items, questions at
 | Demo privacy line: "What you say or type goes to Google only when you tap Done…recording not kept…text deleted after 24 hours" | site en.ts:148 `voice.privacy` | privacy §8, FAQ ("sent to Google"), `src/lib/voice/policy.ts` |
 | Usage limits (not "allowances") collected/applied | privacy §2 #data, terms §2/§3/§6 | free-tier-plan.md |
 | Privacy: voice text sent "to add, find or change tasks"; returns "suggested tasks and changes" | privacy summary 02, §2 ~33, §4 ~55-56 | same as voice-commands row |
-| Legal effective date 2026-11-01 (pending owner WD3 sign-off) | `company.json:10` version, `docs/LEGAL_RELEASE.md:3` | ux-web DECISIONS WD3 |
+| Legal effective date 2026-11-02 (replaces 2026-11-01; pending owner WD3 sign-off) | `company.json:10` version, `docs/LEGAL_RELEASE.md:3` | ux-web DECISIONS WD3 |
 | Account deletion; RevenueCat record deleted best-effort; backups expire on their own | privacy §7, delete-account #scope/#timing | `../TaskFlow/Backend/docs/ACCOUNT_DELETION.md:32` |
+| Retention (WEB-1801): "We never delete your tasks on our own, done or not."; kept while you have the account / until you delete them; a deleted project takes its tasks; your tasks in continuing shared projects stay with that project | privacy §7 first bullet legal en/es/ca.ts:122 | `../TaskFlow/Backend/core/task_views.py:108-120` (soft delete + files), `list_views.py:232-246`, `account_deletion.py:60-78` |
+| Activity (WEB-1802): your name shows in a shared task's Activity next to each change and its date; reminders aren't shared | privacy §5 second sentence legal en.ts:75 | ARB `Activity`/«Actividad»/«Activitat» (`app_en.arb:2335`), `activity_screen.dart:384-386` (actor · shortDate) |
+| On deletion your name is taken off shared items, "Created by" included (doesn't name Activity, though server removes it; privacy §7 says "activity attribution are removed") | delete-account §3 second bullet legal en.ts:368 | `account_deletion.py:198-213` |
+| Account FAQ (WEB-1701): app's buttons "Continue with Google" / "Continue with email" (never "sign in"/«Inicias sesión»); Google before the semicolon, password + 6-digit code after email (WEB-708) | FAQ account answer en.ts:102, es.ts:102, ca.ts:108 | `app_en.arb:2178-2179` `continueWithGoogle`/`continueWithEmail`, `verifyEmailHelp` (`app_es.arb:458`) |
+| Voice FAQ last sentence (WEB-1702) reuses the offline answer's wording "understanding what you say" (no "It needs the internet"); EN cap 88 words (WEB-1001 test) | FAQ voice en.ts:107 / offline en.ts:117 (ca +6) | app DECISIONS D1, `captureOffline` `app_en.arb:1767` |
 | Resend sends automatic email | privacy §5 | CLAUDE.md Email |
 | Language cookie up to 1 year, never location | privacy §8 | `LanguageSwitch.tsx:17`, `src/proxy.ts:4-10` |
 | No Apple/iOS anywhere in legal | — | removed (WEB-210); re-flag any "Apple" |

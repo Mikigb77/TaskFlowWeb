@@ -587,6 +587,8 @@ test("WEB-205: on phones, every legal link outside a sentence is 44 px tall or m
 
 test("WEB-205: on desktop, no focus ring in the legal sidebar is cut by its scroll box", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "The sticky sidebar is a desktop layout.");
+  // Twelve pages, each link focused in turn: under the round check's parallel load it outran 30 s.
+  test.slow();
   for (const { url } of LEGAL_PAGES) {
     await page.goto(url);
     await hydrated(page);
@@ -688,13 +690,13 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the day WP66 ran").toBe("2026-11-01");
-  // The examples for 2026-11-01. The brief asks for Intl's long date; for Catalan, ICU
-  // writes «1 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
+  expect(COMPANY.version, "company.json's version: the day WP268 ran").toBe("2026-11-02");
+  // The examples for 2026-11-02. The brief asks for Intl's long date; for Catalan, ICU
+  // writes «2 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
-    en: /^1 November 2026$/,
-    es: /^1 de noviembre de 2026$/,
-    ca: /^1 de novembre del? 2026$/,
+    en: /^2 November 2026$/,
+    es: /^2 de noviembre de 2026$/,
+    ca: /^2 de novembre del? 2026$/,
   };
   for (const { language, url } of LEGAL_PAGES) {
     await page.goto(url);
@@ -1959,9 +1961,9 @@ const WP66_CLOUDFLARE: Copy = {
 // WEB-1509: §5's first paragraph before this run, the sentence the new one follows, and the
 // new one. The paragraph must be the old one with only the new sentence put in after its anchor.
 const WP66_SHARING_BEFORE: Copy = {
-  en: "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
-  es: "Tu contenido personal no es público por defecto. Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por») y en las que tienes asignadas; si no has dado un nombre, ven el principio de tu correo. También pueden ver solo las tareas de una persona. Lo que colocas en un proyecto compartido es accesible a sus miembros autorizados según sus roles. Los responsables del grupo administran el acceso. Los miembros pueden descargar copias; abandonar un grupo o eliminar la cuenta no borra remotamente esas copias independientes.",
-  ca: "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per») i a les que tens assignades; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
+  en: "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”), on tasks assigned to you, and in a task’s Activity, next to each change you made and its date; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
+  es: "Tu contenido personal no es público por defecto. Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por»), en las que tienes asignadas y en la «Actividad» de cada tarea, junto a cada cambio que hiciste y su fecha; si no has dado un nombre, ven el principio de tu correo. También pueden ver solo las tareas de una persona. Lo que colocas en un proyecto compartido es accesible a sus miembros autorizados según sus roles. Los responsables del grupo administran el acceso. Los miembros pueden descargar copias; abandonar un grupo o eliminar la cuenta no borra remotamente esas copias independientes.",
+  ca: "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per»), a les que tens assignades i a l’«Activitat» de cada tasca, al costat de cada canvi que hi has fet i la data; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
 };
 const WP66_SHARING_ANCHOR: Copy = {
   en: "They can also show just one person’s tasks.",
@@ -2146,4 +2148,164 @@ test("WEB-1506: privacy §8 has no links in any language, and §5 still links Cl
     await expect(cloudflare, `${url} #sharing: Cloudflare`).toHaveCount(1);
     await expect(cloudflare, `${url} #sharing: Cloudflare`).toHaveAttribute("href", "https://www.cloudflare.com/privacypolicy/");
   }
+});
+
+// ---- Run 2026-11-02-changes: WP268 (WEB-1801, WEB-1802, WEB-1803), privacy §7 says what a
+// deletion leaves on the server, §5 names a task's Activity, the delete page's §3 names notes;
+// one version move (proved by WEB-213's and WEB-109's tests above, axe by the 12 legal pages' test).
+
+// WEB-1801: privacy §7's first bullet, the brief's exact copy.
+const WP268_RETENTION: Copy = {
+  en: "Account and personal cloud content: kept while you have your account. We never delete your tasks on our own, done or not. A task, note or project you delete leaves your devices and its files are removed, but our server keeps the rest of it, hidden, until you delete your account (if it was in a shared project, it stays with that project). Account deletion removes your personal database records and sessions.",
+  es: "Cuenta y contenido personal en la nube: se conservan mientras tengas la cuenta. Nunca borramos tus tareas por nuestra cuenta, estén hechas o no. Una tarea, nota o proyecto que borras desaparece de tus dispositivos y se eliminan sus archivos, pero nuestro servidor guarda el resto, oculto, hasta que elimines tu cuenta (si estaba en un proyecto compartido, se queda con ese proyecto). Eliminar la cuenta suprime sus registros personales en la base de datos y sus sesiones.",
+  ca: "Compte i contingut personal al núvol: es conserven mentre tinguis el compte. No esborrem mai les teves tasques pel nostre compte, fetes o no. Una tasca, nota o projecte que esborres desapareix dels teus dispositius i se’n suprimeixen els fitxers, però el nostre servidor en conserva la resta, oculta, fins que suprimeixis el compte (si era en un projecte compartit, es queda amb aquell projecte). Suprimir el compte elimina els registres personals de la base de dades i les sessions.",
+};
+const WP268_NEVER_DELETE: Copy = {
+  en: "We never delete your tasks on our own, done or not.",
+  es: "Nunca borramos tus tareas por nuestra cuenta, estén hechas o no.",
+  ca: "No esborrem mai les teves tasques pel nostre compte, fetes o no.",
+};
+const WP268_RETENTION_GONE = [
+  "synchronisation metadata",
+  "metadatos de sincronización",
+  "metadades de sincronització",
+  "until you delete the content",
+  "hasta que eliminas el contenido",
+  "fins que suprimeixes el contingut",
+];
+
+// WEB-1802: §5's first paragraph as it was at d4c4e94 (WD28's sentence included), its old
+// second sentence, and the brief's new one. Only that sentence may change.
+const WP268_SHARING_OLD: Copy = {
+  en: "Personal content is not made public by default. Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address. They can also show just one person’s tasks. Reminders aren’t shared: each person has their own. A task, note or file placed in a shared project is available to its authorised members according to their roles. Group administrators/owners can manage access. Other members may download or copy content; leaving a group or deleting your account cannot remotely erase their independent copies.",
+  es: "Tu contenido personal no es público por defecto. Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por») y en las que tienes asignadas; si no has dado un nombre, ven el principio de tu correo. También pueden ver solo las tareas de una persona. Los recordatorios no se comparten: cada persona tiene los suyos. Lo que colocas en un proyecto compartido es accesible a sus miembros autorizados según sus roles. Los responsables del grupo administran el acceso. Los miembros pueden descargar copias; abandonar un grupo o eliminar la cuenta no borra remotamente esas copias independientes.",
+  ca: "El contingut personal no és públic per defecte. Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per») i a les que tens assignades; si no has donat cap nom, veuen l’inici del teu correu. També poden veure només les tasques d’una persona. Els recordatoris no es comparteixen: cada persona té els seus. El contingut d’un projecte compartit és accessible als membres autoritzats segons el rol. Els responsables gestionen l’accés. Els membres poden descarregar còpies; sortir del grup o suprimir el compte no les esborra remotament.",
+};
+const WP268_SHARING_OLD_SECOND: Copy = {
+  en: "Members of a shared project see your name on the tasks you create there (“Created by”) and on tasks assigned to you; if you haven’t given a name, they see the start of your email address.",
+  es: "Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por») y en las que tienes asignadas; si no has dado un nombre, ven el principio de tu correo.",
+  ca: "Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per») i a les que tens assignades; si no has donat cap nom, veuen l’inici del teu correu.",
+};
+const WP268_SHARING_SECOND: Copy = {
+  en: "Members of a shared project see your name on the tasks you create there (“Created by”), on tasks assigned to you, and in a task’s Activity, next to each change you made and its date; if you haven’t given a name, they see the start of your email address.",
+  es: "Los miembros de un proyecto compartido ven tu nombre en las tareas que creas en él («Creada por»), en las que tienes asignadas y en la «Actividad» de cada tarea, junto a cada cambio que hiciste y su fecha; si no has dado un nombre, ven el principio de tu correo.",
+  ca: "Els membres d’un projecte compartit veuen el teu nom a les tasques que hi crees («Creada per»), a les que tens assignades i a l’«Activitat» de cada tasca, al costat de cada canvi que hi has fet i la data; si no has donat cap nom, veuen l’inici del teu correu.",
+};
+const WP268_ACTIVITY: Copy = { en: "Activity", es: "«Actividad»", ca: "«Activitat»" };
+
+// WEB-1803: the delete page's §3 second bullet: the brief's first sentence, then the rest as it was.
+const WP268_STAYS: Copy = {
+  en: "Stays for the others: tasks, notes and files you added to shared projects.",
+  es: "Se queda para los demás: las tareas, notas y archivos que añadiste a proyectos compartidos.",
+  ca: "Es queda per als altres: les tasques, les notes i els fitxers que vas afegir a projectes compartits.",
+};
+const WP268_STAYS_REST: Copy = {
+  en: "Your name is taken off them, “Created by” included, but what you wrote inside them doesn’t change. Projects and groups you own pass to another member; the app tells you who before you confirm. Ask support about personal details inside shared content.",
+  es: "Se quita tu nombre, también de «Creada por», pero lo que escribiste en ellos no cambia. Los proyectos y grupos que son tuyos pasan a otro miembro; la app te dice a quién antes de confirmar. Si dentro hay datos personales tuyos, escribe a soporte.",
+  ca: "Se’n treu el teu nom, també de «Creada per», però el que hi vas escriure no canvia. Els projectes i grups que són teus passen a un altre membre; l’app et diu a qui abans de confirmar. Si a dins hi ha dades personals teves, escriu a suport.",
+};
+const WP268_NOTES: Copy = { en: "notes", es: "notas", ca: "notes" };
+const WP268_STAYS_GONE = ["tasks and files you added", "las tareas y archivos que añadiste", "les tasques i els fitxers que vas afegir"];
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP268 legal`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1801: privacy §7's first bullet says a deleted task, note or project stays hidden on our server until the account goes, keeps ‘We never delete your tasks…’ and drops the sync-metadata wording (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const first = privacySection(page, "retention").locator("li").first();
+        await expect(first, `${url} #retention`).toBeVisible();
+        await expect(first, `${url} #retention: the first bullet`).toHaveText(WP268_RETENTION[language]);
+        expect(flat(await first.innerText()), `${url} #retention`).toContain(WP268_NEVER_DELETE[language]);
+        const retention = await sectionText(page, "retention");
+        for (const words of WP268_RETENTION_GONE) expect(retention, `${url} #retention: “${words}”`).not.toContain(words);
+      }
+    });
+
+    test(`WEB-1802: privacy §5's first paragraph names a task's Activity in its second sentence, keeps WD28's reminders sentence after ‘…just one person’s tasks.’, and nothing else in it changed (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const first = privacySection(page, "sharing").locator("p").first();
+        await expect(first, url).toBeVisible();
+        const old = WP268_SHARING_OLD[language];
+        expect(old, `${url}: the old second sentence`).toContain(WP268_SHARING_OLD_SECOND[language]);
+        await expect(first, `${url} #sharing: the first paragraph`).toHaveText(
+          old.replace(WP268_SHARING_OLD_SECOND[language], WP268_SHARING_SECOND[language]),
+        );
+        const text = flat(await first.innerText());
+        expect(text, `${url} #sharing: the second sentence, then the anchor and WD28's sentence`).toContain(
+          `${WP268_SHARING_SECOND[language]} ${WP66_SHARING_ANCHOR[language]} ${WP66_NOT_SHARED[language]}`,
+        );
+        expect(text, `${url} #sharing`).toContain(WP66_CREATED_BY[language]);
+        expect(text, `${url} #sharing`).toContain(WP268_ACTIVITY[language]);
+      }
+    });
+
+    test(`WEB-1803: the delete page's §3 second bullet starts ‘Stays for the others: tasks, notes and files…’, its rest unchanged, and summary 01 and §3's first two bullets each name notes (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("delete-account", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const bullets = page.locator(".legal-body section#scope li");
+        await expect(bullets.nth(1), `${url} #scope`).toBeVisible();
+        await expect(bullets.nth(1), `${url} #scope: the second bullet`).toHaveText(
+          `${WP268_STAYS[language]} ${WP268_STAYS_REST[language]}`,
+        );
+        const notes = new RegExp(`\\b${WP268_NOTES[language]}\\b`);
+        const summary01 = flat(await page.locator(".legal-summary li").first().innerText());
+        expect(summary01, `${url}: summary 01`).toMatch(notes);
+        for (const index of [0, 1])
+          expect(flat(await bullets.nth(index).innerText()), `${url} #scope: bullet ${index + 1}`).toMatch(notes);
+      }
+    });
+  });
+}
+
+plain("WEB-1803: src/content/legal/ says no ‘tasks and files you added’ in any language", () => {
+  const folder = path.join(ROOT, "src", "content", "legal");
+  const files = readdirSync(folder);
+  expect(files).toEqual(expect.arrayContaining(["en.ts", "es.ts", "ca.ts"]));
+  const found: string[] = [];
+  for (const file of files) {
+    const text = readFileSync(path.join(folder, file), "utf8");
+    for (const words of WP268_STAYS_GONE) if (text.includes(words)) found.push(`${file}: “${words}”`);
+  }
+  expect(found).toEqual([]);
+});
+
+test("WEB-1801, WEB-1803: at 320 × 800, the Spanish and Catalan privacy and delete pages don't scroll sideways, and the changed bullets reflow inside the screen", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "The narrowest phone.");
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of ["es", "ca"] as const)
+    for (const [document, id, index] of [
+      ["privacy", "retention", 0],
+      ["privacy", "sharing", -1],
+      ["delete-account", "scope", 1],
+    ] as const) {
+      const url = legalPath(document, language);
+      await page.goto(url);
+      await hydrated(page);
+      await fontsReady(page);
+      expect(await scrollsSideways(page), `${url} at 320 px`).toBe(false);
+      const changed =
+        index < 0 ? privacySection(page, id).locator("p").first() : privacySection(page, id).locator("li").nth(index);
+      const box = await changed.boundingBox();
+      expect(box, `${url} #${id}`).not.toBeNull();
+      expect(box!.x, `${url} #${id}: left edge`).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width, `${url} #${id}: right edge`).toBeLessThanOrEqual(320.5);
+      expect(box!.height, `${url} #${id}: wraps onto several lines`).toBeGreaterThan(60);
+    }
 });

@@ -73,6 +73,23 @@ npm test
 
 Playwright starts the production server when needed. It checks desktop and phone layouts, theme persistence, the task walkthrough, navigation, FAQs, 404 recovery, JavaScript-free content, and WCAG checks through axe. Screenshots are written to the ignored `artifacts` directory; failures retain traces under `test-results`. Linux browser libraries may need `npx playwright install-deps chromium` on a fresh machine.
 
+## Deploy from GitHub
+
+**A merge into `main` deploys the site.** Nothing runs on your computer.
+
+- `.github/workflows/checks.yml` runs on every pull request into `main` or `dev`: `npm run check`, `npm run legal:check`, the build and the unit tests. The Playwright suite stays in the UX web loop, since it takes about half an hour.
+- `.github/workflows/deploy.yml` runs on every push to `main`, which includes merged pull requests. It does what `deploy-cloud` does: Cloud Build builds the image from that commit, Cloud Run gets the new revision with voice on, and the job fails unless `/health/` reports that commit. When `edge/` changed, it also publishes the Cloudflare edge worker. Pushes that only touch the agents' records, `docs/`, `tests/` or root Markdown files don't deploy.
+- To deploy again without a new commit, use **Actions → Deploy → Run workflow** on `main`, and tick the edge box to republish the worker too.
+
+Google sign-in is keyless (Workload Identity Federation), and only `main` of this repo and of `TaskFlow` can use it. The deployer identity can build, deploy the existing services and run the migration job, but can't read secrets or change who may open a service.
+
+One-time setup, done in the browser:
+
+1. In [Google Cloud Shell](https://shell.cloud.google.com/?project=taskflow-511107), signed in as `tech.garbar@gmail.com`, upload `scripts/dev/setup-github-deploy.sh` and run `bash setup-github-deploy.sh`. It is safe to run again. It also covers the app repo's staging API.
+2. In Cloudflare, create an API token from the **Edit Cloudflare Workers** template, for the TaskFlow account and the `garbar.tech` zone. Add it to this repo under **Settings → Secrets and variables → Actions** as `CLOUDFLARE_API_TOKEN`. Only the edge job uses it.
+
+The scripts below still work for a manual deploy, and for first-time setup of new cloud resources.
+
 ## Deploy the preview to Google Cloud Run
 
 Run the deployment script from PowerShell **7.2+**, with Git, `tar` and the Google Cloud CLI installed. Docker does not need to run locally. Google builds the Linux container using `Dockerfile` and `cloudbuild.yaml`, then Cloud Run serves the standalone Next.js app as a non-root user.

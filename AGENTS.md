@@ -41,7 +41,7 @@ Record lasting owner decisions about the site in `.claude/ux-web/DECISIONS.md`. 
 - `src/content/` — all the copy: `site/` and `legal/`, per language.
 - `src/styles/`, `public/` (images, fonts), `src/lib/voice/` (the live demo's limits and recording).
 - `tests/` — Playwright and unit tests. `ux-web-*.spec.ts` are the loop's; `ux-renders.spec.ts` writes `artifacts/ux-web/` with `UX_RENDERS=1`.
-- `scripts/` — deployment (never run them, see Rules); helpers in `scripts/dev/`. `edge/` is the Cloudflare edge worker.
+- `scripts/` — deployment (never run them, see Rules); helpers in `scripts/dev/`. `edge/` is the Cloudflare edge worker. `.github/workflows/` — the pull request checks and the deploy from `main`.
 - `.claude/` (Claude Code: the `/ux-web` skill, agents, the loop's history), `.agents/skills/` and `.codex/` (Codex).
 
 ## Commands
@@ -66,7 +66,7 @@ Git runs on Windows. Port 3000 stays free for people; the loop uses 3100 and up.
 
 ## Rules
 
-- **Branches.** Work on `dev`; `main` is the release branch. Never merge into or push `main`, and never deploy, unless the owner asks. Deploying means `scripts/deploy-*`, `cloudbuild.yaml`, `gcloud`, `wrangler` or `docker`. Releases go from `dev` to `main` by pull request, and merging one deploys nothing. Git's own credentials don't reach these private repos, so a push or fetch the owner asks for passes `gh`'s: `git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`.
+- **Branches.** Work on `dev`; `main` is the release branch. Never merge into or push `main`, and never deploy, unless the owner asks. Deploying means `scripts/deploy-*`, `cloudbuild.yaml`, `gcloud`, `wrangler` or `docker`. Releases go from `dev` to `main` by pull request, and **a merge into `main` deploys**: GitHub Actions publishes the site to Cloud Run, and the edge worker when `edge/` changed (`.github/workflows/deploy.yml`). Pull requests into `main` or `dev` run `.github/workflows/checks.yml`. Git's own credentials don't reach these private repos, so a push or fetch the owner asks for passes `gh`'s: `git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`.
 - **Other sessions' work.** This repo often holds another session's uncommitted and untracked work. Never commit, stage or revert it; the loop's `ux-web.sh base` and `stage` separate a run's own changes from it.
 - **The request decides.** A request to configure, explain, plan or inspect a workflow isn't a request to run it. Permission given once isn't standing permission.
 - **Tooling.** Install, download and set up the tools a task needs, then say what you did; don't ask first. Product decisions still go to the owner.

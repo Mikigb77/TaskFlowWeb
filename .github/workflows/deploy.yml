@@ -1,0 +1,152 @@
+# Deploys the website from main: a merge into main is a release.
+#
+# - The site: Cloud Build builds the Docker image, Cloud Run serves it, and the
+#   job waits until /health/ reports this commit. Same steps as
+#   scripts/dev/deploy-cloud-run.ps1, without its one-time setup.
+# - The Cloudflare edge worker: published only when edge/ changed (or on a
+#   manual run that asks for it).
+#
+# Google sign-in is keyless (Workload Identity Federation), and only main of
+# this repo can use it. One-time setup: scripts/dev/setup-github-deploy.sh, and
+# the CLOUDFLARE_API_TOKEN repository secret. See README.md, "Deploy".
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".claude/**"
+      - ".agents/**"
+      - ".codex/**"
+      - "*.md"
+      - "docs/**"
+      - "tests/**"
+      - ".github/workflows/checks.yml"
+  workflow_dispatch:
+    inputs:
+      edge:
+        description: Also publish the Cloudflare edge worker
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-website
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: taskflow-511107
+  REGION: europe-southwest1
+  SERVICE: taskflow-web
+  SITE_URL: https://taskflow.garbar.tech
+  # Public widget identifier, also in README.md; not a secret.
+  TURNSTILE_SITE_KEY: 0x4AAAAAAFSOD8PvA-Wh35pV
+  WORKLOAD_IDENTITY_PROVIDER: projects/177649734578/locations/global/workloadIdentityPools/github/providers/github
+  DEPLOYER: github-deployer@taskflow-511107.iam.gserviceaccount.com
+
+jobs:
+  site:
+    name: Website on Cloud Run
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Refuse tracked secrets
+        run: |
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.(pem|p12|key)$' | grep -v -E '(^|/)\.env\.example$' || true)
+          if [ -n "$found" ]; then echo "Refusing to upload: $found"; exit 1; fi
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.DEPLOYER }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build the image
+        run: |
+          image="$REGION-docker.pkg.dev/$PROJECT_ID/$SERVICE/website:$GITHUB_SHA"
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+          # The Dockerfile runs the legal check and the build; .gcloudignore
+          # keeps .git, .env files and the agents' records out of the upload.
+          gcloud builds submit . --project="$PROJECT_ID" --region="$REGION" \
+            --config=cloudbuild.yaml \
+            --service-account="projects/$PROJECT_ID/serviceAccounts/$SERVICE-builder@$PROJECT_ID.iam.gserviceaccount.com" \
+            --gcs-source-staging-dir="gs://$PROJECT_ID-$SERVICE-builds/source" \
+            --substitutions="_IMAGE=$image,_SITE_URL=$SITE_URL,_SITE_INDEXABLE=false,COMMIT_SHA=$GITHUB_SHA"
+
+      - name: Deploy to Cloud Run
+        run: |
+          digest=$(gcloud artifacts docker images describe "$IMAGE" --project="$PROJECT_ID" \
+            --format='value(image_summary.fully_qualified_digest)')
+          test -n "$digest"
+          # The service is already public; this identity can't change its access.
+          gcloud run deploy "$SERVICE" --project="$PROJECT_ID" --region="$REGION" --quiet \
+            --image="$digest" \
+            --service-account="$SERVICE-runtime@$PROJECT_ID.iam.gserviceaccount.com" \
+            --ingress=all --default-url --execution-environment=gen2 --port=8080 \
+            --cpu=1 --memory=512Mi --min=0 --max=1 --concurrency=8 --timeout=60 \
+            --cpu-throttling --no-cpu-boost \
+            --labels="app=taskflow-web,git-sha=$GITHUB_SHA" \
+            --description="TaskFlow marketing preview from main" \
+            --update-env-vars="GOOGLE_CLOUD_PROJECT=$PROJECT_ID,VOICE_DEMO_ENABLED=true,VOICE_PUBLIC_ORIGIN=$SITE_URL,VOICE_MONTHLY_BUDGET_EUR=25,TURNSTILE_SITE_KEY=$TURNSTILE_SITE_KEY" \
+            --update-secrets="VOICE_APP_SECRET=taskflow-voice-app:latest,VOICE_EDGE_SECRET=taskflow-voice-edge:latest,TURNSTILE_SECRET_KEY=taskflow-turnstile:latest"
+          gcloud run services update-traffic "$SERVICE" --project="$PROJECT_ID" --region="$REGION" --to-latest --quiet
+
+      - name: Check health reports this commit
+        run: |
+          url=$(gcloud run services describe "$SERVICE" --project="$PROJECT_ID" --region="$REGION" --format='value(status.url)')
+          for attempt in 1 2 3 4 5 6; do
+            commit=$(curl -fsS --max-time 30 "$url/health/" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' || true)
+            if [ "$commit" = "$GITHUB_SHA" ]; then
+              echo "Deployed $GITHUB_SHA: $url, shown at $SITE_URL"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Health check did not report $GITHUB_SHA (last: ${commit:-none})"
+          exit 1
+
+  edge-changes:
+    name: Did the edge worker change?
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' && inputs.edge }}
+        run: |
+          if [ "$MANUAL" = "true" ]; then changed=true
+          elif [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then changed=false
+          elif git diff --quiet "$BEFORE" "$GITHUB_SHA" -- edge/; then changed=false
+          else changed=true; fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "Edge worker changed: $changed"
+
+  edge:
+    name: Edge worker on Cloudflare
+    needs: edge-changes
+    if: needs.edge-changes.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26.13.0
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # VOICE_EDGE_SECRET stays as it is in Cloudflare; a deploy doesn't change it.
+      - run: npx wrangler deploy --config edge/wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

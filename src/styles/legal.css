@@ -151,6 +151,7 @@
   font-size: 1rem;
   line-height: 1.65;
   overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 .legal-layout {
   display: grid;

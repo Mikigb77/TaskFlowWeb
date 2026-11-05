@@ -7,7 +7,7 @@ export const es: LegalCopy = {
       "Política de privacidad de la app y la web de TaskFlow: cuenta, tareas, voz, archivos y derechos.",
     summary: [
       "No vendemos tus datos ni te mostramos anuncios.",
-      "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, para pedir recordatorios con tus palabras o para hacer notas de una reunión que grabas.",
+      "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, para pedir recordatorios con tus palabras o para hacer notas de una reunión que grabas, con lo que dice cada persona.",
       "Puedes pedir una copia de tus datos o eliminarlos cuando quieras.",
     ],
     sections: [
@@ -45,7 +45,7 @@ export const es: LegalCopy = {
           "Consentimiento (art. 6.1.a), si se pide separadamente para una finalidad opcional: puedes retirarlo sin afectar al tratamiento lícito anterior. Un permiso del dispositivo no autoriza usos ajenos a la función solicitada.",
         ],
         paragraphs: [
-          "No vendemos datos personales, no instalamos rastreadores publicitarios ni usamos tus tareas para segmentar anuncios. No entrenamos un modelo propio con tus tareas. La IA propone títulos, fechas y prioridades para tu revisión; no toma decisiones con efectos jurídicos o similares significativos sobre ti.",
+          "No vendemos datos personales, no instalamos rastreadores publicitarios ni usamos tus tareas para segmentar anuncios. No entrenamos un modelo propio con tus tareas. La IA propone títulos, fechas y prioridades para tu revisión, y redacta las notas de las reuniones que grabas; no toma decisiones con efectos jurídicos o similares significativos sobre ti.",
         ],
       },
       {
@@ -53,14 +53,14 @@ export const es: LegalCopy = {
         title: "4. Voz, inteligencia artificial y datos sensibles",
         paragraphs: [
           "El micrófono se utiliza cuando eliges grabar y das permiso. La app puede conservar localmente grabaciones, texto y tareas sugeridas pendientes para recuperar una captura interrumpida. Se eliminan de esa captura cuando guardas o descartas todas sus tareas sugeridas, o cuando descartas la captura. Si tu teléfono puede reconocer la voz por sí solo, tu voz se convierte en texto en el propio teléfono y el audio no sale de él; solo se envían las palabras. Si no puede, la grabación se envía para convertirla en texto en línea al terminar. Con Pro, lo que escribes para la IA y los recordatorios que pides con tus palabras se envían igual. Sin Pro, el formulario de tareas nunca envía nada a la IA.",
-          "Con Pro puedes grabar una reunión para tener notas. Mientras grabas, la app envía el audio en partes de unos cinco minutos y guarda cada parte en el teléfono hasta que nuestro servidor la recibe. Nuestro servidor pide a Google que convierta cada parte en texto y después borra su audio. Cuando han llegado todas las partes, el texto se convierte en notas (un resumen, tareas pendientes, decisiones y preguntas abiertas), que la app guarda como una nota normal. Después nuestro servidor borra el texto de la reunión. Pro incluye hasta 20 horas de reuniones al mes.",
-          "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste y, si es una reunión, sus notas. La app y la demo web utilizan Vertex AI de Google Cloud. Google puede procesarlo fuera de la UE. Nuestro servidor no archiva grabaciones, pero esto no significa que Google no conserve datos de procesamiento o seguridad.",
-          "Según las condiciones de Google Cloud, Google no usa lo que enviamos a Vertex AI para entrenar sus modelos sin nuestro permiso. Google puede conservar algunos datos durante un tiempo limitado, para caché, seguridad y prevención de abusos, y procesarlos fuera de la UE. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
-          "TaskFlow es una herramienta de organización, no un historial clínico ni un asesor profesional. Evita enviar a la IA informes médicos, contraseñas, documentos de identidad u otros datos especialmente sensibles. Avisa a las personas de una reunión antes de grabarla, y no grabes a terceros ni subas sus datos sin una base legítima. Puedes escribir tareas manualmente. Revisa fechas, horas, asignaciones y notas antes de guardar.",
+          "Con Pro puedes grabar una reunión para tener notas. Mientras grabas, la app envía el audio en partes de unos cinco minutos y guarda cada parte en el teléfono hasta que nuestro servidor la recibe. Nuestro servidor pide a Google que convierta cada parte en texto y después borra su audio. Cuando han llegado todas las partes, el texto se convierte en notas (un resumen, las cosas por hacer, las decisiones y las preguntas abiertas), que la app guarda como una nota normal. Después nuestro servidor borra el texto de la reunión. Pro incluye hasta 20 horas de reuniones al mes.",
+          "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste y, si es una reunión, su texto y sus notas. La app y la demo web utilizan Vertex AI de Google Cloud. Google puede procesarlo fuera de la UE. Nuestro servidor no archiva grabaciones, pero esto no significa que Google no conserve datos de procesamiento o seguridad.",
+          "Según las condiciones de Google Cloud, Google no usa lo que enviamos a Vertex AI para entrenar sus modelos sin nuestro permiso. Google puede conservar algunos datos durante un tiempo limitado, para caché, seguridad y prevención de abusos. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
+          "TaskFlow es una herramienta de organización, no un historial clínico ni un asesor profesional. Evita enviar a la IA informes médicos, contraseñas, documentos de identidad u otros datos especialmente sensibles. Avisa a las personas de una reunión antes de grabarla, y no grabes a terceros ni subas sus datos sin una base legítima. Puedes escribir tareas manualmente. Revisa fechas, horas, asignaciones y notas antes de guardarlas o fiarte de ellas.",
         ],
         links: [
           {
-            label: "Condiciones específicas de Google Cloud, con Vertex AI",
+            label: "Condiciones específicas de Google Cloud, incluida Vertex AI",
             href: "https://cloud.google.com/terms/service-terms",
           },
           {
@@ -123,7 +123,7 @@ export const es: LegalCopy = {
           "Cuenta y contenido personal en la nube: se conservan mientras tengas la cuenta. Nunca borramos tus tareas por nuestra cuenta, estén hechas o no. Una tarea, nota o proyecto que borras desaparece de tus dispositivos y se eliminan sus archivos, pero nuestro servidor guarda el resto, oculto, hasta que elimines tu cuenta (si estaba en un proyecto compartido, se queda con ese proyecto). Eliminar la cuenta suprime sus registros personales en la base de datos y sus sesiones.",
           "Adjuntos personales: la eliminación retira el acceso y solicita el borrado de los archivos almacenados. El borrado sigue a la transacción de base de datos; un fallo del almacenamiento requiere seguimiento. Los archivos de proyectos compartidos que continúan siguen disponibles para sus miembros, como se indica antes de confirmar.",
           "Contenido compartido: tareas, notas y archivos de proyectos compartidos que continúan se conservan hasta que un miembro autorizado los elimina o termina el espacio. Los traspasos de titularidad mostrados se ejecutan al confirmar; se retiran tu pertenencia, asignaciones y atribución identificativa de actividad. Contacta con soporte por datos personales dentro del contenido compartido conservado.",
-          "Reuniones grabadas: nuestro servidor borra el audio de cada parte cuando ya es texto, y el texto de la reunión cuando la app ha guardado sus notas. Una reunión que nunca se termina se borra 30 días después de recibir su última parte. Una grabación que paras pero no terminas se convierte en una nota en tu teléfono a los 7 días. Descartar una reunión la borra a la vez del teléfono y de nuestro servidor. Eliminar tu cuenta borra sus reuniones.",
+          "Reuniones grabadas: nuestro servidor borra el audio de cada parte cuando ya es texto, y el texto de la reunión cuando la app ha guardado sus notas. Lo que quede de una reunión en nuestro servidor, terminada o no, se borra 30 días después de recibir su última parte. Una grabación por la que la app te pregunta, y que dejas sin responder, se convierte en una nota 7 días después de que te pregunte. Descartar una reunión la borra del teléfono al momento, y de nuestro servidor en cuanto el teléfono tiene conexión. Eliminar tu cuenta borra sus\u00a0reuniones.",
           "Dispositivo: la eliminación confirmada desde la app borra su copia local de la cuenta y las capturas pendientes. Los demás dispositivos pierden el acceso y borran su copia al volver a contactar con el servicio. Exportaciones, descargas fuera del almacenamiento de la app y copias del dispositivo se eliminan aparte. Desinstalar no elimina la cuenta del servidor.",
           "Invitaciones y códigos: los códigos de invitación caducan a los siete días, y los de confirmación del correo y de recuperación, a los 30 minutos. La limpieza retira registros caducados de ejecución, sesiones y correo. El cuerpo del correo se vacía tras entrega o fallo/caducidad definitivos; el historial de invitaciones compartidas puede continuar sin vínculo con la cuenta del remitente eliminado.",
           "Registros operativos y soporte: los registros de nuestros servidores se guardan 30 días. El correo de soporte se conserva durante la gestión y, cuando sea necesario, durante el plazo aplicable a reclamaciones. Las evidencias de seguridad y auditorías obligatorias siguen sus finalidades y reglas específicas; el plazo de 30 días no se aplica a todos los registros de todos los proveedores.",
@@ -148,7 +148,7 @@ export const es: LegalCopy = {
         id: "permissions",
         title: "9. Permisos y seguridad",
         paragraphs: [
-          "La app solicita micrófono para grabar, notificaciones para recordatorios y los permisos pertinentes de archivos, fotos, cámara o calendario cuando eliges esas funciones. Los eventos de los calendarios del teléfono se muestran solo para consulta y se quedan en el teléfono: no se suben ni se envían a la IA. Puedes cambiar permisos en el sistema operativo; retirarlos no borra lo ya enviado.",
+          "La app solicita micrófono para grabar, notificaciones para recordatorios y grabaciones de reuniones, y los permisos pertinentes de archivos, fotos, cámara o calendario cuando eliges esas funciones. Los eventos de los calendarios del teléfono se muestran solo para consulta y se quedan en el teléfono: no se suben ni se envían a la IA. Puedes cambiar permisos en el sistema operativo; retirarlos no borra lo ya enviado.",
           "Utilizamos HTTPS, contraseñas guardadas de forma que no se pueden volver a leer, autenticación, comprobaciones de pertenencia, archivos privados y credenciales en servidor. TaskFlow no es una caja fuerte cifrada de extremo a extremo: nuestro servidor y los proveedores necesarios pueden tratar el contenido. También importan la seguridad del dispositivo, el acceso compartido y tus exportaciones.",
         ],
       },
@@ -232,7 +232,7 @@ export const es: LegalCopy = {
         id: "ai",
         title: "5. Sugerencias de la IA",
         paragraphs: [
-          "La IA es opcional y envía entrada/contexto al proveedor descrito en la política. Puede omitir, interpretar mal o inventar detalles. Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardar o compartir. No es asesoramiento profesional ni garantía de exactitud.",
+          "La IA es opcional y envía entrada/contexto al proveedor descrito en la política. Puede omitir, interpretar mal o inventar detalles. Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardarlos, compartirlos o fiarte de ellos. No es asesoramiento profesional ni garantía de exactitud.",
           "Eres responsable de tus instrucciones y del uso de las sugerencias revisadas. Esto no excluye nuestros deberes legales de calidad, seguridad o conformidad. No envíes información confidencial o especialmente sensible a la demo.",
         ],
       },

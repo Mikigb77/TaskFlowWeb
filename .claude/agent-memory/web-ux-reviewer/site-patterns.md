@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2) and 2026-11-02-changes. Enforce these; a deviation in a new change is a finding.
+Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2), 2026-11-02-changes and 2026-11-05-pages (legal meeting wording). Enforce these; a deviation in a new change is a finding.
 
 **Calls to action**
 - Primary CTA everywhere points to the live demo `#voice`, never to a download (Play not published). Availability line: "Coming soon to Google Play / You can't download it yet"; header/menu/closing "Coming soon to Android". ES/CA say «Próximamente» / «Properament», never «Muy pronto» / «Molt aviat».
@@ -42,11 +42,14 @@ Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2) and 
 - Legal prose `max-width: 52ch` (≈ 75 chars at 1440).
 
 **Legal pages**
-- Legal version 2026-11-02 (`company.json:10`; awaiting WD3 sign-off). Privacy §8 explains `/delete-account/` opening in the visitor's language.
+- Legal version 2026-11-05 (`company.json:10`). Privacy §8 explains `/delete-account/` opening in the visitor's language.
 - Legal copy uses "suggestions" / «sugerencias» / «suggeriments» and "limits", never draft/allowance/transcript/AI Studio; terms §5 heading "5. AI suggestions". Meta descriptions ~100-115 chars. Bumping the legal text moves `company.json` version, `docs/LEGAL_RELEASE.md` and the pinned dates in both legal specs together.
 - h1 = document name; plain numbered summary first; in-force line only; icons: `arrow` for internal, `arrowUp` only for `http` links, none on mailto.
 - Email addresses render split with `<wbr>` before `@` (not hard-coded).
 - Catalan uses «suprimir/supressió» for the account (eliminar only for records/exports).
+- Meeting wording (2026-11-05-pages): CA «enregistrar/enregistres/enregistraments» for meetings (app's word); «gravar/gravació» kept only for dictation (§4 ¶1, §9 «micròfon per gravar») and the general «no gravis tercers». ES/CA to-dos are «las cosas por hacer» / «les coses per fer», never «tareas pendientes» / «tasques pendents». Meeting notes are never "for your review" (they save themselves); AI duty phrase is "before saving, sharing or relying on them". The 7-day rule says "a recording the app asks you about", never "Stop".
+- ES/CA lists: when an item itself contains «y»/«i», put a comma before the list's final «y»/«i» (R1-WP271-1, §9).
+- Widows: `.legal-summary p` has `text-wrap: pretty` (`legal.css:154`, WEB-1502); `.legal-body li` deliberately has none (would re-wrap every legal list). A one-word last line in a list item is fixed with a `\u00a0` before the last word, on that string only (WEB-1609 Google LLC, WEB-2004 «sus\u00a0reuniones.» `es.ts:126`).
 - Retention wording (2026-11-02): plain "your tasks", never "synchronisation metadata" / «metadatos de sincronización» / «metadades de sincronització»; ES/CA conditionals take the subjunctive («mientras tengas», «hasta que elimines»; «mentre tinguis», «fins que suprimeixis»).
 - Home copy names the app's entry buttons "Continue with Google" / "Continue with email" (WEB-1701); no "sign in" / «Inicias sesión» / «Inicies la sessió» in `src/content/site/`. Legal texts still say "sign in" in prose (terms withdrawal, delete page) — accepted, not a finding.
 - Per-page openGraph + twitter (summary_large_image) in the page's language.

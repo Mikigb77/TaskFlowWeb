@@ -690,13 +690,13 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the day WP268 ran").toBe("2026-11-02");
-  // The examples for 2026-11-02. The brief asks for Intl's long date; for Catalan, ICU
+  expect(COMPANY.version, "company.json's version: the meeting-notes release").toBe("2026-11-05");
+  // The examples for 2026-11-05. The brief asks for Intl's long date; for Catalan, ICU
   // writes «2 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
-    en: /^2 November 2026$/,
-    es: /^2 de noviembre de 2026$/,
-    ca: /^2 de novembre del? 2026$/,
+    en: /^5 November 2026$/,
+    es: /^5 de noviembre de 2026$/,
+    ca: /^5 de novembre del? 2026$/,
   };
   for (const { language, url } of LEGAL_PAGES) {
     await page.goto(url);
@@ -1395,24 +1395,24 @@ const WP47_PRIVACY = {
     ca: "el text del que has dit, tasques i canvis suggerits",
   } as Copy,
   route: {
-    en: "The app can use Google’s Gemini API, with Google Cloud’s Vertex AI as a fallback; the website demonstration uses Vertex AI.",
-    es: "La app puede usar Gemini API de Google, con Vertex AI de Google Cloud como alternativa; la demo web utiliza Vertex AI.",
-    ca: "L’app pot fer servir Gemini API de Google, amb Vertex AI de Google Cloud com a alternativa; la demo web utilitza Vertex AI.",
+    en: "The app and the website demonstration use Google Cloud’s Vertex AI.",
+    es: "La app y la demo web utilizan Vertex AI de Google Cloud.",
+    ca: "L’app i la demo web fan servir Vertex AI de Google Cloud.",
   } as Copy,
   outsideEu: {
     en: "Google can process it outside the EU",
     es: "Google puede procesarlo fuera de la UE",
     ca: "Google ho pot processar fora de la UE",
   } as Copy,
-  // §4's third paragraph, which WD12 keeps as it is.
+  // §4's contractual paragraph, on Vertex AI since the owner's Vertex-only decision (2026-11-05).
   third: {
-    en: "Google’s contractual treatment depends on the service and account tier. Paid Gemini API terms and the EEA provisions specify that prompts/responses are not used to improve Google products; unpaid services outside those provisions can involve model improvement and human review. Provider safety retention and international processing still apply. See the linked provider terms. We do not promise zero retention or EU-only processing.",
-    es: "El tratamiento contractual de Google depende del servicio y nivel de cuenta. Las condiciones de pago de Gemini API y las disposiciones para el EEE excluyen el uso de entradas/respuestas para mejorar productos de Google; los servicios gratuitos fuera de esas disposiciones pueden implicar mejora de modelos y revisión humana. Siguen siendo aplicables la conservación de seguridad y el procesamiento internacional. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
-    ca: "El tractament contractual de Google depèn del servei i nivell de compte. Les condicions de pagament de Gemini API i les disposicions per a l’EEE exclouen l’ús d’entrades/respostes per millorar productes de Google; els serveis gratuïts fora d’aquestes disposicions poden implicar millora de models i revisió humana. Continuen aplicant-se retenció de seguretat i processament internacional. No prometem retenció zero ni tractament exclusiu a la UE.",
+    en: "Under Google Cloud’s terms, Google doesn’t use what we send to Vertex AI to train its models without our permission. Google can still keep some data for a limited time, for caching, safety and abuse monitoring, and process it outside the EU. See the linked provider terms. We do not promise zero retention or EU-only processing.",
+    es: "Según las condiciones de Google Cloud, Google no usa lo que enviamos a Vertex AI para entrenar sus modelos sin nuestro permiso. Google puede conservar algunos datos durante un tiempo limitado, para caché, seguridad y prevención de abusos, y procesarlos fuera de la UE. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
+    ca: "Segons les condicions de Google Cloud, Google no fa servir el que enviem a Vertex AI per entrenar els seus models sense el nostre permís. Google pot conservar algunes dades durant un temps limitat, per a memòria cau, seguretat i prevenció d’abusos, i processar-les fora de la UE. No prometem retenció zero ni tractament exclusiu a la UE.",
   } as Copy,
 };
 
-test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, and §4 names the Gemini API with Vertex AI as a fallback, its third paragraph unchanged", async ({
+test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, and §4 names Vertex AI, and its contractual paragraph is on Vertex AI", async ({
   page,
 }) => {
   for (const language of languages) {
@@ -1422,7 +1422,7 @@ test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, 
     const voice = await sectionText(page, "voice");
     expect(voice, `${url} #voice: the route`).toContain(WP47_PRIVACY.route[language]);
     expect(voice, `${url} #voice: outside the EU`).toContain(WP47_PRIVACY.outsideEu[language]);
-    await expect(page.locator(".legal-body section#voice > p").nth(2), `${url} #voice: the third paragraph`).toHaveText(
+    await expect(page.locator(".legal-body section#voice > p").nth(3), `${url} #voice: the contractual paragraph`).toHaveText(
       WP47_PRIVACY.third[language],
     );
   }
@@ -1461,9 +1461,9 @@ plain("WEB-109, WEB-729: docs/LEGAL_RELEASE.md names company.json's version as t
 // The plan's exact copy: the check is about the wording.
 
 const SUMMARY_02: Copy = {
-  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.",
-  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, o para pedir recordatorios con tus palabras.",
-  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, o per demanar recordatoris amb les teves paraules.",
+  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, to ask for reminders in your own words, or to make notes from a meeting you record.",
+  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, para pedir recordatorios con tus palabras o para hacer notas de una reunión que grabas.",
+  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, per demanar recordatoris amb les teves paraules o per fer notes d’una reunió que graves.",
 };
 const WP54_DATA: Copy = {
   en: "the text of what you said, suggested tasks and changes",
@@ -1477,9 +1477,9 @@ const WP54_ONLY_WORDS: Copy = {
   ca: "l’àudio no en surt; només s’envien les paraules. Si no pot",
 };
 const WP54_GOOGLE: Copy = {
-  en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said.",
-  es: "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste.",
-  ca: "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit.",
+  en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said, and for a meeting, its notes.",
+  es: "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste y, si es una reunión, sus notas.",
+  ca: "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit i, si és una reunió, les seves notes.",
 };
 const WP54_GONE = [
   "turn them into tasks",
@@ -1526,13 +1526,14 @@ test("WEB-1002: privacy §2 lists suggested tasks and changes, §4 sends only th
     expect(flat(await paragraphs.nth(0).innerText()), `${url} #voice: the first paragraph`).toContain(
       WP54_ONLY_WORDS[language],
     );
-    const second = flat(await paragraphs.nth(1).innerText());
+    // nth(1) is the meeting-notes paragraph (2026-11-05).
+    const second = flat(await paragraphs.nth(2).innerText());
     expect(second.startsWith(WP54_GOOGLE[language]), `${url} #voice: the second paragraph begins “${second.slice(0, 90)}…”`).toBe(
       true,
     );
     // The second paragraph's next sentences stay as they were.
     expect(second, `${url} #voice: the route`).toContain(WP47_PRIVACY.route[language]);
-    await expect(paragraphs.nth(2), `${url} #voice: the third paragraph`).toHaveText(WP47_PRIVACY.third[language]);
+    await expect(paragraphs.nth(3), `${url} #voice: the contractual paragraph`).toHaveText(WP47_PRIVACY.third[language]);
   }
 });
 
@@ -1686,15 +1687,15 @@ plain("WEB-1101: no line in src/content/legal/ says the task form never sends an
   expect(found).toEqual([]);
 });
 
-test("WEB-1101: privacy §4's fourth paragraph still offers manual task entry, and §4 has four paragraphs, in each language", async ({
+test("WEB-1101: privacy §4's last paragraph still offers manual task entry, and §4 has five paragraphs, in each language", async ({
   page,
 }) => {
   for (const language of languages) {
     const url = legalPath("privacy", language);
     await page.goto(url);
     const paragraphs = page.locator(".legal-body section#voice > p");
-    await expect(paragraphs, `${url} #voice`).toHaveCount(4);
-    expect(flat(await paragraphs.nth(3).innerText()), `${url} #voice: the fourth paragraph`).toContain(
+    await expect(paragraphs, `${url} #voice`).toHaveCount(5);
+    expect(flat(await paragraphs.nth(4).innerText()), `${url} #voice: the last paragraph`).toContain(
       WP58_MANUAL[language],
     );
   }

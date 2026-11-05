@@ -1,6 +1,6 @@
 # TaskFlow legal documents
 
-The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **2 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
+The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **5 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
 
 ## Edit and publish
 
@@ -29,6 +29,16 @@ The operation also deletes the RevenueCat customer once the deletion has committ
 
 The website email button opens a translated message for the user to review and send; it does not transmit email or delete an account. Users can request deletion without reinstalling, signing in, giving a reason, purchasing or first cancelling a subscription.
 
+## Evidence behind meeting-notes and AI wording
+
+Version 2026-11-05 adds meeting notes (the app repo's `App/docs/MEETING_NOTES.md`, MN-34, and `Backend/docs/MEETINGS.md`) and moves §4 to Vertex AI only. The owner asked for it to be published on 2026-11-05.
+
+- Meeting notes are Pro only, with up to 20 hours a month (240 five-minute pieces, `AI_MEETING_PIECES_PER_MONTH`). The app sends pieces of about 5 minutes while recording, and keeps each piece on the phone until the server confirms it.
+- The server transcribes each piece on Vertex AI, stores the text and drops the audio. Once every piece is in, it writes the notes. The app saves them as an ordinary note, then deletes the meeting on the server: its pieces' text, chapter notes and row (MN-24). Discard deletes it at once (MN-25).
+- A meeting is deleted 30 days after its last piece arrived (MN-27, `maintain_staging`). A stopped recording left unanswered is finished into a note on the phone after 7 days (MN-26). Account deletion deletes meetings, because the rows cascade from the user.
+- Every AI call goes through Vertex AI with application credentials, and there is no Gemini API key (the app repo's commit `aa627da`, 2026-11-05). This answers WD12's "paid or free Gemini" half. Its backup half is unchanged.
+- The training sentence rests on Google Cloud's Service Specific Terms (the generative AI training restriction). Caching, abuse monitoring and global processing are stated as possible, not quantified.
+
 ## Operating the published policy
 
 Monitor support. Record receipt, verify ownership proportionately, carry out applicable erasure and confirm the outcome. Respond within one calendar month; explain any legally permitted extension within the first month. Explain specific lawful retention exceptions. Never request passwords or full card numbers by email.
@@ -49,6 +59,6 @@ Before introducing real paid subscriptions, update the offer, benefits, price/ta
 - [LOPDGDD](https://www.boe.es/buscar/act.php?id=BOE-A-2018-16673).
 - [AEPD erasure guidance](https://www.aepd.es/derechos-y-deberes/conoce-tus-derechos/derecho-de-supresion-al-olvido).
 - [Google Play account deletion](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en-GB) and [Apple account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
-- [Gemini API terms](https://ai.google.dev/gemini-api/terms), [Google Cloud processing terms](https://cloud.google.com/terms/data-processing-addendum) and [Google Workspace processing terms](https://workspace.google.com/terms/dpa_terms.html).
+- [Google Cloud service terms](https://cloud.google.com/terms/service-terms) (Vertex AI), [Google Cloud processing terms](https://cloud.google.com/terms/data-processing-addendum) and [Google Workspace processing terms](https://workspace.google.com/terms/dpa_terms.html).
 
 Keep translations and effective dates aligned. Preserve mandatory consumer rights and do not reintroduce the obsolete EU ODR platform link.

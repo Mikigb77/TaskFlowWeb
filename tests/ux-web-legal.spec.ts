@@ -690,13 +690,13 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the meeting-notes release").toBe("2026-11-05");
-  // The examples for 2026-11-05. The brief asks for Intl's long date; for Catalan, ICU
+  expect(COMPANY.version, "company.json's version: the meeting-notes release").toBe("2026-11-06");
+  // The examples for 2026-11-06. The brief asks for Intl's long date; for Catalan, ICU
   // writes «2 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
-    en: /^5 November 2026$/,
-    es: /^5 de noviembre de 2026$/,
-    ca: /^5 de novembre del? 2026$/,
+    en: /^6 November 2026$/,
+    es: /^6 de noviembre de 2026$/,
+    ca: /^6 de novembre del? 2026$/,
   };
   for (const { language, url } of LEGAL_PAGES) {
     await page.goto(url);

@@ -1,6 +1,6 @@
 # TaskFlow legal documents
 
-The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **5 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
+The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **6 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
 
 ## Edit and publish
 
@@ -31,7 +31,7 @@ The website email button opens a translated message for the user to review and s
 
 ## Evidence behind meeting-notes and AI wording
 
-Version 2026-11-05 adds meeting notes (the app repo's `App/docs/MEETING_NOTES.md`, MN-34, and `Backend/docs/MEETINGS.md`) and moves §4 to Vertex AI only. The owner asked for it to be published on 2026-11-05.
+Version 2026-11-06 adds meeting notes (the app repo's `App/docs/MEETING_NOTES.md`, MN-34, and `Backend/docs/MEETINGS.md`) and moves §4 to Vertex AI only. The owner asked for it to be published on 2026-11-05, and it went out on 2026-11-06.
 
 - Meeting notes are Pro only, with up to 20 hours a month (240 five-minute pieces, `AI_MEETING_PIECES_PER_MONTH`). The app sends pieces of about 5 minutes while recording, and keeps each piece on the phone until the server confirms it.
 - The server transcribes each piece on Vertex AI, stores the text and drops the audio. Once every piece is in, it writes the notes. The app saves them as an ordinary note, then deletes the meeting on the server: its pieces' text, chapter notes and row (MN-24). Discard deletes the pieces on the phone at once, and the meeting on the server as soon as the phone reaches it (MN-25; phase `discarding` in `App/lib/models/meeting.dart`).

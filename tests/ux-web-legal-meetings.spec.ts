@@ -3,7 +3,7 @@
 // into a note as the app does it: the 7 days are for a recording the app asks about (one cut off
 // before Stop, or a quiet Stop), counted from the app's question, the 30 days cover whatever is
 // left on the server, finished or not, and Discard reaches the server once the phone is online.
-// The release notes repeat the same rules. The version stays 2026-11-05: WEB-213's and
+// The release notes repeat the same rules. The version is 2026-11-06, the publication day: WEB-213's and
 // WEB-109's tests in tests/ux-web-legal.spec.ts prove it, and check.py runs `npm run legal:check`.
 // Its own file so it can't collide with WP271's block at the end of ux-web-legal.spec.ts.
 import { test as plain, type Page } from "@playwright/test";

@@ -5,7 +5,7 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
 
-## 2026-11-05 — Meeting notes on the privacy page, published (version 2026-11-05)
+## 2026-11-05 — Meeting notes on the privacy page, published (version 2026-11-06, the day it went out)
 - The owner, on the privacy page for meeting notes (MN-34): "Not only draft a legal change, but actually go ahead and publish it through GitHub Actions." That is the legal sign-off for this version (`docs/LEGAL_RELEASE.md`).
 - Privacy §2, §4 and §7 and the summary now cover meeting notes as the app does them: Pro only, up to 20 hours a month, pieces sent while recording, the audio deleted once it's text, the server's text deleted once the note is saved, 30 days for an unfinished meeting, 7 days on the phone.
 - On 2026-11-05 the owner decided that every AI call goes through Vertex AI, with no Gemini API key (app repo, `aa627da`). That answers WD12's paid-or-free Gemini half: §4 now names Vertex AI only, and Google Cloud's terms. WD12's backup half is unchanged.

@@ -2659,8 +2659,12 @@ test("WEB-1312: Spanish and Catalan micHint and the Catalan recording error are 
       if (statSync(file).isDirectory()) walk(file);
       else {
         const text = readFileSync(file, "utf8");
-        for (const word of ["te pedirá usar", "demanarà fer servir", "enregistrament"])
-          if (text.includes(word)) found.push(`${path.relative(ROOT, file)}: ${word}`);
+        const relative = path.relative(ROOT, file);
+        // The legal texts name meeting recordings «enregistrament(s)», as the app does
+        // (run 2026-11-05-pages, WEB-1904 and WEB-1907); the demo's recording stays «gravació».
+        const legal = relative.split(path.sep).join("/").startsWith("src/content/legal/");
+        for (const word of ["te pedirá usar", "demanarà fer servir", ...(legal ? [] : ["enregistrament"])])
+          if (text.includes(word)) found.push(`${relative}: ${word}`);
       }
     }
   };

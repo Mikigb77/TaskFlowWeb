@@ -7,7 +7,7 @@ export const en: LegalCopy = {
       "Privacy Policy for the TaskFlow app and website: your account, tasks, voice, files and choices.",
     summary: [
       "We don’t sell your data or show you ads.",
-      "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.",
+      "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, to ask for reminders in your own words, or to make notes from a meeting you record, with everyone’s words in it.",
       "You can get a copy of your data or delete it whenever you want.",
     ],
     sections: [
@@ -30,7 +30,7 @@ export const en: LegalCopy = {
           "Organisation: tasks, notes, dates, reminders, priorities, checklists, recurrence, completion history, projects, groups, assignments and the changes needed to synchronise them. Content is cached on your device and account content is synchronised with our servers.",
           "Files: the files or images you choose to attach, their names, sizes, a check code that spots damaged files, ownership and related task. Files you attach upload to your account when you save the task. A document or image may itself contain personal information or embedded metadata.",
           "Collaboration: membership, roles, invitation email addresses, sender names and acceptance status. If another user invites you before you have an account, that user is the source of your invitation details; we use them to deliver and manage the invitation, not to add you to marketing lists.",
-          "Voice and AI: recordings or text you submit, the text of what you said, suggested tasks and changes, language, timezone, reference date and relevant project/member names used to interpret a request. We also record usage counts and processing status to apply usage limits.",
+          "Voice and AI: recordings or text you submit, the text of what you said, suggested tasks and changes, language, timezone, reference date and relevant project/member names used to interpret a request. With Pro, a meeting you record: its audio, the text of what was said and the notes made from it. We also record usage counts and processing status to apply usage limits.",
           "Subscriptions: an opaque billing identifier, product, purchase/renewal/expiry information, store transaction references and entitlement status. RevenueCat and the relevant app store process subscription information. We do not receive your full payment-card details.",
           "Operations and support: IP/connection information, request/error logs, your phone’s and app’s versions, which our providers’ components need, security counters and the messages you send us. The app’s capture diagnostics contain local counts and timings, not recordings or task text.",
         ],
@@ -45,7 +45,7 @@ export const en: LegalCopy = {
           "Consent (Article 6(1)(a)), where separately requested for an optional purpose: you can withdraw it without affecting earlier lawful processing. A device permission enables access to a device feature; it does not automatically authorise unrelated uses of its data.",
         ],
         paragraphs: [
-          "We do not sell personal data, run advertising trackers, or use task content to target advertisements. We do not train our own AI model on your tasks. The AI suggests titles, dates and priorities for your review; it does not make decisions producing legal or similarly significant effects about you.",
+          "We do not sell personal data, run advertising trackers, or use task content to target advertisements. We do not train our own AI model on your tasks. The AI suggests titles, dates and priorities for your review, and writes the notes of meetings you record; it does not make decisions producing legal or similarly significant effects about you.",
         ],
       },
       {
@@ -53,14 +53,15 @@ export const en: LegalCopy = {
         title: "4. Voice, AI and sensitive information",
         paragraphs: [
           "The microphone is used when you choose to record and grant the device permission. The mobile app can retain unfinished recordings, source text and suggested tasks locally so you can recover an interrupted capture. They are removed from that capture after all its suggested tasks have been saved or removed, or you explicitly discard it. By default, the recording is sent to be turned into text online when you finish. If you choose in the app’s voice settings to have your phone recognise speech by itself, and it can, your voice becomes text on the phone and no audio leaves it; only the words are sent. With Pro, words you type for the AI, and reminders you ask for in your own words, are sent the same way. Without Pro, the task form never sends anything to the AI.",
-          "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said. The app can use Google’s Gemini API, with Google Cloud’s Vertex AI as a fallback; the website demonstration uses Vertex AI. Google can process it outside the EU. Our servers do not deliberately persist raw recordings, but that does not mean Google retains no processing or security data.",
-          "Google’s contractual treatment depends on the service and account tier. Paid Gemini API terms and the EEA provisions specify that prompts/responses are not used to improve Google products; unpaid services outside those provisions can involve model improvement and human review. Provider safety retention and international processing still apply. See the linked provider terms. We do not promise zero retention or EU-only processing.",
-          "TaskFlow is a general planning tool, not a medical-record service or professional adviser. Avoid including health records, passwords, identity documents or other highly sensitive information in AI input. Do not record other people or upload their personal information without an appropriate legal basis. You can use manual task entry instead of AI. Review every generated date, time, assignment and note before saving.",
+          "With Pro, you can record a meeting to get notes. While you record, the app sends the audio in pieces of about five minutes, and keeps each piece on the phone until our server has received it. Our server has Google turn each piece into text, then deletes that piece’s audio. Once every piece is in, the text becomes notes (a summary, to-dos, decisions and open questions), which the app saves as an ordinary note. Our server then deletes the meeting’s text. Pro includes up to 20 hours of meetings a month.",
+          "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said, and for a meeting, its text and notes. The app and the website demonstration use Google Cloud’s Vertex AI. Google can process it outside the EU. Our servers do not deliberately persist raw recordings, but that does not mean Google retains no processing or security data.",
+          "Under Google Cloud’s terms, Google doesn’t use what we send to Vertex AI to train its models without our permission. Google can still keep some data for a limited time, for caching, safety and abuse monitoring. See the linked provider terms. We do not promise zero retention or EU-only processing.",
+          "TaskFlow is a general planning tool, not a medical-record service or professional adviser. Avoid including health records, passwords, identity documents or other highly sensitive information in AI input. Tell the people in a meeting before you record it, and do not record other people or upload their personal information without an appropriate legal basis. You can use manual task entry instead of AI. Review every generated date, time, assignment and note before saving or relying on it.",
         ],
         links: [
           {
-            label: "Google Gemini API terms",
-            href: "https://ai.google.dev/gemini-api/terms",
+            label: "Google Cloud service terms, including Vertex AI",
+            href: "https://cloud.google.com/terms/service-terms",
           },
           {
             label: "Google Cloud data processing terms",
@@ -122,6 +123,7 @@ export const en: LegalCopy = {
           "Account and personal cloud content: kept while you have your account. We never delete your tasks on our own, done or not. A task, note or project you delete leaves your devices and its files are removed, but our server keeps the rest of it, hidden, until you delete your account (if it was in a shared project, it stays with that project). Account deletion removes your personal database records and sessions.",
           "Personal attachments: account deletion removes access and requests deletion of the stored files. File removal follows the database transaction; a failed storage operation requires follow-up. Files belonging to continuing shared projects remain available to their members, as shown before you confirm deletion.",
           "Shared content: tasks, notes and files in continuing shared projects remain for the other members until deleted by an authorised member or the shared space ends. Ownership transfers shown in the deletion preview take effect on confirmation; your membership, assignments and identifying activity attribution are removed. Contact support about personal information within retained shared content.",
+          "Meeting recordings: our server deletes each piece’s audio once it has been turned into text, and the meeting’s text once the app has saved its notes. Whatever is left of a meeting on our server, finished or not, is deleted 30 days after its last piece arrived. A recording the app asks you about, and that you leave unanswered, becomes a note 7 days after it asks. Discarding a meeting deletes it from your phone at once, and from our server as soon as your phone is online. Deleting your account deletes its meetings.",
           "Device data: successful in-app deletion clears the app’s local account data and unfinished captures. Other signed-in devices lose access and clear their account copy when they next contact the service. Independent exports, downloaded copies outside app storage and device backups require separate removal. Uninstalling alone does not delete the server account.",
           "Invitations and codes: invitation codes expire after seven days, and email-confirmation and recovery codes after 30 minutes. Cleanup removes expired runtime/session/email records. Email bodies are cleared after delivery or terminal failure/expiry; shared invitation history can remain without the deleted sender’s account link.",
           "Operational and support records: our servers’ logs are kept for 30 days. Support correspondence is kept while the request is handled and, when needed, for the applicable complaint or legal-claim limitation period. Security evidence and mandatory audit records follow their specific purpose and retention rules; a 30-day application-log setting is not a limit for every provider record.",
@@ -146,7 +148,7 @@ export const en: LegalCopy = {
         id: "permissions",
         title: "9. Device permissions and security",
         paragraphs: [
-          "TaskFlow requests microphone access for recording, notifications for reminders, and relevant file/photo/camera or calendar permissions when you choose those features. Events from your phone’s calendars are shown read-only and stay on the phone: they’re never uploaded or sent to the AI. Permissions can be changed in your operating-system settings. Revocation does not erase content already submitted.",
+          "TaskFlow requests microphone access for recording, notifications for reminders and meeting recordings, and relevant file/photo/camera or calendar permissions when you choose those features. Events from your phone’s calendars are shown read-only and stay on the phone: they’re never uploaded or sent to the AI. Permissions can be changed in your operating-system settings. Revocation does not erase content already submitted.",
           "We use HTTPS, passwords stored so they can’t be read back, authenticated access, membership checks, private file storage and server-side credential handling. TaskFlow is not an end-to-end encrypted vault: our servers and necessary providers can process content to provide the features. Device security, shared-device access and copies you export also matter.",
         ],
       },
@@ -230,7 +232,7 @@ export const en: LegalCopy = {
         id: "ai",
         title: "5. AI suggestions",
         paragraphs: [
-          "The AI is optional. It sends submitted input and relevant context to an AI provider as explained in the Privacy Policy. Output can omit, misinterpret or invent details. Check titles, dates, times, priorities, notes, recipients and project assignments before saving or sharing. An AI suggestion is not a professional recommendation or a guarantee of correctness.",
+          "The AI is optional. It sends submitted input and relevant context to an AI provider as explained in the Privacy Policy. Output can omit, misinterpret or invent details. Check titles, dates, times, priorities, notes, recipients and project assignments before saving, sharing or relying on them. An AI suggestion is not a professional recommendation or a guarantee of correctness.",
           "You remain responsible for the instructions and content you submit and how you use reviewed suggestions. This does not exclude our legal duties regarding the quality, security or conformity of the service. Do not use the demo to submit confidential or highly sensitive information.",
         ],
       },

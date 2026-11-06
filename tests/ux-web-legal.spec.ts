@@ -690,7 +690,7 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the day dictation went online by default").toBe("2026-11-06");
+  expect(COMPANY.version, "company.json's version: the meeting-notes release, and dictation online by default").toBe("2026-11-06");
   // The examples for 2026-11-06. The brief asks for Intl's long date; for Catalan, ICU
   // writes «6 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
@@ -1395,24 +1395,24 @@ const WP47_PRIVACY = {
     ca: "el text del que has dit, tasques i canvis suggerits",
   } as Copy,
   route: {
-    en: "The app can use Google’s Gemini API, with Google Cloud’s Vertex AI as a fallback; the website demonstration uses Vertex AI.",
-    es: "La app puede usar Gemini API de Google, con Vertex AI de Google Cloud como alternativa; la demo web utiliza Vertex AI.",
-    ca: "L’app pot fer servir Gemini API de Google, amb Vertex AI de Google Cloud com a alternativa; la demo web utilitza Vertex AI.",
+    en: "The app and the website demonstration use Google Cloud’s Vertex AI.",
+    es: "La app y la demo web utilizan Vertex AI de Google Cloud.",
+    ca: "L’app i la demo web fan servir Vertex AI de Google Cloud.",
   } as Copy,
   outsideEu: {
     en: "Google can process it outside the EU",
     es: "Google puede procesarlo fuera de la UE",
     ca: "Google ho pot processar fora de la UE",
   } as Copy,
-  // §4's third paragraph, which WD12 keeps as it is.
+  // §4's contractual paragraph, on Vertex AI since the owner's Vertex-only decision (2026-11-05).
   third: {
-    en: "Google’s contractual treatment depends on the service and account tier. Paid Gemini API terms and the EEA provisions specify that prompts/responses are not used to improve Google products; unpaid services outside those provisions can involve model improvement and human review. Provider safety retention and international processing still apply. See the linked provider terms. We do not promise zero retention or EU-only processing.",
-    es: "El tratamiento contractual de Google depende del servicio y nivel de cuenta. Las condiciones de pago de Gemini API y las disposiciones para el EEE excluyen el uso de entradas/respuestas para mejorar productos de Google; los servicios gratuitos fuera de esas disposiciones pueden implicar mejora de modelos y revisión humana. Siguen siendo aplicables la conservación de seguridad y el procesamiento internacional. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
-    ca: "El tractament contractual de Google depèn del servei i nivell de compte. Les condicions de pagament de Gemini API i les disposicions per a l’EEE exclouen l’ús d’entrades/respostes per millorar productes de Google; els serveis gratuïts fora d’aquestes disposicions poden implicar millora de models i revisió humana. Continuen aplicant-se retenció de seguretat i processament internacional. No prometem retenció zero ni tractament exclusiu a la UE.",
+    en: "Under Google Cloud’s terms, Google doesn’t use what we send to Vertex AI to train its models without our permission. Google can still keep some data for a limited time, for caching, safety and abuse monitoring. See the linked provider terms. We do not promise zero retention or EU-only processing.",
+    es: "Según las condiciones de Google Cloud, Google no usa lo que enviamos a Vertex AI para entrenar sus modelos sin nuestro permiso. Google puede conservar algunos datos durante un tiempo limitado, para caché, seguridad y prevención de abusos. No prometemos retención cero ni tratamiento exclusivamente en la UE.",
+    ca: "Segons les condicions de Google Cloud, Google no fa servir el que enviem a Vertex AI per entrenar els seus models sense el nostre permís. Google pot conservar algunes dades durant un temps limitat, per a memòria cau, seguretat i prevenció d’abusos. No prometem retenció zero ni tractament exclusiu a la UE.",
   } as Copy,
 };
 
-test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, and §4 names the Gemini API with Vertex AI as a fallback, its third paragraph unchanged", async ({
+test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, and §4 names Vertex AI, and its contractual paragraph is on Vertex AI", async ({
   page,
 }) => {
   for (const language of languages) {
@@ -1422,7 +1422,7 @@ test("WEB-729: privacy §2 lists the text of what you said and suggested tasks, 
     const voice = await sectionText(page, "voice");
     expect(voice, `${url} #voice: the route`).toContain(WP47_PRIVACY.route[language]);
     expect(voice, `${url} #voice: outside the EU`).toContain(WP47_PRIVACY.outsideEu[language]);
-    await expect(page.locator(".legal-body section#voice > p").nth(2), `${url} #voice: the third paragraph`).toHaveText(
+    await expect(page.locator(".legal-body section#voice > p").nth(3), `${url} #voice: the contractual paragraph`).toHaveText(
       WP47_PRIVACY.third[language],
     );
   }
@@ -1461,9 +1461,9 @@ plain("WEB-109, WEB-729: docs/LEGAL_RELEASE.md names company.json's version as t
 // The plan's exact copy: the check is about the wording.
 
 const SUMMARY_02: Copy = {
-  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, or to ask for reminders in your own words.",
-  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, o para pedir recordatorios con tus palabras.",
-  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, o per demanar recordatoris amb les teves paraules.",
+  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, to ask for reminders in your own words, or to make notes from a meeting you record, with everyone’s words in it.",
+  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, para pedir recordatorios con tus palabras o para hacer notas de una reunión que grabas, con lo que dice cada persona.",
+  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, per demanar recordatoris amb les teves paraules o per fer notes d’una reunió que enregistres, amb el que hi diu cadascú.",
 };
 const WP54_DATA: Copy = {
   en: "the text of what you said, suggested tasks and changes",
@@ -1478,9 +1478,9 @@ const WP54_ONLY_WORDS: Copy = {
   ca: "De manera predeterminada, la gravació s’envia per convertir-la en text en línia en acabar. Si als ajustos de veu de l’app tries que el telèfon reconegui la veu tot sol, i pot fer-ho, la veu es converteix en text al mateix telèfon i l’àudio no en surt; només s’envien les paraules.",
 };
 const WP54_GOOGLE: Copy = {
-  en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said.",
-  es: "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste.",
-  ca: "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit.",
+  en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said, and for a meeting, its text and notes.",
+  es: "Google procesa el audio/texto y el contexto pertinente para devolver tareas y cambios sugeridos y, si es una grabación, el texto de lo que dijiste y, si es una reunión, su texto y sus notas.",
+  ca: "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit i, si és una reunió, el seu text i les seves notes.",
 };
 const WP54_GONE = [
   "turn them into tasks",
@@ -1527,13 +1527,14 @@ test("WEB-1002: privacy §2 lists suggested tasks and changes, §4 sends only th
     expect(flat(await paragraphs.nth(0).innerText()), `${url} #voice: the first paragraph`).toContain(
       WP54_ONLY_WORDS[language],
     );
-    const second = flat(await paragraphs.nth(1).innerText());
+    // nth(1) is the meeting-notes paragraph (2026-11-05).
+    const second = flat(await paragraphs.nth(2).innerText());
     expect(second.startsWith(WP54_GOOGLE[language]), `${url} #voice: the second paragraph begins “${second.slice(0, 90)}…”`).toBe(
       true,
     );
     // The second paragraph's next sentences stay as they were.
     expect(second, `${url} #voice: the route`).toContain(WP47_PRIVACY.route[language]);
-    await expect(paragraphs.nth(2), `${url} #voice: the third paragraph`).toHaveText(WP47_PRIVACY.third[language]);
+    await expect(paragraphs.nth(3), `${url} #voice: the contractual paragraph`).toHaveText(WP47_PRIVACY.third[language]);
   }
 });
 
@@ -1687,15 +1688,15 @@ plain("WEB-1101: no line in src/content/legal/ says the task form never sends an
   expect(found).toEqual([]);
 });
 
-test("WEB-1101: privacy §4's fourth paragraph still offers manual task entry, and §4 has four paragraphs, in each language", async ({
+test("WEB-1101: privacy §4's last paragraph still offers manual task entry, and §4 has five paragraphs, in each language", async ({
   page,
 }) => {
   for (const language of languages) {
     const url = legalPath("privacy", language);
     await page.goto(url);
     const paragraphs = page.locator(".legal-body section#voice > p");
-    await expect(paragraphs, `${url} #voice`).toHaveCount(4);
-    expect(flat(await paragraphs.nth(3).innerText()), `${url} #voice: the fourth paragraph`).toContain(
+    await expect(paragraphs, `${url} #voice`).toHaveCount(5);
+    expect(flat(await paragraphs.nth(4).innerText()), `${url} #voice: the last paragraph`).toContain(
       WP58_MANUAL[language],
     );
   }
@@ -1945,12 +1946,12 @@ const WP66_TERMS_KEPT: Record<"es" | "ca", { service: string; ai: string }> = {
   es: {
     service:
       "TaskFlow ofrece organización de tareas/notas, calendarios, recordatorios, IA opcional, sincronización y proyectos compartidos cuando estén habilitados. Las funciones y límites de archivos o IA figuran en la app y la oferta contratada. Una demo o previsión no garantiza una función todavía no disponible.",
-    ai: "La IA es opcional y envía entrada/contexto al proveedor descrito en la política. Puede omitir, interpretar mal o inventar detalles. Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardar o compartir. No es asesoramiento profesional ni garantía de exactitud.",
+    ai: "La IA es opcional y envía entrada/contexto al proveedor descrito en la política. Puede omitir, interpretar mal o inventar detalles. Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardarlos, compartirlos o fiarte de ellos. No es asesoramiento profesional ni garantía de exactitud.",
   },
   ca: {
     service:
       "TaskFlow ofereix tasques/notes, calendaris, recordatoris, IA opcional, sincronització i projectes compartits quan estiguin habilitats. Funcions i límits consten a l’app i l’oferta. Una demo o previsió no garanteix una funció futura.",
-    ai: "La IA opcional envia entrada/context al proveïdor descrit. Pot ometre, malinterpretar o inventar. Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar/compartir. No és assessorament ni garantia d’exactitud.",
+    ai: "La IA opcional envia entrada/context al proveïdor descrit. Pot ometre, malinterpretar o inventar. Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar-los, compartir-los o refiar-te’n. No és assessorament ni garantia d’exactitud.",
   },
 };
 // WEB-1506: §5's Cloudflare link, which stays.
@@ -2310,3 +2311,292 @@ test("WEB-1801, WEB-1803: at 320 × 800, the Spanish and Catalan privacy and del
       expect(box!.height, `${url} #${id}: wraps onto several lines`).toBeGreaterThan(60);
     }
 });
+
+// ---- Run 2026-11-05-pages: WP271 (WEB-2001, WEB-1904, WEB-1502, WEB-1906, WEB-1905, WEB-1907),
+// the privacy summary, §2–§4 and §9 and terms §5: meeting wording, no review-before-saving
+// promise, no widow. The copy is the plan's, exact: the checks are about the wording. ----
+
+// Summary 02 before WP271, and the last clause WEB-1905 changes in it.
+const WP271_SUMMARY_02_BEFORE: Copy = {
+  en: "Your words go to Google’s AI only when you ask TaskFlow to understand them: to add, find or change tasks, to ask for reminders in your own words, or to make notes from a meeting you record.",
+  es: "Tus palabras solo van a la IA de Google cuando pides a TaskFlow que las entienda: para añadir, buscar o cambiar tareas, para pedir recordatorios con tus palabras o para hacer notas de una reunión que grabas.",
+  ca: "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, per demanar recordatoris amb les teves paraules o per fer notes d’una reunió que graves.",
+};
+const WP271_SUMMARY_02_OLD_END: Copy = {
+  en: "…or to make notes from a meeting you record.",
+  es: "…o para hacer notas de una reunión que grabas.",
+  ca: "…o per fer notes d’una reunió que graves.",
+};
+const WP271_SUMMARY_02_NEW_END: Copy = {
+  en: "…or to make notes from a meeting you record, with everyone’s words in it.",
+  es: "…o para hacer notas de una reunión que grabas, con lo que dice cada persona.",
+  ca: "…o per fer notes d’una reunió que enregistres, amb el que hi diu cadascú.",
+};
+const wp271Summary02 = (language: Language) =>
+  WP271_SUMMARY_02_BEFORE[language].replace(
+    WP271_SUMMARY_02_OLD_END[language].slice(1),
+    WP271_SUMMARY_02_NEW_END[language].slice(1),
+  );
+
+// WEB-2001: terms §5's checking sentence, and privacy §4's last sentence.
+const WP271_TERMS_CHECK: Copy = {
+  en: "Check titles, dates, times, priorities, notes, recipients and project assignments before saving, sharing or relying on them.",
+  es: "Revisa título, fecha, hora, prioridad, notas y destinatarios antes de guardarlos, compartirlos o fiarte de ellos.",
+  ca: "Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar-los, compartir-los o refiar-te’n.",
+};
+const WP271_TERMS_GONE: Copy = { en: "before saving or sharing", es: "antes de guardar o compartir", ca: "abans de desar/compartir" };
+const WP271_PRIVACY_REVIEW: Copy = {
+  en: "Review every generated date, time, assignment and note before saving or relying on it.",
+  es: "Revisa fechas, horas, asignaciones y notas antes de guardarlas o fiarte de ellas.",
+  ca: "Revisa dates, hores, assignacions i notes abans de desar-les o refiar-te’n.",
+};
+
+// WEB-1904: the meeting sentences' words, and §4 ¶2's list of what the notes hold.
+const WP271_MEETING_LIST: Copy = {
+  en: "(a summary, to-dos, decisions and open questions)",
+  es: "(un resumen, las cosas por hacer, las decisiones y las preguntas abiertas)",
+  ca: "(un resum, les coses per fer, les decisions i les preguntes obertes)",
+};
+const WP271_CA_MEETING = {
+  data: "Amb Pro, una reunió que enregistres:",
+  second: "Amb Pro pots enregistrar una reunió per tenir-ne notes. Mentre enregistres, l’app envia",
+  last: "Avisa les persones d’una reunió abans d’enregistrar-la, i no gravis tercers",
+};
+const WP271_CA_GONE = ["gravar una reunió", "que graves", "Mentre graves", "abans de gravar-la"];
+const WP271_TODOS_GONE = ["tareas pendientes", "tasques pendents"];
+
+// WEB-1906: §4's provider paragraphs and the provider link.
+const WP271_GOOGLE_RETURNS: Copy = {
+  en: "and for a meeting, its text and notes.",
+  es: "y, si es una reunión, su texto y sus notas.",
+  ca: "i, si és una reunió, el seu text i les seves notes.",
+};
+const WP271_OUTSIDE_EU_GONE: Copy = {
+  en: "and process it outside the EU",
+  es: "y procesarlos fuera de la UE",
+  ca: "i processar-les fora de la UE",
+};
+const WP271_KEEP_END: Copy = {
+  en: "for caching, safety and abuse monitoring.",
+  es: "para caché, seguridad y prevención de abusos.",
+  ca: "per a memòria cau, seguretat i prevenció d’abusos.",
+};
+const WP271_KEPT: Record<Language, string[]> = {
+  en: ["Google can process it outside the EU.", "We do not promise zero retention or EU-only processing."],
+  es: ["Google puede procesarlo fuera de la UE.", "No prometemos retención cero ni tratamiento exclusivamente en la UE."],
+  ca: ["Google ho pot processar fora de la UE.", "No prometem retenció zero ni tractament exclusiu a la UE."],
+};
+const WP271_SERVICE_TERMS: Copy = {
+  en: "Google Cloud service terms, including Vertex AI",
+  es: "Condiciones específicas de Google Cloud, incluida Vertex AI",
+  ca: "Condicions específiques de Google Cloud, inclosa Vertex AI",
+};
+
+// WEB-1907: §3 and §9.
+const WP271_PURPOSES: Copy = {
+  en: "The AI suggests titles, dates and priorities for your review, and writes the notes of meetings you record; it does not",
+  es: "La IA propone títulos, fechas y prioridades para tu revisión, y redacta las notas de las reuniones que grabas; no toma",
+  ca: "La IA proposa títols, dates i prioritats perquè els revisis, i redacta les notes de les reunions que enregistres; no pren",
+};
+const WP271_PERMISSIONS: Copy = {
+  en: "notifications for reminders and meeting recordings",
+  es: "notificaciones para recordatorios y grabaciones de reuniones",
+  ca: "notificacions per recordar i per als enregistraments de reunions",
+};
+
+// Each word's last line top in a paragraph, from a Range over its characters.
+const wordTops = (locator: ReturnType<Page["locator"]>) =>
+  locator.evaluate((element) => {
+    const result: number[] = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const value = node.textContent ?? "";
+      for (const match of value.matchAll(/\S+/g)) {
+        const range = document.createRange();
+        range.setStart(node, match.index!);
+        range.setEnd(node, match.index! + match[0].length);
+        const rects = range.getClientRects();
+        result.push(rects[rects.length - 1].top);
+      }
+    }
+    return result;
+  });
+
+const voiceParagraphs = (page: Page) => page.locator(".legal-body section#voice > p");
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP271`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-1502: at 390 × 664, summary 02's last line holds two words or more in each language, and its paragraph wraps pretty (${theme})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "mobile", "A 390 px phone.");
+      await page.setViewportSize({ width: 390, height: 664 });
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await hydrated(page);
+        await fontsReady(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const text = summary02(page).locator("p");
+        await expect(text, url).toHaveText(wp271Summary02(language));
+        const wrap = await text.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return `${style.getPropertyValue("text-wrap-style")} ${style.getPropertyValue("text-wrap")}`;
+        });
+        expect(wrap, `${url}: summary 02's text-wrap`).toContain("pretty");
+        const tops = await wordTops(text);
+        expect(tops.length, `${url}: summary 02's words`).toBe(wp271Summary02(language).split(" ").length);
+        const last = Math.max(...tops);
+        expect(tops.filter((top) => Math.abs(top - last) < 2).length, `${url}: words on summary 02's last line`).toBeGreaterThanOrEqual(2);
+      }
+    });
+
+    test(`WEB-1905: summary 02 ends ‘…with everyone’s words in it.’ and the rest of it is unchanged, in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const text = summary02(page).locator("p");
+        await expect(text, url).toBeVisible();
+        await expect(text, `${url}: summary 02`).toHaveText(wp271Summary02(language));
+        expect(flat(await text.innerText()).endsWith(WP271_SUMMARY_02_NEW_END[language].slice(1)), url).toBe(true);
+      }
+    });
+
+    test(`WEB-2001: terms §5 asks to check before saving, sharing or relying on them, and privacy §4 ends with the review sentence that covers saved notes, in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const terms = legalPath("terms", language);
+        await page.goto(terms);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(page.locator(".legal-body section#ai"), terms).toBeVisible();
+        const ai = await sectionText(page, "ai");
+        expect(ai, `${terms} #ai`).toContain(WP271_TERMS_CHECK[language]);
+        expect(ai, `${terms} #ai`).not.toContain(WP271_TERMS_GONE[language]);
+
+        const privacy = legalPath("privacy", language);
+        await page.goto(privacy);
+        const paragraphs = voiceParagraphs(page);
+        await expect(paragraphs, `${privacy} #voice`).toHaveCount(5);
+        const last = flat(await paragraphs.last().innerText());
+        expect(last.endsWith(` ${WP271_PRIVACY_REVIEW[language]}`), `${privacy} #voice ends “…${last.slice(-100)}”`).toBe(true);
+      }
+    });
+
+    test(`WEB-1904: §4's second paragraph lists ‘the things to do’ as the app names them, and the Catalan meeting sentences say «enregistrar» (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const second = flat(await voiceParagraphs(page).nth(1).innerText());
+        expect(second, `${url} #voice ¶2`).toContain(WP271_MEETING_LIST[language]);
+        const text = flat(await article(page).innerText());
+        for (const words of WP271_TODOS_GONE) expect(text, `${url}: “${words}”`).not.toContain(words);
+        if (language !== "ca") continue;
+        expect(await sectionText(page, "data"), `${url} #data`).toContain(WP271_CA_MEETING.data);
+        expect(second.startsWith(WP271_CA_MEETING.second), `${url} #voice ¶2 begins “${second.slice(0, 90)}…”`).toBe(true);
+        expect(flat(await voiceParagraphs(page).last().innerText()), `${url} #voice's last paragraph`).toContain(
+          WP271_CA_MEETING.last,
+        );
+        // Dictation keeps «gravar» / «gravació».
+        expect(flat(await voiceParagraphs(page).first().innerText()), `${url} #voice ¶1`).toContain("gravació");
+        expect(await sectionText(page, "permissions"), `${url} #permissions`).toContain("micròfon per gravar");
+      }
+    });
+
+    test(`WEB-1906: §4 says Google returns a meeting's text and notes, ¶4 drops ‘and process it outside the EU’ but §4 keeps both EU sentences, and the provider link is named in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const paragraphs = voiceParagraphs(page);
+        expect(flat(await paragraphs.nth(2).innerText()), `${url} #voice ¶3`).toContain(WP271_GOOGLE_RETURNS[language]);
+        const fourth = flat(await paragraphs.nth(3).innerText());
+        expect(fourth, `${url} #voice ¶4`).not.toContain(WP271_OUTSIDE_EU_GONE[language]);
+        expect(fourth, `${url} #voice ¶4`).toContain(WP271_KEEP_END[language]);
+        const voice = await sectionText(page, "voice");
+        expect(voice, `${url} #voice`).not.toContain(WP271_OUTSIDE_EU_GONE[language]);
+        for (const sentence of WP271_KEPT[language]) expect(voice, `${url} #voice`).toContain(sentence);
+        const link = page.locator('.legal-body section#voice a[href="https://cloud.google.com/terms/service-terms"]');
+        await expect(link, `${url} #voice: the service terms link`).toBeVisible();
+        await expect(link, `${url} #voice: the service terms link`).toHaveAccessibleName(WP271_SERVICE_TERMS[language]);
+      }
+    });
+
+    test(`WEB-1907: privacy §3 says the AI writes the notes of meetings you record, outside ‘for your review’, and §9 asks for notifications for meeting recordings, in each language (${theme})`, async ({
+      page,
+    }) => {
+      for (const language of languages) {
+        const url = legalPath("privacy", language);
+        await page.goto(url);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(page.locator(".legal-body section#purposes"), url).toBeVisible();
+        expect(await sectionText(page, "purposes"), `${url} #purposes`).toContain(WP271_PURPOSES[language]);
+        expect(await sectionText(page, "permissions"), `${url} #permissions`).toContain(WP271_PERMISSIONS[language]);
+      }
+    });
+
+    test(`WP271: the privacy and terms pages have no axe violations, in each language (${theme})`, async ({ page }) => {
+      for (const language of languages)
+        for (const document of ["privacy", "terms"] as const) {
+          const url = legalPath(document, language);
+          await page.goto(url);
+          await hydrated(page);
+          await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+          expect(await axeViolations(page), url).toEqual([]);
+        }
+    });
+  });
+}
+
+plain("WEB-1904: src/content/legal/ca.ts says no «gravar una reunió», «que graves», «Mentre graves» or «abans de gravar-la», and neither es.ts nor ca.ts says «tareas pendientes» or «tasques pendents»", () => {
+  const read = (file: string) => readFileSync(path.join(ROOT, "src", "content", "legal", file), "utf8");
+  const found: string[] = [];
+  const ca = read("ca.ts");
+  for (const words of WP271_CA_GONE) if (ca.includes(words)) found.push(`ca.ts: «${words}»`);
+  for (const file of ["es.ts", "ca.ts"])
+    for (const words of WP271_TODOS_GONE) if (read(file).includes(words)) found.push(`${file}: «${words}»`);
+  expect(found).toEqual([]);
+});
+
+for (const [width, height, doubled] of [
+  [320, 800, false],
+  [320, 800, true],
+  [390, 664, true],
+] as const)
+  test(`WP271: at ${width} px${doubled ? " with text at 200%" : ""}, the privacy summary cards and §4 reflow inside the screen with no sideways scroll, in each language`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "A phone.");
+    await page.setViewportSize({ width, height });
+    if (doubled) await doubleTextSize(page);
+    for (const language of languages) {
+      const url = legalPath("privacy", language);
+      await page.goto(url);
+      await hydrated(page);
+      await fontsReady(page);
+      if (doubled) expect(await rootFontSize(page), `${url}: the root font size`).toBe(32);
+      expect(await scrollsSideways(page), `${url} at ${width} px`).toBe(false);
+      const parts = [
+        ...(await page.locator(".legal-summary li").all()),
+        ...(await voiceParagraphs(page).all()),
+        page.locator(".legal-body section#voice .legal-links"),
+      ];
+      expect(parts.length, `${url}: three cards, five paragraphs and the links`).toBe(9);
+      for (const [index, part] of parts.entries()) {
+        const box = await part.boundingBox();
+        expect(box, `${url}: part ${index + 1}`).not.toBeNull();
+        expect(box!.x, `${url}: part ${index + 1}'s left edge`).toBeGreaterThanOrEqual(0);
+        expect(box!.x + box!.width, `${url}: part ${index + 1}'s right edge`).toBeLessThanOrEqual(width + 0.5);
+      }
+    }
+  });

@@ -7,7 +7,7 @@ export const ca: LegalCopy = {
       "Política de privacitat de l’app i el web de TaskFlow: compte, tasques, veu, fitxers i drets.",
     summary: [
       "No venem les teves dades ni et mostrem anuncis.",
-      "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, o per demanar recordatoris amb les teves paraules.",
+      "Les teves paraules només van a la IA de Google quan demanes a TaskFlow que les entengui: per afegir, cercar o canviar tasques, per demanar recordatoris amb les teves paraules o per fer notes d’una reunió que enregistres, amb el que hi diu cadascú.",
       "Pots demanar una còpia de les teves dades o suprimir-les quan vulguis.",
     ],
     sections: [
@@ -30,7 +30,7 @@ export const ca: LegalCopy = {
           "Organització: tasques, notes, dates, recordatoris, prioritats, passos, repeticions, historial de finalització, projectes, grups, assignacions i canvis de sincronització. L’app desa còpies locals i sincronitza el contingut del compte amb el servidor.",
           "Fitxers: documents o imatges que selecciones, nom, mida, un codi de control que detecta fitxers malmesos, titularitat i tasca relacionada. Els fitxers que adjuntes es pugen al compte en desar la tasca. Poden contenir dades personals o metadades incrustades.",
           "Col·laboració: membres, rols, correus d’invitació, remitents i acceptació. Si algú et convida abans de registrar-te, aquesta persona és la font de les dades de la invitació. Les utilitzem per tramitar-la, no per enviar publicitat.",
-          "Veu i IA: àudio o text enviat, el text del que has dit, tasques i canvis suggerits, idioma, zona horària, data de referència i noms pertinents de projectes/membres. També comptadors d’ús i estat per aplicar límits.",
+          "Veu i IA: àudio o text enviat, el text del que has dit, tasques i canvis suggerits, idioma, zona horària, data de referència i noms pertinents de projectes/membres. Amb Pro, una reunió que enregistres: el seu àudio, el text del que s’hi ha dit i les notes fetes a partir d’aquest text. També comptadors d’ús i estat per aplicar límits.",
           "Subscripció: identificador de facturació opac, producte, compra, renovació, caducitat, referències i estat d’accés. RevenueCat i la botiga tracten la informació de subscripció. No rebem les dades completes de la targeta.",
           "Operació i suport: IP/connexió, registres de peticions/errors, la versió del telèfon i de l’app que necessiten els components dels nostres proveïdors, comptadors de seguretat i missatges que ens envies. El diagnòstic de captura conté comptadors i temps locals, no àudio ni text de tasques.",
         ],
@@ -45,7 +45,7 @@ export const ca: LegalCopy = {
           "Consentiment (art. 6.1.a), si es demana separadament per a una finalitat opcional: el pots retirar sense afectar el tractament lícit anterior. Un permís del dispositiu no autoritza usos aliens a la funció.",
         ],
         paragraphs: [
-          "No venem dades personals, no instal·lem rastrejadors publicitaris ni utilitzem tasques per segmentar anuncis. No entrenem un model propi amb les teves tasques. La IA proposa títols, dates i prioritats perquè els revisis; no pren decisions amb efectes jurídics o semblants significatius sobre tu.",
+          "No venem dades personals, no instal·lem rastrejadors publicitaris ni utilitzem tasques per segmentar anuncis. No entrenem un model propi amb les teves tasques. La IA proposa títols, dates i prioritats perquè els revisis, i redacta les notes de les reunions que enregistres; no pren decisions amb efectes jurídics o semblants significatius sobre tu.",
         ],
       },
       {
@@ -53,14 +53,15 @@ export const ca: LegalCopy = {
         title: "4. Veu, intel·ligència artificial i dades sensibles",
         paragraphs: [
           "El micròfon s’utilitza quan tries gravar i dones permís. L’app pot conservar localment gravacions, text i tasques suggerides pendents per recuperar una captura interrompuda. Es retiren d’aquella captura quan deses o descartes totes les tasques suggerides, o quan descartes la captura. De manera predeterminada, la gravació s’envia per convertir-la en text en línia en acabar. Si als ajustos de veu de l’app tries que el telèfon reconegui la veu tot sol, i pot fer-ho, la veu es converteix en text al mateix telèfon i l’àudio no en surt; només s’envien les paraules. Amb Pro, el que escrius per a la IA i els recordatoris que demanes amb les teves paraules s’envien igual. Sense Pro, el formulari de tasques no envia mai res a la IA.",
-          "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit. L’app pot fer servir Gemini API de Google, amb Vertex AI de Google Cloud com a alternativa; la demo web utilitza Vertex AI. Google ho pot processar fora de la UE. El servidor no arxiva gravacions, però això no vol dir que Google no conservi dades de processament o seguretat.",
-          "El tractament contractual de Google depèn del servei i nivell de compte. Les condicions de pagament de Gemini API i les disposicions per a l’EEE exclouen l’ús d’entrades/respostes per millorar productes de Google; els serveis gratuïts fora d’aquestes disposicions poden implicar millora de models i revisió humana. Continuen aplicant-se retenció de seguretat i processament internacional. No prometem retenció zero ni tractament exclusiu a la UE.",
-          "TaskFlow és una eina d’organització, no un historial clínic ni un assessor professional. Evita enviar informes mèdics, contrasenyes, documents d’identitat o altres dades especialment sensibles a la IA. No gravis tercers ni pugis les seves dades sense base legítima. Pots escriure tasques manualment. Revisa dates, hores, assignacions i notes abans de desar.",
+          "Amb Pro pots enregistrar una reunió per tenir-ne notes. Mentre enregistres, l’app envia l’àudio en parts d’uns cinc minuts i desa cada part al telèfon fins que el nostre servidor la rep. El nostre servidor demana a Google que converteixi cada part en text i després n’esborra l’àudio. Quan han arribat totes les parts, el text es converteix en notes (un resum, les coses per fer, les decisions i les preguntes obertes), que l’app desa com una nota normal. Després el nostre servidor esborra el text de la reunió. Pro inclou fins a 20 hores de reunions al mes.",
+          "Google processa l’àudio/text i el context pertinent per retornar tasques i canvis suggerits i, si és una gravació, el text del que has dit i, si és una reunió, el seu text i les seves notes. L’app i la demo web fan servir Vertex AI de Google Cloud. Google ho pot processar fora de la UE. El servidor no arxiva gravacions, però això no vol dir que Google no conservi dades de processament o seguretat.",
+          "Segons les condicions de Google Cloud, Google no fa servir el que enviem a Vertex AI per entrenar els seus models sense el nostre permís. Google pot conservar algunes dades durant un temps limitat, per a memòria cau, seguretat i prevenció d’abusos. No prometem retenció zero ni tractament exclusiu a la UE.",
+          "TaskFlow és una eina d’organització, no un historial clínic ni un assessor professional. Evita enviar informes mèdics, contrasenyes, documents d’identitat o altres dades especialment sensibles a la IA. Avisa les persones d’una reunió abans d’enregistrar-la, i no gravis tercers ni pugis les seves dades sense base legítima. Pots escriure tasques manualment. Revisa dates, hores, assignacions i notes abans de desar-les o refiar-te’n.",
         ],
         links: [
           {
-            label: "Condicions de Gemini API",
-            href: "https://ai.google.dev/gemini-api/terms",
+            label: "Condicions específiques de Google Cloud, inclosa Vertex AI",
+            href: "https://cloud.google.com/terms/service-terms",
           },
           {
             label: "Condicions de tractament de Google Cloud",
@@ -122,6 +123,7 @@ export const ca: LegalCopy = {
           "Compte i contingut personal al núvol: es conserven mentre tinguis el compte. No esborrem mai les teves tasques pel nostre compte, fetes o no. Una tasca, nota o projecte que esborres desapareix dels teus dispositius i se’n suprimeixen els fitxers, però el nostre servidor en conserva la resta, oculta, fins que suprimeixis el compte (si era en un projecte compartit, es queda amb aquell projecte). Suprimir el compte elimina els registres personals de la base de dades i les sessions.",
           "Adjunts personals: la supressió retira l’accés i demana l’esborrament dels fitxers emmagatzemats. L’esborrament segueix la transacció de base de dades; una fallada d’emmagatzematge requereix seguiment. Els fitxers dels projectes compartits que continuen segueixen disponibles per als membres, tal com s’indica abans de confirmar.",
           "Contingut compartit: tasques, notes i fitxers de projectes compartits que continuen es conserven fins que un membre autoritzat els elimina o finalitza l’espai. Els traspassos de titularitat mostrats s’executen en confirmar; es retiren la pertinença, les assignacions i l’atribució identificativa d’activitat. Contacta amb suport per dades personals dins del contingut compartit conservat.",
+          "Reunions enregistrades: el nostre servidor esborra l’àudio de cada part quan ja és text, i el text de la reunió quan l’app n’ha desat les notes. El que quedi d’una reunió al nostre servidor, acabada o no, s’esborra 30 dies després de rebre’n l’última part. Un enregistrament pel qual l’app et pregunta, i que deixes sense resposta, es converteix en una nota 7 dies després que te’n pregunti. Descartar una reunió l’esborra del telèfon a l’instant, i del nostre servidor tan bon punt el telèfon té connexió. Suprimir el compte n’esborra les reunions.",
           "Dispositiu: la supressió confirmada des de l’app esborra la còpia local del compte i les captures pendents. Els altres dispositius perden l’accés i esborren la còpia en tornar a contactar amb el servei. Exportacions, descàrregues fora de l’emmagatzematge de l’app i còpies del dispositiu s’eliminen a part. Desinstal·lar no suprimeix el compte del servidor.",
           "Invitacions i codis: els codis d’invitació caduquen als set dies, i els de confirmació del correu i de recuperació, als 30 minuts. La neteja retira registres caducats d’execució, sessions i correu. El cos del correu es buida després de l’entrega o fallada/caducitat definitives; l’historial d’invitacions compartides pot continuar sense vincle amb el compte del remitent suprimit.",
           "Registres operatius i suport: els registres dels nostres servidors es conserven 30 dies. El correu de suport es conserva durant la gestió i, quan calgui, durant el termini aplicable a reclamacions. Les evidències de seguretat i auditories obligatòries segueixen les seves finalitats i regles específiques; el termini de 30 dies no s’aplica a tots els registres de tots els proveïdors.",
@@ -146,7 +148,7 @@ export const ca: LegalCopy = {
         id: "permissions",
         title: "9. Permisos i seguretat",
         paragraphs: [
-          "Demanem micròfon per gravar, notificacions per recordar i els permisos pertinents de fitxers, fotos, càmera o calendari quan tries aquestes funcions. Els esdeveniments dels calendaris del telèfon es mostren només per consultar-los i es queden al telèfon: no es pugen ni s’envien a la IA. Pots canviar permisos al sistema; revocar-los no esborra dades ja enviades.",
+          "Demanem micròfon per gravar, notificacions per recordar i per als enregistraments de reunions, i els permisos pertinents de fitxers, fotos, càmera o calendari quan tries aquestes funcions. Els esdeveniments dels calendaris del telèfon es mostren només per consultar-los i es queden al telèfon: no es pugen ni s’envien a la IA. Pots canviar permisos al sistema; revocar-los no esborra dades ja enviades.",
           "Utilitzem HTTPS, contrasenyes desades de manera que no es poden tornar a llegir, autenticació, comprovacions de pertinença, fitxers privats i credencials al servidor. TaskFlow no és una caixa forta amb xifratge d’extrem a extrem: servidor i proveïdors necessaris poden tractar el contingut. També importen seguretat del dispositiu, accessos compartits i exportacions.",
         ],
       },
@@ -230,7 +232,7 @@ export const ca: LegalCopy = {
         id: "ai",
         title: "5. Suggeriments de la IA",
         paragraphs: [
-          "La IA opcional envia entrada/context al proveïdor descrit. Pot ometre, malinterpretar o inventar. Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar/compartir. No és assessorament ni garantia d’exactitud.",
+          "La IA opcional envia entrada/context al proveïdor descrit. Pot ometre, malinterpretar o inventar. Revisa títol, data, hora, prioritat, notes, projecte i destinataris abans de desar-los, compartir-los o refiar-te’n. No és assessorament ni garantia d’exactitud.",
           "Ets responsable de les instruccions i de l’ús dels suggeriments revisats, sense excloure els nostres deures de qualitat, seguretat i conformitat. No enviïs dades confidencials o especialment sensibles a la demo.",
         ],
       },

@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2), 2026-11-02-changes and 2026-11-05-pages (legal meeting wording). Enforce these; a deviation in a new change is a finding.
+Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2), 2026-11-02-changes, 2026-11-05-pages (legal meeting wording) and 2026-11-06-pages (meetings card). Enforce these; a deviation in a new change is a finding.
 
 **Calls to action**
 - Primary CTA everywhere points to the live demo `#voice`, never to a download (Play not published). Availability line: "Coming soon to Google Play / You can't download it yet"; header/menu/closing "Coming soon to Android". ES/CA say «Próximamente» / «Properament», never «Muy pronto» / «Molt aviat».
@@ -42,7 +42,7 @@ Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2), 202
 - Legal prose `max-width: 52ch` (≈ 75 chars at 1440).
 
 **Legal pages**
-- Legal version 2026-11-05 (`company.json:10`). Privacy §8 explains `/delete-account/` opening in the visitor's language.
+- Legal version 2026-11-06 (`company.json:10`). Privacy §8 explains `/delete-account/` opening in the visitor's language.
 - Legal copy uses "suggestions" / «sugerencias» / «suggeriments» and "limits", never draft/allowance/transcript/AI Studio; terms §5 heading "5. AI suggestions". Meta descriptions ~100-115 chars. Bumping the legal text moves `company.json` version, `docs/LEGAL_RELEASE.md` and the pinned dates in both legal specs together.
 - h1 = document name; plain numbered summary first; in-force line only; icons: `arrow` for internal, `arrowUp` only for `http` links, none on mailto.
 - Email addresses render split with `<wbr>` before `@` (not hard-coded).
@@ -54,7 +54,11 @@ Settled by run 2026-10-18-site (b1-b5), extended by 2026-10-28-site (b1-b2), 202
 - Home copy names the app's entry buttons "Continue with Google" / "Continue with email" (WEB-1701); no "sign in" / «Inicias sesión» / «Inicies la sessió» in `src/content/site/`. Legal texts still say "sign in" in prose (terms withdrawal, delete page) — accepted, not a finding.
 - Per-page openGraph + twitter (summary_large_image) in the page's language.
 
-**Feature-card / prose wrapping**: `text-wrap: pretty` on `.feature-card p` (`global.css:583`, WEB-1105), `.floating-note p`, `.closing-card > p`; any new paragraph style that can end on one word gets it too. Lengthening a card sentence: crop es/ca mobile full renders (screens 4-5) for a one-word last line and the drawing still reaching the card's bottom edge (WEB-1004).
+**Feature cards** (2026-11-06-pages): heading = the app's own phrase, distinct in its first two words from its neighbours (no two consecutive headings opening "Notes…", SC-4/SC-5); body leads with the payoff, then the how-to, Pro named first when the feature is Pro; a step through a review is described as "check it, then add it" (voice card's pattern), never "in one tap" unless it is one tap; button names as in the app. An example drawing beside a card is aria-hidden, follows the app screen's order and labels, and draws no icon the app doesn't show. `.feature-card h3` has `text-wrap: balance` (`global.css:580`, R1-WP273-1).
+
+**Catalan enclitics**: on the home, a hyphenated enclitic («rep-ne», «revisa-la», «afegeix-la») carries U+2060 WORD JOINER right after the hyphen (`ca.ts:87`) so phones don't break «afegeix- / la». Test strings matched with `toHaveText` must carry the same joiners (`tests/support/ux-web-copy.ts`, `WP273_BODY` in `tests/ux-web-features.spec.ts`).
+
+**Feature-card / prose wrapping**: `text-wrap: pretty` on `.feature-card p` (`global.css:587`, WEB-1105), `.floating-note p`, `.closing-card > p`; any new paragraph style that can end on one word gets it too. Lengthening a card sentence: crop es/ca mobile full renders (screens 4-5) for a one-word last line and the drawing still reaching the card's bottom edge (WEB-1004).
 
 **Reminder wording**: site says «recordatorios»/«recordatoris» everywhere; the app's ES/CA Pro screen says «avisos» (`app_es.arb:1408`) — accepted, not a finding. Don't quote the app's «A tu manera» label on the site. The short line under the demo omits reminders by decision (WD2/WD14).
 

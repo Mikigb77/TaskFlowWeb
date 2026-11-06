@@ -71,6 +71,21 @@ export type SiteCopy = {
     };
     voice: { title: string; body: string; link: string };
     details: { title: string; body: string };
+    // Pro's meeting notes (WD36): the copy, and the words of the example note beside it.
+    meetings: {
+      title: string;
+      body: string;
+      note: {
+        title: string;
+        checklist: string;
+        header: string;
+        summary: string;
+        steps: string[];
+        decisions: string;
+        decision: string;
+        button: string;
+      };
+    };
     offline: { title: string; body: string };
   };
   faq: {

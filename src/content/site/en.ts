@@ -76,6 +76,20 @@ export const en: SiteCopy = {
       title: "Notes, checklists and files",
       body: "Add notes, a checklist or files to any task. Files are backed up to your account, up to 6 MB each.",
     },
+    meetings: {
+      title: "Your meetings become notes",
+      body: "With TaskFlow Pro, record a meeting and get its notes: a summary, the to-dos, the decisions and the open questions. Tap Record a meeting in Notes, lock your phone if you like, and press Stop. Create task turns the to-dos into a task with a checklist: check it, then add it. Up to 20 hours of meetings a month.",
+      note: {
+        title: "Team meeting",
+        checklist: "Checklist · 0/2",
+        header: "Meeting on Tuesday · 42 min",
+        summary: "The spring plan is agreed, and each part has someone to prepare it.",
+        steps: ["Send the quote by Friday", "Book the room for March"],
+        decisions: "Decisions",
+        decision: "Launch in April",
+        button: "Create task",
+      },
+    },
     offline: {
       title: "Your tasks, even offline",
       body: "Your tasks are saved on your phone, so you can check and add them without internet. They’re saved to your account when you’re back online.",
@@ -93,7 +107,7 @@ export const en: SiteCopy = {
         question: "Is TaskFlow free?",
         answer: [
           "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-          "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+          "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
         ],
       },
       {

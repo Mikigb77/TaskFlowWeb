@@ -76,6 +76,20 @@ export const es: SiteCopy = {
       title: "Notas, listas de pasos y archivos",
       body: "Añade notas, una lista de pasos o archivos a cualquier tarea. Los archivos se guardan en tu cuenta, hasta 6 MB cada uno.",
     },
+    meetings: {
+      title: "Tus reuniones se convierten en notas",
+      body: "Con TaskFlow Pro, graba una reunión y recibe sus notas: un resumen, las cosas por hacer, las decisiones y las preguntas abiertas. Toca Grabar una reunión en Notas, bloquea el móvil si quieres y pulsa Parar. Crear tarea convierte las cosas por hacer en una tarea con su lista de pasos: revísala y añádela. Hasta 20 horas de reuniones al mes.",
+      note: {
+        title: "Reunión de equipo",
+        checklist: "Pasos · 0/2",
+        header: "Reunión del martes · 42 min",
+        summary: "El plan de primavera está acordado, y cada parte tiene a alguien que la prepara.",
+        steps: ["Enviar el presupuesto el viernes", "Reservar la sala para marzo"],
+        decisions: "Decisiones",
+        decision: "Lanzar en abril",
+        button: "Crear tarea",
+      },
+    },
     offline: {
       title: "Tus tareas, también sin conexión",
       body: "Tus tareas se guardan en el móvil, así puedes consultarlas y añadirlas sin internet. Se guardan en tu cuenta cuando vuelves a tener conexión.",
@@ -93,7 +107,7 @@ export const es: SiteCopy = {
         question: "¿TaskFlow es gratis?",
         answer: [
           "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-          "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+          "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
         ],
       },
       {

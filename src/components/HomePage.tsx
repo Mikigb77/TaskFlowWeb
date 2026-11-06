@@ -121,6 +121,44 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
             <h3>{features.details.title}</h3>
             <p>{features.details.body}</p>
           </article>
+          <article className="feature-meetings feature-card">
+            <div className="feature-card-copy">
+              <span className="feature-icon">
+                <Icon name="people" size={23} />
+              </span>
+              <h3>{features.meetings.title}</h3>
+              <p>{features.meetings.body}</p>
+            </div>
+            <div className="meeting-illustration" aria-hidden="true">
+              <strong className="meeting-note-title">
+                {features.meetings.note.title}
+              </strong>
+              <strong className="meeting-note-label meeting-checklist-label">
+                {features.meetings.note.checklist}
+              </strong>
+              <ul>
+                {features.meetings.note.steps.map((step) => (
+                  <li key={step}>
+                    <span className="meeting-box"></span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+              <small>{features.meetings.note.header}</small>
+              <span className="meeting-line">
+                {features.meetings.note.summary}
+              </span>
+              <strong className="meeting-note-label">
+                {features.meetings.note.decisions}
+              </strong>
+              <span className="meeting-line meeting-decision">
+                {features.meetings.note.decision}
+              </span>
+              <span className="meeting-button">
+                {features.meetings.note.button}
+              </span>
+            </div>
+          </article>
           <article className="feature-offline feature-card">
             <span className="feature-icon">
               <Icon name="wifiOff" size={23} />

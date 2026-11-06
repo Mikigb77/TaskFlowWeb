@@ -1,0 +1,47 @@
+{
+ "runId": "2026-11-06-pages",
+ "mode": "pages",
+ "round": 2,
+ "created": "2026-11-06",
+ "conventions": [
+  "Paths are relative to the website root (`/home/claude/TaskFlowWeb` in this cloud session, `C:/Users/mikig/Desktop/Custom/MikiHacks/TaskFlow/TaskFlowWeb` on the owner's PC); app-repo paths start with `../TaskFlow/`. Line numbers were read on 2026-11-06 from TaskFlowWeb HEAD 0014f62, where `docs/LEGAL_RELEASE.md` has no uncommitted change. Search for the text a line number points at before you edit.",
+  "Subtract first and stay inside the brief: this round restores text a merge dropped, word for word from commit 20e6826; it writes no new sentence. No published legal text changes: nothing in `src/content/legal/` (including `company.json`'s version) and nothing on the site's pages. The legal version stays 2026-11-06, which the owner signed off (`.claude/ux-web/DECISIONS.md:15`, and the dictation update in c77deb1).",
+  "Another session's work: `git status --porcelain` lists this run's own merged WP273 change (`src/components/HomePage.tsx`, `src/components/Icon.tsx`, `src/content/site/{en,es,ca,types}.ts`, `src/styles/global.css`, `tests/support/ux-web-copy.ts`, `tests/ux-web-features.spec.ts`, `.claude/ux-web/DECISIONS.md`, `.claude/ux-web/ISSUES.md`). This round touches none of them. Never stage, commit, revert or reformat a file outside the package's `files`. The app repo (`../TaskFlow/`) is read-only.",
+  "Tests: no test changes. The failing check is `tests/ux-web-legal-meetings.spec.ts:91` (`docs/LEGAL_RELEASE.md states the same meeting rules as §7`), a plain Node test that reads the file; it runs in both projects. `tests/ux-web-legal.spec.ts:1452` (WEB-109, WEB-729: the doc names company.json's version as the effective day) must keep passing. web-ux-tester adds no new test unless an acceptance check isn't covered; the Vertex AI reference check (acceptance 3) can go as one `plain(...)` test at the end of `tests/ux-web-legal-meetings.spec.ts`, headed `// ---- Run 2026-11-06-pages round 2: WP274 (WEB-2107) ----`.",
+  "Checks: this is a Linux cloud session with no WSL and no WebKit. Run commands through `python3 /home/claude/TaskFlowWeb/.claude/skills/ux-web/scripts/webrun.py --src <your copy> --name <name> --port <port> -- '<command>'`, or through `.claude/skills/ux-web/scripts/check.py` as the fix workflow gives it. From the website root: `npm run legal:check`, `npm run check`, `SITE_URL=https://taskflow.garbar.tech npm run build`, then `npx playwright test tests/ux-web-legal-meetings.spec.ts tests/ux-web-legal.spec.ts --reporter=dot`. Chromium only. Never call the real voice API.",
+  "Today is 2026-11-06. Nothing here depends on a date beyond the section's own record that version 2026-11-06 went out on 2026-11-06."
+ ],
+ "packages": [
+  {
+   "id": "WP274",
+   "title": "Release doc: restore the meeting-notes evidence a merge dropped",
+   "area": "L",
+   "size": "S",
+   "severity": 2,
+   "findings": [
+    "WEB-2107"
+   ],
+   "files": [
+    "docs/LEGAL_RELEASE.md",
+    "tests/ux-web-legal-meetings.spec.ts"
+   ],
+   "brief": [
+    "WEB-2107 (S2, L): `docs/LEGAL_RELEASE.md` lost the evidence behind privacy §7's meeting rules and §4's Vertex AI wording. This isn't a change this run made, and the last attempt was not a fix: in round 1 the final check failed `tests/ux-web-legal-meetings.spec.ts:91` at `expect(release).toContain(\"finished or not\")` (:95), and the tester's repair in the main checkout couldn't clear it because the cause is committed. Merge d9f0a3d (‘Merge main into the online-dictation policy update’, another session, 2026-11-06 09:55 UTC, in HEAD through PR #26, 0014f62) took c77deb1's side of the file, which predates the meeting-notes section. The file has the text at 20e6826 and lacks it at c77deb1, d9f0a3d and HEAD. The published pages are right (`src/content/legal/en.ts:57-63` already say Vertex AI and link ‘Google Cloud service terms, including Vertex AI’); only the release record is wrong.",
+    "Edit 1, restore the section. In `docs/LEGAL_RELEASE.md`, between the paragraph that starts ‘The website email button opens a translated message’ (HEAD line 30) and `## Operating the published policy` (HEAD line 32), insert the whole section `## Evidence behind meeting-notes and AI wording` exactly as it stands at commit 20e6826, lines 32–40: the heading, its paragraph starting ‘Version 2026-11-06 adds meeting notes’, and its five bullets (‘Meeting notes are Pro only, with up to 20 hours a month…’, ‘The server transcribes each piece on Vertex AI…’, ‘Whatever is left of a meeting on the server, finished or not, is deleted 30 days after its last piece arrived… 7 days after the app first asks about it (MN-26…)… UX-2717). Account deletion deletes meetings, because the rows cascade from the user.’, ‘Every AI call goes through Vertex AI with application credentials, and there is no Gemini API key…’, ‘The training sentence rests on Google Cloud's Service Specific Terms…’). Take it from `git show 20e6826:docs/LEGAL_RELEASE.md` (sed -n 32,41p) and paste it unchanged, with one blank line before and after, so the file reads: deletion section, blank line, meeting-notes section, blank line, Operating section. Don't reword it.",
+    "Edit 2, the reference. In `## Primary references` (HEAD line 52), replace `[Gemini API terms](https://ai.google.dev/gemini-api/terms)` with `[Google Cloud service terms](https://cloud.google.com/terms/service-terms) (Vertex AI)`, as at 20e6826 line 62. The rest of that line stays.",
+    "Keep c77deb1's own change: the first paragraph's sentence ‘The 6 November version says that dictation sends the recording to be turned into text online by default…’ (HEAD line 3) stays exactly as it is. After the edits, `git diff 20e6826 -- docs/LEGAL_RELEASE.md` shows only that sentence.",
+    "Don't touch: anything in `src/content/legal/` or `company.json` (no version move: the published text doesn't change, so no new sign-off is needed; the owner signed off version 2026-11-06 with meeting notes, `.claude/ux-web/DECISIONS.md:15`), the tests (web-ux-tester may add acceptance 3's test), and every other section of the doc."
+   ],
+   "acceptance": [
+    "`tests/ux-web-legal-meetings.spec.ts:91` (‘WEB-1901, WEB-1902, WEB-1903: docs/LEGAL_RELEASE.md states the same meeting rules as §7’) passes on the desktop and mobile projects: the file contains ‘finished or not’ and ‘7 days after the app first asks about it’, and neither ‘Discard deletes it at once’ nor ‘A stopped recording left unanswered is finished into a note on the phone after 7 days’.",
+    "`docs/LEGAL_RELEASE.md` has exactly one `## Evidence behind meeting-notes and AI wording` heading, after `## Evidence behind deletion wording` and before `## Operating the published policy`, and its text equals lines 32–40 of the file at 20e6826.",
+    "`docs/LEGAL_RELEASE.md` contains `[Google Cloud service terms](https://cloud.google.com/terms/service-terms) (Vertex AI)` and contains no `ai.google.dev` and no ‘Gemini API terms’.",
+    "`docs/LEGAL_RELEASE.md` still contains ‘The 6 November version says that dictation sends the recording to be turned into text online by default’, and `tests/ux-web-legal.spec.ts:1452` (WEB-109, WEB-729) and `npm run legal:check` pass. `git diff 20e6826 -- docs/LEGAL_RELEASE.md` shows only that dictation sentence; `git diff HEAD --stat` for the package lists only `docs/LEGAL_RELEASE.md` (and the tester's test file if it adds acceptance 3's test)."
+   ],
+   "deviceChecks": [],
+   "dependsOn": []
+  }
+ ],
+ "decisions": [],
+ "skipped": []
+}

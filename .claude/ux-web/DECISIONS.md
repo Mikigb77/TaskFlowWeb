@@ -5,6 +5,12 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
 
+## 2026-11-06 — WD36: meeting notes get their own place on the home page
+- The owner, on the home page (2026-11-06): "have we stated clearly on the web and nicely on the web that […] we also have this feature of meeting recording? […] it's also a nice feature, so we should probably give it some importance on the web."
+- That answers WD36 of run 2026-11-05-pages with more than its one clause:
+  - a feature card of its own, a whole row of the features grid, with an example note beside its copy (aria-hidden, like the calendar card's week);
+  - WD36's clause in the FAQ's Pro paragraph, as recommended.
+- The facts are the app's: Pro only, Record a meeting in the Notes tab, the phone can be locked while it records, Stop, then a summary, the to-dos, the decisions and the open questions; Create task turns the to-dos into one task with a checklist; up to 20 hours a month.
 ## 2026-11-05 — Meeting notes on the privacy page, published (version 2026-11-06, the day it went out)
 - The owner, on the privacy page for meeting notes (MN-34): "Not only draft a legal change, but actually go ahead and publish it through GitHub Actions." That is the legal sign-off for this version (`docs/LEGAL_RELEASE.md`).
 - Privacy §2, §4 and §7 and the summary now cover meeting notes as the app does them: Pro only, up to 20 hours a month, pieces sent while recording, the audio deleted once it's text, the server's text deleted once the note is saved, 30 days for an unfinished meeting, 7 days on the phone.

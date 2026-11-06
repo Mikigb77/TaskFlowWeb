@@ -31,10 +31,13 @@ import {
   FEATURES,
   TRY_VOICE,
 } from "./support/ux-web-copy";
+import { ca as siteCaCopy } from "../src/content/site/ca";
+import { en as siteEnCopy } from "../src/content/site/en";
+import { es as siteEsCopy } from "../src/content/site/es";
 
 const DICTATIONS = { en: /\b10 dictations\b/, es: /\b10 dictados\b/, ca: /\b10 dictats\b/ };
 
-test("WEB-111: the features have one plain heading and four plain card headings, with no eyebrow or intro", async ({
+test("WEB-111: the features have one plain heading and five plain card headings, with no eyebrow or intro", async ({
   page,
 }) => {
   for (const language of LANGUAGES) {
@@ -108,7 +111,7 @@ test("WEB-111: no text in the features is under 12 px, and the cards' paragraphs
       .evaluateAll((paragraphs) =>
         paragraphs.map((p) => ({ text: p.textContent?.slice(0, 30), size: parseFloat(getComputedStyle(p).fontSize) })),
       );
-    expect(sizes.length).toBe(4);
+    expect(sizes.length).toBe(5);
     for (const { text, size } of sizes) expect(size, `${homeUrl(language)}: “${text}…”`).toBeGreaterThanOrEqual(16);
   }
 });
@@ -301,15 +304,15 @@ async function cards(page: Page) {
 for (const theme of THEMES) {
   test.describe(`${theme} grid`, () => {
     test.use({ colorScheme: theme });
-    test(`WEB-705, WEB-709: at 1440 px the calendar card spans two rows beside voice over details, offline runs full width below, and no card is a quarter empty (${theme})`, async ({
+    test(`WEB-705, WEB-709: at 1440 px the calendar card spans two rows beside voice over details, meetings then offline run full width below, and no card is a quarter empty (${theme})`, async ({
       page,
     }, testInfo) => {
       test.skip(testInfo.project.name !== "desktop", "Measured at 1440 × 1000.");
       await page.goto("/");
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await page.evaluate(() => document.fonts.ready);
-      const [calendar, voice, details, offline] = await cards(page);
-      expect([calendar, voice, details, offline].map((card) => card.heading)).toEqual(
+      const [calendar, voice, details, meetings, offline] = await cards(page);
+      expect([calendar, voice, details, meetings, offline].map((card) => card.heading)).toEqual(
         FEATURES.cards.map((card) => card.title.en),
       );
       // Voice and details sit to the calendar's right, one above the other.
@@ -320,11 +323,15 @@ for (const theme of THEMES) {
       // The calendar spans both their rows.
       expect(Math.abs(calendar.top - voice.top), "calendar starts with voice").toBeLessThan(1);
       expect(Math.abs(calendar.bottom - details.bottom), "calendar ends with details").toBeLessThan(1);
-      // Offline spans the full width below them.
-      expect(offline.top, "offline is below the calendar").toBeGreaterThan(calendar.bottom);
+      // WD36: meetings spans the full width below them, its note beside its copy.
+      expect(meetings.top, "meetings is below the calendar").toBeGreaterThan(calendar.bottom);
+      expect(Math.abs(meetings.left - calendar.left), "meetings starts at the grid's left").toBeLessThan(1);
+      expect(Math.abs(meetings.right - voice.right), "meetings ends at the grid's right").toBeLessThan(1);
+      // Offline spans the full width below meetings.
+      expect(offline.top, "offline is below meetings").toBeGreaterThan(meetings.bottom);
       expect(Math.abs(offline.left - calendar.left), "offline starts at the grid's left").toBeLessThan(1);
       expect(Math.abs(offline.right - voice.right), "offline ends at the grid's right").toBeLessThan(1);
-      for (const card of [voice, details, offline])
+      for (const card of [voice, details, meetings, offline])
         expect(card.gap, `${card.heading}: ${card.gap}px empty of ${card.height}px`).toBeLessThanOrEqual(
           card.height * 0.25,
         );
@@ -332,7 +339,7 @@ for (const theme of THEMES) {
   });
 }
 
-test("WEB-705: on a phone the four feature cards are one column in order, none with more than 40 px left empty", async ({
+test("WEB-705: on a phone the five feature cards are one column in order, none with more than 40 px left empty", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "Measured on the phone (390 × 664).");
@@ -1025,15 +1032,15 @@ const FREE_QUESTION: Copy = {
 const FREE_ANSWER: Record<Language, string[]> = {
   en: [
     "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
   ],
   es: [
     "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
   ],
   ca: [
     "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
   ],
 };
 const FREE_REMINDERS: Copy = {
@@ -1045,6 +1052,12 @@ const PRO_SECOND: Copy = {
   en: "It also turns sentences you type into tasks, and lets you ask for reminders in your own words.",
   es: "Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras.",
   ca: "A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules.",
+};
+// WD36: Pro's meeting notes, a sentence of their own after PRO_SECOND.
+const PRO_MEETINGS: Copy = {
+  en: "It makes notes from the meetings you record too, up to 20 hours a month.",
+  es: "También toma notas de las reuniones que grabas, hasta 20 horas al mes.",
+  ca: "També pren notes de les reunions que enregistres, fins a 20 hores al mes.",
 };
 const UNLIMITED: Copy = {
   en: "unlimited dictation and file space",
@@ -1139,7 +1152,7 @@ test("WEB-1104: no sentence of the free answer passes the old Pro sentence's lim
     const answer = (await item.locator("p").allInnerTexts()).map((paragraph) => paragraph.trim()).join(" ");
     expect(answer, where).toBe(FREE_ANSWER[language].join(" "));
     expect(longestSentence(answer), `${where}: the longest sentence`).toBeLessThanOrEqual(LONGEST_SENTENCE[language]);
-    for (const added of [FREE_REMINDERS[language], PRO_SECOND[language]]) {
+    for (const added of [FREE_REMINDERS[language], PRO_SECOND[language], PRO_MEETINGS[language]]) {
       expect(sentences(answer), `${where}: “${added}” is a sentence of its own`).toContain(added);
       expect(words(added).length, `${where}: “${added}”`).toBeLessThanOrEqual(24);
     }
@@ -1259,13 +1272,13 @@ for (const theme of THEMES) {
 
 // The paragraphs' widths before this round: the calendar card's 24rem from `.feature-card p`, and the
 // other cards' own limits, which WP61 doesn't touch (voice 21rem, details 26rem, offline 32rem, or
-// 26rem at 800 px and below).
+// 26rem at 800 px and below), and WD36's meetings card, 30rem.
 const CARD_TEXT_WIDTH = {
-  desktop: ["384px", "336px", "416px", "512px"],
-  mobile: ["384px", "336px", "416px", "416px"],
+  desktop: ["384px", "336px", "416px", "480px", "512px"],
+  mobile: ["384px", "336px", "416px", "480px", "416px"],
 };
 
-test("WEB-1105: the four feature cards' paragraphs wrap with text-wrap: pretty, at 16 px and line height 1.7, with their widths unchanged", async ({
+test("WEB-1105: the five feature cards' paragraphs wrap with text-wrap: pretty, at 16 px and line height 1.7, with their widths unchanged", async ({
   page,
 }, testInfo) => {
   const widths = CARD_TEXT_WIDTH[testInfo.project.name as keyof typeof CARD_TEXT_WIDTH];
@@ -1283,7 +1296,7 @@ test("WEB-1105: the four feature cards' paragraphs wrap with text-wrap: pretty, 
         };
       }),
     );
-    expect(styles, `${homeUrl(language)}: one paragraph per card`).toHaveLength(4);
+    expect(styles, `${homeUrl(language)}: one paragraph per card`).toHaveLength(5);
     for (const [index, style] of styles.entries()) {
       const where = `${homeUrl(language)} ${FEATURES.cards[index].title[language]}`;
       expect(style.wrap, `${where}: text-wrap`).toContain("pretty");
@@ -1302,15 +1315,15 @@ test("WEB-1105: the four feature cards' paragraphs wrap with text-wrap: pretty, 
 const WP70_FREE: Record<Language, [string, string]> = {
   en: [
     "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. Its price isn’t set yet.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
   ],
   es: [
     "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. Su precio aún no está decidido.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
   ],
   ca: [
     "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. El preu encara no està decidit.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
   ],
 };
 const WP70_FIRST_START: Copy = { en: "Yes.", es: "Sí.", ca: "Sí." };
@@ -1907,3 +1920,324 @@ test("WEB-1701, WEB-1702: on desktop with the browser's text doubled, the accoun
   }
   expect(found).toEqual([]);
 });
+
+// ---- 2026-11-06, WD36: Pro's meeting notes get a card of their own ----
+const WD36_FACTS: Record<Language, RegExp[]> = {
+  en: [/TaskFlow Pro/, /Record a meeting/, /\bStop\b/, /20 hours/],
+  es: [/TaskFlow Pro/, /Grabar una reunión/, /\bParar\b/, /20 horas/],
+  ca: [/TaskFlow Pro/, /Enregistra una reunió/, /\bAtura\b/, /20 hores/],
+};
+
+test("WD36: the meetings card names Pro, the app's Record a meeting and Stop, and 20 hours a month; its example note is hidden from screen readers", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const card = page.locator("#features .feature-meetings");
+    await expect(card, where).toHaveCount(1);
+    const body = (await card.locator(".feature-card-copy p").innerText()).trim();
+    for (const fact of WD36_FACTS[language]) expect(body, `${where}: ${fact}`).toMatch(fact);
+    const note = card.locator(".meeting-illustration");
+    await expect(note).toHaveAttribute("aria-hidden", "true");
+    await expect(note.locator("li")).toHaveCount(2);
+    await expect(note.locator("a, button")).toHaveCount(0);
+  }
+});
+
+test("WD36: the meetings card stacks its note under its copy on a phone and at text 200%, with nothing sideways", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phone widths.");
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const language of LANGUAGES) {
+      for (const text200 of [false, true]) {
+        const where = `${homeUrl(language)} at ${width} px${text200 ? ", text 200%" : ""}`;
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send("Page.setFontSizes", { fontSizes: text200 ? { standard: 32, fixed: 26 } : { standard: 16, fixed: 13 } });
+        await page.goto(homeUrl(language));
+        await page.evaluate(() => document.fonts.ready);
+        const card = page.locator("#features .feature-meetings");
+        const copy = await card.locator(".feature-card-copy").boundingBox();
+        const note = await card.locator(".meeting-illustration").boundingBox();
+        const box = await card.boundingBox();
+        expect(note!.y, `${where}: the note is below the copy`).toBeGreaterThanOrEqual(copy!.y + copy!.height - 1);
+        expect(note!.x + note!.width, `${where}: the note fits the card`).toBeLessThanOrEqual(box!.x + box!.width + 1);
+        expect(await scrollsSideways(page), where).toBe(false);
+      }
+    }
+  }
+});
+
+// ---- Run 2026-11-06-pages: WP273 (WEB-2101–WEB-2105, WEB-2002) ----
+// The meetings card leads with its payoff, names the app's Create task review truthfully, and
+// its example note follows the app's note page: the checklist first, then the note's words.
+const WP273_SITE = { en: siteEnCopy, es: siteEsCopy, ca: siteCaCopy };
+const WP273_TITLE: Copy = {
+  en: "Your meetings become notes",
+  es: "Tus reuniones se convierten en notas",
+  ca: "Les teves reunions es converteixen en notes",
+};
+const WP273_BODY: Copy = {
+  en: "With TaskFlow Pro, record a meeting and get its notes: a summary, the to-dos, the decisions and the open questions. Tap Record a meeting in Notes, lock your phone if you like, and press Stop. Create task turns the to-dos into a task with a checklist: check it, then add it. Up to 20 hours of meetings a month.",
+  es: "Con TaskFlow Pro, graba una reunión y recibe sus notas: un resumen, las cosas por hacer, las decisiones y las preguntas abiertas. Toca Grabar una reunión en Notas, bloquea el móvil si quieres y pulsa Parar. Crear tarea convierte las cosas por hacer en una tarea con su lista de pasos: revísala y añádela. Hasta 20 horas de reuniones al mes.",
+  ca: "Amb TaskFlow Pro, enregistra una reunió i rep-⁠ne les notes: un resum, les coses per fer, les decisions i les preguntes obertes. Toca Enregistra una reunió a Notes, bloqueja el mòbil si vols i prem Atura. El botó Crea una tasca converteix les coses per fer en una tasca amb la seva llista de passos: revisa-⁠la i afegeix-⁠la. Fins a 20 hores de reunions al mes.",
+};
+const WP273_ONE_TAP: Copy = { en: "one tap", es: "un toque", ca: "un toc" };
+const WP273_CREATE_TASK: Copy = { en: "Create task", es: "Crear tarea", ca: "Crea una tasca" };
+const WP273_NOTES: Copy = { en: "notes", es: "notas", ca: "notes" };
+const WP273_RECORD: Copy = { en: "Record a meeting", es: "Grabar una reunión", ca: "Enregistra una reunió" };
+const WP273_CHECKLIST: Copy = { en: "Checklist · 0/2", es: "Pasos · 0/2", ca: "Passos · 0/2" };
+const WP273_HEADER: Copy = {
+  en: "Meeting on Tuesday · 42 min",
+  es: "Reunión del martes · 42 min",
+  ca: "Reunió del dimarts · 42 min",
+};
+const WP273_DECISIONS: Copy = { en: "Decisions", es: "Decisiones", ca: "Decisions" };
+const WP273_FAQ_MEETINGS: Copy = {
+  en: "It makes notes from the meetings you record too, up to 20 hours a month.",
+  es: "También toma notas de las reuniones que grabas, hasta 20 horas al mes.",
+  ca: "També pren notes de les reunions que enregistres, fins a 20 hores al mes.",
+};
+const WP273_CALQUES: Partial<Copy> = { es: "hace notas", ca: "fa notes" };
+
+const wp273Card = (page: Page) => page.locator("#features .feature-meetings");
+
+function wp273Count(text: string, needle: string) {
+  return text.split(needle).length - 1;
+}
+
+// The tops of an element's rendered lines: each word's last box, measured with a Range.
+async function wp273LineTops(element: ReturnType<Page["locator"]>) {
+  return element.evaluate((node) => {
+    const words: { word: string; top: number }[] = [];
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+      for (const match of (text.textContent ?? "").matchAll(/\S+/g)) {
+        const range = document.createRange();
+        range.setStart(text, match.index);
+        range.setEnd(text, match.index + match[0].length);
+        const rects = [...range.getClientRects()].filter((rect) => rect.width > 0);
+        if (rects.length) words.push({ word: match[0], top: rects[rects.length - 1].top });
+      }
+    }
+    return words;
+  });
+}
+
+test("WEB-2103, WEB-2101, WEB-2102: the meetings card's heading and paragraph read exactly the brief's copy in each language", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const card = wp273Card(page);
+    await expect(card.locator("h3"), where).toHaveText(WP273_TITLE[language]);
+    await expect(card.locator(".feature-card-copy p"), where).toHaveText([WP273_BODY[language]]);
+  }
+});
+
+test("WEB-2101, WEB-2102: the meetings paragraph has no ‘one tap’, names Create task, and its first sentence says notes before the Record a meeting button", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const body = (await wp273Card(page).locator(".feature-card-copy p").innerText()).trim();
+    expect(body, `${where}: no ${WP273_ONE_TAP[language]}`).not.toContain(WP273_ONE_TAP[language]);
+    expect(body, `${where}: names ${WP273_CREATE_TASK[language]}`).toContain(WP273_CREATE_TASK[language]);
+    const firstSentence = body.slice(0, body.indexOf(". ") + 1);
+    const notes = firstSentence.indexOf(WP273_NOTES[language]);
+    const record = body.indexOf(WP273_RECORD[language]); // case-sensitive: the button's name
+    expect(notes, `${where}: the first sentence says ${WP273_NOTES[language]}`).toBeGreaterThan(-1);
+    expect(record, `${where}: names ${WP273_RECORD[language]}`).toBeGreaterThan(-1);
+    expect(notes, `${where}: ${WP273_NOTES[language]} comes before ${WP273_RECORD[language]}`).toBeLessThan(record);
+  }
+});
+
+test("WEB-2101: with every answer open, ‘one tap’ appears exactly twice on each home: in the voice card and in the voice answer", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const needle = WP273_ONE_TAP[language];
+    const text = await homeTextAllOpen(page);
+    expect(wp273Count(text, needle), `${where}: «${needle}» on the page`).toBe(2);
+    const voiceCard = page.locator("#features article", {
+      has: page.getByRole("heading", { level: 3, name: WP273_SITE[language].features.voice.title, exact: true }),
+    });
+    expect(wp273Count(await voiceCard.locator("p").innerText(), needle), `${where}: in the voice card`).toBe(1);
+    const voiceAnswer = page.locator("#questions details").nth(WP269_VOICE_INDEX);
+    expect(wp273Count(await voiceAnswer.innerText(), needle), `${where}: in the voice answer`).toBe(1);
+  }
+});
+
+test("WEB-2103: at 320 px the meetings heading is at most two lines in Spanish and Catalan", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phone width.");
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of ["es", "ca"] as Language[]) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    await page.evaluate(() => document.fonts.ready);
+    const heading = wp273Card(page).locator("h3");
+    await expect(heading).toHaveText(WP273_TITLE[language]);
+    const tops = new Set((await wp273LineTops(heading)).map((word) => Math.round(word.top)));
+    expect(tops.size, `${where}: lines of the meetings heading`).toBeLessThanOrEqual(2);
+  }
+});
+
+test("WEB-2002, WEB-2105: the open ‘Is TaskFlow free?’ answer's Pro paragraph holds the meetings sentence, and no home has «hace notas» or «fa notes»", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const item = await openAnswer(page, FREE_INDEX);
+    await expect(item.locator("summary"), where).toHaveText(FREE_QUESTION[language]);
+    const paragraphs = await answerParagraphs(item);
+    expect(paragraphs.length, `${where}: paragraphs`).toBeGreaterThanOrEqual(2);
+    expect(sentences(paragraphs[1]), `${where}: the Pro paragraph's sentences`).toContain(WP273_FAQ_MEETINGS[language]);
+    const calque = WP273_CALQUES[language];
+    if (calque) expect(await homeTextAllOpen(page), `${where}: no «${calque}»`).not.toContain(calque);
+  }
+});
+
+test("WEB-2104: the example note runs title, checklist, the two to-dos, header, summary, Decisions, the decision and Create task, top to bottom", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    const note = WP273_SITE[language].features.meetings.note;
+    await page.goto(where);
+    await page.evaluate(() => document.fonts.ready);
+    const drawing = wp273Card(page).locator(".meeting-illustration");
+    await expect(drawing, where).toHaveAttribute("aria-hidden", "true");
+    await expect(drawing.locator("li"), where).toHaveCount(2);
+    await expect(drawing.locator("a, button"), where).toHaveCount(0);
+    await expect(drawing.locator(".meeting-button svg"), where).toHaveCount(0);
+    await expect(drawing.locator(".meeting-button"), where).toHaveText(WP273_CREATE_TASK[language]);
+    const expected = [
+      note.title,
+      WP273_CHECKLIST[language],
+      ...note.steps,
+      WP273_HEADER[language],
+      note.summary,
+      WP273_DECISIONS[language],
+      note.decision,
+      WP273_CREATE_TASK[language],
+    ];
+    // Each visible text run in the drawing, in reading order, with its box.
+    const runs = await drawing.evaluate((root) => {
+      const found: { text: string; top: number; bottom: number }[] = [];
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = (node.textContent ?? "").trim();
+        if (!text) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const box = range.getBoundingClientRect();
+        if (box.width === 0 || box.height === 0) continue;
+        found.push({ text, top: box.top, bottom: box.bottom });
+      }
+      return found;
+    });
+    expect(runs.map((run) => run.text), `${where}: the drawing's text, in order`).toEqual(expected);
+    for (let i = 1; i < runs.length; i++)
+      expect(runs[i].top, `${where}: «${runs[i].text}» is below «${runs[i - 1].text}»`).toBeGreaterThanOrEqual(
+        runs[i - 1].bottom - 1,
+      );
+  }
+});
+
+test("WEB-2104: the thin line divides the checklist from the note's words: on the header line, not above the to-dos", async ({
+  page,
+}) => {
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    const drawing = wp273Card(page).locator(".meeting-illustration");
+    const header = drawing.locator("small");
+    await expect(header, where).toHaveText(WP273_HEADER[language]);
+    const borders = await drawing.evaluate((root) => {
+      const top = (selector: string) => getComputedStyle(root.querySelector(selector)!).borderTopWidth;
+      return { list: top("ul"), header: top("small") };
+    });
+    expect(parseFloat(borders.header), `${where}: the header line has the separator`).toBeGreaterThan(0);
+    expect(parseFloat(borders.list), `${where}: the to-dos have no separator`).toBe(0);
+  }
+});
+
+test("WEB-2104: the note's lines wrap with text-wrap: pretty", async ({ page }) => {
+  await page.goto("/");
+  const styles = await wp273Card(page)
+    .locator(".meeting-line")
+    .evaluateAll((lines) =>
+      lines.map((line) => {
+        const style = getComputedStyle(line) as CSSStyleDeclaration & { textWrapStyle?: string; textWrap?: string };
+        return `${style.textWrapStyle ?? ""} ${style.textWrap ?? ""}`;
+      }),
+    );
+  expect(styles.length).toBeGreaterThanOrEqual(1);
+  for (const style of styles) expect(style).toContain("pretty");
+});
+
+test("WEB-2104: at 320 px the note's summary ends on a line of two words or more, in every language", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Phone width.");
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const language of LANGUAGES) {
+    const where = homeUrl(language);
+    await page.goto(where);
+    await page.evaluate(() => document.fonts.ready);
+    const summary = wp273Card(page).locator(".meeting-line").first();
+    await expect(summary).toHaveText(WP273_SITE[language].features.meetings.note.summary);
+    const words = await wp273LineTops(summary);
+    const last = words[words.length - 1];
+    const lastLine = words.filter((word) => Math.abs(word.top - last.top) <= 2).map((word) => word.word);
+    expect(lastLine.length, `${where}: the summary's last line «${lastLine.join(" ")}»`).toBeGreaterThanOrEqual(2);
+  }
+});
+
+for (const theme of THEMES) {
+  test.describe(`${theme} WP273`, () => {
+    test.use({ colorScheme: theme });
+
+    test(`WEB-2104: the checklist label's text has 4.5:1 contrast or more on the note (${theme})`, async ({ page }) => {
+      for (const language of LANGUAGES) {
+        const where = homeUrl(language);
+        await page.goto(where);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        const label = wp273Card(page).locator(".meeting-illustration strong", { hasText: WP273_CHECKLIST[language] });
+        await expect(label, where).toHaveCount(1);
+        const colours = await label.evaluate((element) => {
+          let background = "rgba(0, 0, 0, 0)";
+          for (let node: Element | null = element; node; node = node.parentElement) {
+            const value = getComputedStyle(node).backgroundColor;
+            if (!/rgba\(.*,\s*0\)$/.test(value) && value !== "transparent") {
+              background = value;
+              break;
+            }
+          }
+          return { color: getComputedStyle(element).color, background };
+        });
+        const ratio = contrast(parseColor(colours.color), parseColor(colours.background));
+        expect(ratio, `${where}: ${colours.color} on ${colours.background}`).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    test(`WEB-2101–WEB-2105: axe reports no violations on the three homes (${theme})`, async ({ page }) => {
+      for (const language of LANGUAGES) {
+        await page.goto(homeUrl(language));
+        await hydrated(page);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(wp273Card(page).locator("h3")).toHaveText(WP273_TITLE[language]);
+        expect(await axeViolations(page), `${homeUrl(language)} in ${theme}`).toEqual([]);
+      }
+    });
+  });
+}

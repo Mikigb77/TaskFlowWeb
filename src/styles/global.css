@@ -577,6 +577,7 @@ h1 {
   overflow: hidden;
 }
 .feature-card h3 {
+  text-wrap: balance;
   font-size: 1.3125rem;
   line-height: 1.35;
   letter-spacing: -0.7px;
@@ -734,6 +735,104 @@ h1 {
 }
 .feature-details p {
   max-width: 26rem;
+}
+/* Pro's meeting notes (WD36): a whole row, its copy beside an example note. */
+.feature-meetings {
+  grid-column: span 12;
+  background: var(--lavender);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 40px;
+  align-items: center;
+  padding-bottom: 0;
+}
+.feature-meetings .feature-icon {
+  color: var(--ink);
+}
+.feature-meetings .feature-card-copy {
+  padding-bottom: 29px;
+}
+.feature-meetings .feature-card-copy p {
+  max-width: 30rem;
+}
+.meeting-illustration {
+  align-self: end;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 13px 13px 0 0;
+  margin-top: 29px;
+  padding: 22px 24px 20px;
+  box-shadow: 0 7px 35px #1d342806;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.meeting-illustration strong,
+.meeting-illustration small,
+.meeting-line {
+  display: block;
+}
+.meeting-note-title {
+  font-size: 1rem;
+  font-weight: 750;
+}
+.meeting-illustration small {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.meeting-line {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  margin-top: 10px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.meeting-illustration ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.meeting-illustration li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  min-width: 0;
+}
+.meeting-box {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--green);
+  border-radius: 4px;
+}
+.meeting-note-label {
+  font-size: 0.75rem;
+  font-weight: 750;
+  margin-top: 14px;
+}
+.meeting-checklist-label {
+  margin-top: 12px;
+}
+.meeting-decision {
+  margin-top: 3px;
+  color: var(--ink);
+}
+.meeting-button {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--paper);
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 .feature-offline {
   grid-column: span 12;
@@ -1198,6 +1297,9 @@ summary::-webkit-details-marker {
   .feature-details {
     grid-column: span 6;
   }
+  .feature-meetings {
+    column-gap: 24px;
+  }
   .feature-offline {
     grid-column: span 12;
     display: block;
@@ -1212,7 +1314,8 @@ summary::-webkit-details-marker {
   .feature-card h3 {
     font-size: 1.1875rem;
   }
-  .feature-calendar {
+  .feature-calendar,
+  .feature-meetings {
     padding-bottom: 0;
   }
   .calendar-illustration {
@@ -1317,6 +1420,12 @@ summary::-webkit-details-marker {
     grid-template-columns: 1fr;
     gap: 14px;
   }
+  .feature-meetings {
+    display: block;
+  }
+  .feature-meetings .feature-card-copy {
+    padding-bottom: 0;
+  }
   .feature-card {
     grid-column: auto;
     grid-row: auto;
@@ -1326,7 +1435,8 @@ summary::-webkit-details-marker {
   .feature-card h3 {
     font-size: 1.3125rem;
   }
-  .feature-calendar {
+  .feature-calendar,
+  .feature-meetings {
     padding-bottom: 0;
   }
   .calendar-illustration {

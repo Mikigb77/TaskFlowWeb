@@ -213,3 +213,76 @@ for (const theme of THEMES) {
     });
   });
 }
+
+// ---- Run 2026-11-06-pages, round 2: WP274 (WEB-2107) ----
+// docs/LEGAL_RELEASE.md is the release record behind privacy §7's meeting rules and §4's Vertex AI
+// wording. A merge (d9f0a3d) dropped its meeting-notes section and put back the Gemini API terms
+// link; WP274 restores both from commit 20e6826. The section's text at 20e6826 (lines 32–40) is
+// kept byte for byte in tests/support/legal-release-meetings-20e6826.md, taken with
+// `git show 20e6826:docs/LEGAL_RELEASE.md | sed -n 32,40p`. The meeting rules themselves are the
+// WEB-1901–WEB-1903 test above; WEB-109's and WEB-729's are in tests/ux-web-legal.spec.ts.
+const releaseDoc = () => readFileSync(path.join(ROOT, "docs", "LEGAL_RELEASE.md"), "utf8").replace(/\r\n/g, "\n");
+const MEETINGS_HEADING = "## Evidence behind meeting-notes and AI wording";
+const DELETION_HEADING = "## Evidence behind deletion wording";
+const OPERATING_HEADING = "## Operating the published policy";
+const MEETINGS_SECTION_20E6826 = readFileSync(
+  path.join(ROOT, "tests", "support", "legal-release-meetings-20e6826.md"),
+  "utf8",
+)
+  .replace(/\r\n/g, "\n")
+  .trimEnd();
+const headings = (text: string) => text.split("\n").filter((line) => /^##? /.test(line));
+
+plain("WEB-2107: docs/LEGAL_RELEASE.md has one ‘Evidence behind meeting-notes and AI wording’ section, between the deletion evidence and ‘Operating the published policy’, with 20e6826's text unchanged", () => {
+  const release = releaseDoc();
+  const all = headings(release);
+  expect(all.filter((line) => line === MEETINGS_HEADING), "the meeting-notes heading, once").toHaveLength(1);
+  expect(all.filter((line) => line === DELETION_HEADING), "the deletion heading, once").toHaveLength(1);
+  expect(all.filter((line) => line === OPERATING_HEADING), "the operating heading, once").toHaveLength(1);
+  // The heading that comes right before it and right after it.
+  const at = all.indexOf(MEETINGS_HEADING);
+  expect(all[at - 1], "the heading before the meeting-notes section").toBe(DELETION_HEADING);
+  expect(all[at + 1], "the heading after the meeting-notes section").toBe(OPERATING_HEADING);
+  // The section, from its heading to the next heading, equals lines 32–40 at 20e6826,
+  // with one blank line before it and one before ‘Operating the published policy’.
+  const start = release.indexOf(`\n\n${MEETINGS_HEADING}\n`);
+  expect(start, "one blank line before the meeting-notes heading").toBeGreaterThan(0);
+  expect(release.charAt(start - 1), "only one blank line before the meeting-notes heading").not.toBe("\n");
+  const end = release.indexOf(`\n\n${OPERATING_HEADING}\n`, start);
+  expect(end, "one blank line before ‘Operating the published policy’").toBeGreaterThan(start);
+  const section = release.slice(start + 2, end);
+  expect(section, "the section's text, as at 20e6826").toBe(MEETINGS_SECTION_20E6826);
+  // The bullets the finding names, so a wrong fixture can't pass on its own.
+  expect(MEETINGS_SECTION_20E6826.split("\n").filter((line) => line.startsWith("- "))).toHaveLength(5);
+  for (const words of [
+    "Version 2026-11-06 adds meeting notes",
+    "Meeting notes are Pro only, with up to 20 hours a month",
+    "The server transcribes each piece on Vertex AI",
+    "Whatever is left of a meeting on the server, finished or not, is deleted 30 days after its last piece arrived",
+    "7 days after the app first asks about it",
+    "Account deletion deletes meetings, because the rows cascade from the user.",
+    "Every AI call goes through Vertex AI with application credentials, and there is no Gemini API key",
+    "The training sentence rests on Google Cloud's Service Specific Terms",
+  ]) {
+    expect(section, `the section says “${words}”`).toContain(words);
+  }
+});
+
+plain("WEB-2107: docs/LEGAL_RELEASE.md's primary references name the Google Cloud service terms (Vertex AI), not the Gemini API terms", () => {
+  const release = releaseDoc();
+  const references = release.slice(release.indexOf("\n## Primary references\n"));
+  expect(release.indexOf("\n## Primary references\n"), "the Primary references section").toBeGreaterThan(0);
+  expect(references).toContain("[Google Cloud service terms](https://cloud.google.com/terms/service-terms) (Vertex AI)");
+  expect(release).not.toContain("ai.google.dev");
+  expect(release).not.toContain("Gemini API terms");
+});
+
+plain("WEB-2107: docs/LEGAL_RELEASE.md keeps the 6 November version's online-dictation sentence in its opening paragraph", () => {
+  const release = releaseDoc();
+  const opening = release.split("\n").find((line) => line.startsWith("The current Privacy Policy"));
+  expect(opening, "the opening paragraph").toBeDefined();
+  expect(opening).toContain(
+    "The 6 November version says that dictation sends the recording to be turned into text online by default, and only the words where the person chose on-device speech in the app's voice settings (owner, 2026-11-06).",
+  );
+  expect(release.split("The 6 November version says that dictation sends").length - 1, "the sentence, once").toBe(1);
+});

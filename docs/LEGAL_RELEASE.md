@@ -1,6 +1,6 @@
 # TaskFlow legal documents
 
-The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **2 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. All three translations describe the current service; there is no draft banner or deferred-policy language.
+The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **6 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. The 6 November version says that dictation sends the recording to be turned into text online by default, and only the words where the person chose on-device speech in the app's voice settings (owner, 2026-11-06). All three translations describe the current service; there is no draft banner or deferred-policy language.
 
 ## Edit and publish
 

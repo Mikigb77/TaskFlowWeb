@@ -690,9 +690,9 @@ const DATE_LOCALE: Copy = { en: "en-GB", es: "es", ca: "ca" };
 test("WEB-213: each legal page says ‘In force since’ and the long date in its language, in a time element dated company.json's version", async ({
   page,
 }) => {
-  expect(COMPANY.version, "company.json's version: the meeting-notes release").toBe("2026-11-06");
+  expect(COMPANY.version, "company.json's version: the meeting-notes release, and dictation online by default").toBe("2026-11-06");
   // The examples for 2026-11-06. The brief asks for Intl's long date; for Catalan, ICU
-  // writes «2 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
+  // writes «6 de novembre del 2026» where a plan's example may have «de 2026»: either is the long date.
   const examples: Record<Language, RegExp> = {
     en: /^6 November 2026$/,
     es: /^6 de noviembre de 2026$/,
@@ -1471,10 +1471,11 @@ const WP54_DATA: Copy = {
   ca: "el text del que has dit, tasques i canvis suggerits",
 };
 // §4's first paragraph, where its purpose clause was cut, and the second paragraph's new first sentence.
+// Since 2026-11-06 the recording goes online by default; on-device speech, where chosen, sends only the words.
 const WP54_ONLY_WORDS: Copy = {
-  en: "no audio leaves it; only the words are sent. Otherwise",
-  es: "el audio no sale de él; solo se envían las palabras. Si no puede",
-  ca: "l’àudio no en surt; només s’envien les paraules. Si no pot",
+  en: "By default, the recording is sent to be turned into text online when you finish. If you choose in the app’s voice settings to have your phone recognise speech by itself, and it can, your voice becomes text on the phone and no audio leaves it; only the words are sent.",
+  es: "De forma predeterminada, la grabación se envía para convertirla en texto en línea al terminar. Si en los ajustes de voz de la app eliges que tu teléfono reconozca la voz por sí solo, y puede hacerlo, tu voz se convierte en texto en el propio teléfono y el audio no sale de él; solo se envían las palabras.",
+  ca: "De manera predeterminada, la gravació s’envia per convertir-la en text en línia en acabar. Si als ajustos de veu de l’app tries que el telèfon reconegui la veu tot sol, i pot fer-ho, la veu es converteix en text al mateix telèfon i l’àudio no en surt; només s’envien les paraules.",
 };
 const WP54_GOOGLE: Copy = {
   en: "Google processes submitted recordings/text and the relevant context to return suggested tasks and changes and, for a recording, the text of what you said, and for a meeting, its text and notes.",

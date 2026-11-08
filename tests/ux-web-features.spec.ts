@@ -1032,15 +1032,15 @@ const FREE_QUESTION: Copy = {
 const FREE_ANSWER: Record<Language, string[]> = {
   en: [
     "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation (with a safety limit of 50 dictations a day) and 500 MB of files a month. It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
   ],
   es: [
     "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado ilimitado (con un límite de seguridad de 50 dictados al día) y 500 MB de archivos al mes. Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
   ],
   ca: [
     "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat il·limitat (amb un límit de seguretat de 50 dictats al dia) i 500 MB de fitxers al mes. A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
   ],
 };
 const FREE_REMINDERS: Copy = {
@@ -1060,9 +1060,9 @@ const PRO_MEETINGS: Copy = {
   ca: "També pren notes de les reunions que enregistres, fins a 20 hores al mes.",
 };
 const UNLIMITED: Copy = {
-  en: "unlimited dictation and file space",
-  es: "dictado y espacio para archivos ilimitados",
-  ca: "dictat i espai per a fitxers il·limitats",
+  en: "unlimited dictation",
+  es: "dictado ilimitado",
+  ca: "dictat il·limitat",
 };
 const OWN_WORDS: Copy = {
   en: "reminders in your own words",
@@ -1315,15 +1315,15 @@ test("WEB-1105: the five feature cards' paragraphs wrap with text-wrap: pretty, 
 const WP70_FREE: Record<Language, [string, string]> = {
   en: [
     "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
+    "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation (with a safety limit of 50 dictations a day) and 500 MB of files a month. It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
   ],
   es: [
     "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
+    "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado ilimitado (con un límite de seguridad de 50 dictados al día) y 500 MB de archivos al mes. Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
   ],
   ca: [
     "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
+    "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat il·limitat (amb un límit de seguretat de 50 dictats al dia) i 500 MB de fitxers al mes. A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
   ],
 };
 const WP70_FIRST_START: Copy = { en: "Yes.", es: "Sí.", ca: "Sí." };
@@ -1340,7 +1340,7 @@ const WP70_CLAIMS: Record<Language, { free: string[]; pro: string[] }> = {
     ],
     pro: [
       "monthly subscription that renews until you cancel it in Google Play",
-      "unlimited dictation and file space (with a safety limit of 50 dictations a day)",
+      "unlimited dictation (with a safety limit of 50 dictations a day) and 500 MB of files a month",
       "turns sentences you type into tasks",
       "reminders in your own words",
       "Its price isn’t set yet.",
@@ -1355,7 +1355,7 @@ const WP70_CLAIMS: Record<Language, { free: string[]; pro: string[] }> = {
     ],
     pro: [
       "suscripción mensual que se renueva hasta que la cancelas en Google Play",
-      "dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día)",
+      "dictado ilimitado (con un límite de seguridad de 50 dictados al día) y 500 MB de archivos al mes",
       "convierte en tareas las frases que escribes",
       "los recordatorios con tus palabras",
       "Su precio aún no está decidido.",
@@ -1370,7 +1370,7 @@ const WP70_CLAIMS: Record<Language, { free: string[]; pro: string[] }> = {
     ],
     pro: [
       "subscripció mensual que es renova fins que la cancel·les a Google Play",
-      "dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia)",
+      "dictat il·limitat (amb un límit de seguretat de 50 dictats al dia) i 500 MB de fitxers al mes",
       "converteix en tasques les frases que escrius",
       "els recordatoris amb les teves paraules",
       "El preu encara no està decidit.",

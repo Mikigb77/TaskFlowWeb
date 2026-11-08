@@ -74,7 +74,7 @@ export const en: SiteCopy = {
     },
     details: {
       title: "Notes, checklists and files",
-      body: "Add notes, a checklist or files to any task. Files are backed up to your account, up to 6 MB each.",
+      body: "Add notes, a checklist or files to any task. Files are backed up to your account, up to 6 MB each, and deleted 15 days after their task is completed. Without Pro you can upload 200 MB of files in all; with Pro, 500 MB a month.",
     },
     meetings: {
       title: "Your meetings become notes",
@@ -107,7 +107,7 @@ export const en: SiteCopy = {
         question: "Is TaskFlow free?",
         answer: [
           "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-          "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
+          "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation (with a safety limit of 50 dictations a day) and 500 MB of files a month. It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
         ],
       },
       {
@@ -152,7 +152,7 @@ export const en: SiteCopy = {
     body: "TaskFlow isn’t on Google Play yet. Until then, you can try it with your voice on this page.",
     button: "Try it with your voice",
     plans:
-      "Free with an account: 10 dictations a month, and tasks by hand with no limit. TaskFlow Pro, a monthly subscription: unlimited dictation and file space.",
+      "Free with an account: 10 dictations a month, and tasks by hand with no limit. TaskFlow Pro, a monthly subscription: unlimited dictation and 500 MB of files a month.",
   },
   voice: {
     title: "Try it with your voice",

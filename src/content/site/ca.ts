@@ -80,7 +80,7 @@ export const ca: SiteCopy = {
     },
     details: {
       title: "Notes, llistes de passos i fitxers",
-      body: "Afegeix notes, una llista de passos o fitxers a qualsevol tasca. Els fitxers es desen al teu compte, fins a 6 MB cadascun.",
+      body: "Afegeix notes, una llista de passos o fitxers a qualsevol tasca. Els fitxers es desen al teu compte, fins a 6 MB cadascun, i s’eliminen 15 dies després de completar la seva tasca. Sense Pro pots pujar 200 MB de fitxers en total; amb Pro, 500 MB al mes.",
     },
     meetings: {
       title: "Les teves reunions es converteixen en notes",
@@ -113,7 +113,7 @@ export const ca: SiteCopy = {
         question: "TaskFlow és gratuït?",
         answer: [
           "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-          "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
+          "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat il·limitat (amb un límit de seguretat de 50 dictats al dia) i 500 MB de fitxers al mes. A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
         ],
       },
       {
@@ -158,7 +158,7 @@ export const ca: SiteCopy = {
     body: "TaskFlow encara no és a Google Play. Mentrestant, el pots provar amb la teva veu en aquesta pàgina.",
     button: "Prova-ho amb la teva veu",
     plans:
-      "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit. TaskFlow Pro, una subscripció mensual: dictats i espai per a fitxers sense límit.",
+      "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit. TaskFlow Pro, una subscripció mensual: dictats sense límit i 500 MB de fitxers al mes.",
   },
   voice: {
     title: "Prova-ho amb la teva veu",

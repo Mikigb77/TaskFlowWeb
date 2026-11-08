@@ -1,6 +1,6 @@
 # TaskFlow legal documents
 
-The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **6 November 2026**. The owner requested their publication-ready form after implementing in-app account deletion. The 6 November version says that dictation sends the recording to be turned into text online by default, and only the words where the person chose on-device speech in the app's voice settings (owner, 2026-11-06). All three translations describe the current service; there is no draft banner or deferred-policy language.
+The current Privacy Policy, Terms and Conditions, Legal Notice and account-deletion instructions are effective **8 November 2026**. Version 2026-11-08 adds, in Privacy §7, that a completed task's files are deleted 15 days after completion and that each account's uploads are recorded for its allowance (the app repo's `Backend/docs/ARCHITECTURE.md`, Customer storage and retention policy). The owner requested their publication-ready form after implementing in-app account deletion. The 6 November version says that dictation sends the recording to be turned into text online by default, and only the words where the person chose on-device speech in the app's voice settings (owner, 2026-11-06). All three translations describe the current service; there is no draft banner or deferred-policy language.
 
 ## Edit and publish
 
@@ -45,7 +45,7 @@ Monitor support. Record receipt, verify ownership proportionately, carry out app
 
 For associated-data requests, include relevant processors, a check that the RevenueCat customer was deleted with the account (best effort; a failure is logged and never blocks the deletion), personal file failures and personal information in shared content. These actions need operational handling; the website does not automate them. Preserve only the minimal record needed to handle and demonstrate the request.
 
-Ordinary Cloud Run application logs were checked at a 30-day retention setting on 16 October. This is not the period for all mandatory audit, billing or provider-security records. Recovery copies use the provider's configured rolling window. Keep backup windows, processor arrangements and restoration procedures in the operational inventory, and explain applicable retention criteria to requesters. Completed tasks are not automatically purged at 30/90 days.
+Ordinary Cloud Run application logs were checked at a 30-day retention setting on 16 October. This is not the period for all mandatory audit, billing or provider-security records. Recovery copies use the provider's configured rolling window. Keep backup windows, processor arrangements and restoration procedures in the operational inventory, and explain applicable retention criteria to requesters. Completed tasks are never purged; their attached files are deleted 15 days after completion (`sweep()` in the app repo's `Backend/core/attachment_views.py`, run by `maintain_staging`), and the bytes each account uploaded stay recorded (`AttachmentUsage`) because the allowances count them.
 
 The public demo keeps encrypted retrievable results for 24 hours, quota records until 48-hour expiry followed by asynchronous TTL deletion, and a signed session cookie up to 30 days. Aggregate usage/cost data contains no task text or recording. Recheck `src/lib/voice/` after changes.
 

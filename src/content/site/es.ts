@@ -74,7 +74,7 @@ export const es: SiteCopy = {
     },
     details: {
       title: "Notas, listas de pasos y archivos",
-      body: "Añade notas, una lista de pasos o archivos a cualquier tarea. Los archivos se guardan en tu cuenta, hasta 6 MB cada uno.",
+      body: "Añade notas, una lista de pasos o archivos a cualquier tarea. Los archivos se guardan en tu cuenta, hasta 6 MB cada uno, y se eliminan 15 días después de completar su tarea. Sin Pro puedes subir 200 MB de archivos en total; con Pro, 500 MB al mes.",
     },
     meetings: {
       title: "Tus reuniones se convierten en notas",
@@ -107,7 +107,7 @@ export const es: SiteCopy = {
         question: "¿TaskFlow es gratis?",
         answer: [
           "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-          "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
+          "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado ilimitado (con un límite de seguridad de 50 dictados al día) y 500 MB de archivos al mes. Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
         ],
       },
       {
@@ -152,7 +152,7 @@ export const es: SiteCopy = {
     body: "TaskFlow todavía no está en Google Play. Mientras tanto, puedes probarlo con tu voz en esta página.",
     button: "Pruébalo con tu voz",
     plans:
-      "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite. TaskFlow Pro, una suscripción mensual: dictados y espacio para archivos sin límite.",
+      "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite. TaskFlow Pro, una suscripción mensual: dictados sin límite y 500 MB de archivos al mes.",
   },
   voice: {
     title: "Pruébalo con tu voz",

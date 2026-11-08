@@ -5,6 +5,10 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
 
+## 2026-11-08 — WD37: file allowances replace "unlimited file space", and completed tasks' files go after 15 days
+- The owner, in the app (2026-11-08): every account's files on a task are deleted 15 days after it's completed; without Pro an account can upload 200 MB in all, for life, and with Pro 500 MB a month. The app's record: `../TaskFlow/.claude/ux-review/DECISIONS.md`, 2026-11-08.
+- WD2's Pro line changes with it: "unlimited dictation and file space" becomes "unlimited dictation and 500 MB of files a month", in the closing line and the FAQ. The files feature card adds the 15 days and both allowances.
+- Privacy §7 gains a bullet on completed tasks' files and the upload record: version 2026-11-08 (`docs/LEGAL_RELEASE.md`). The owner chose «Publish it with this change» (2026-11-08): that is the legal sign-off for this version.
 ## 2026-11-06 — WD36: meeting notes get their own place on the home page
 - The owner, on the home page (2026-11-06): "have we stated clearly on the web and nicely on the web that […] we also have this feature of meeting recording? […] it's also a nice feature, so we should probably give it some importance on the web."
 - That answers WD36 of run 2026-11-05-pages with more than its one clause:

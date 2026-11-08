@@ -74,9 +74,9 @@ export const FEATURES = {
         ca: "Notes, llistes de passos i fitxers",
       },
       body: {
-        en: "Add notes, a checklist or files to any task. Files are backed up to your account, up to 6 MB each.",
-        es: "Añade notas, una lista de pasos o archivos a cualquier tarea. Los archivos se guardan en tu cuenta, hasta 6 MB cada uno.",
-        ca: "Afegeix notes, una llista de passos o fitxers a qualsevol tasca. Els fitxers es desen al teu compte, fins a 6 MB cadascun.",
+        en: "Add notes, a checklist or files to any task. Files are backed up to your account, up to 6 MB each, and deleted 15 days after their task is completed. Without Pro you can upload 200 MB of files in all; with Pro, 500 MB a month.",
+        es: "Añade notas, una lista de pasos o archivos a cualquier tarea. Los archivos se guardan en tu cuenta, hasta 6 MB cada uno, y se eliminan 15 días después de completar su tarea. Sin Pro puedes subir 200 MB de archivos en total; con Pro, 500 MB al mes.",
+        ca: "Afegeix notes, una llista de passos o fitxers a qualsevol tasca. Els fitxers es desen al teu compte, fins a 6 MB cadascun, i s’eliminen 15 dies després de completar la seva tasca. Sense Pro pots pujar 200 MB de fitxers en total; amb Pro, 500 MB al mes.",
       },
     },
     // WD36: Pro's meeting notes, a whole row before offline.
@@ -121,14 +121,14 @@ export const CLOSING = {
   } as Copy,
   // WD2's line, fixed wording.
   plans: {
-    en: "Free with an account: 10 dictations a month, and tasks by hand with no limit. TaskFlow Pro, a monthly subscription: unlimited dictation and file space.",
-    es: "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite. TaskFlow Pro, una suscripción mensual: dictados y espacio para archivos sin límite.",
-    ca: "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit. TaskFlow Pro, una subscripció mensual: dictats i espai per a fitxers sense límit.",
+    en: "Free with an account: 10 dictations a month, and tasks by hand with no limit. TaskFlow Pro, a monthly subscription: unlimited dictation and 500 MB of files a month.",
+    es: "Gratis con una cuenta: 10 dictados al mes y tareas a mano sin límite. TaskFlow Pro, una suscripción mensual: dictados sin límite y 500 MB de archivos al mes.",
+    ca: "Gratuït amb un compte: 10 dictats al mes i tasques a mà sense límit. TaskFlow Pro, una subscripció mensual: dictats sense límit i 500 MB de fitxers al mes.",
   } as Copy,
 };
 
 // The FAQ's first three items (WP18). The pricing answer carries WD14's safety-limit
-// clause (decided 2026-10-19, after the plan) right after "unlimited dictation and file space".
+// clause (decided 2026-10-19, after the plan) right after "unlimited dictation".
 // WP60 adds the free reminders and Pro's reminders in your own words, and ends the Pro sentence after that clause.
 // WP70 (run 2026-10-28-site) splits the pricing answer in two paragraphs, Free then Pro.
 export const FAQ_FIRST: { question: Copy; answer: Record<Language, string | string[]> }[] = [
@@ -153,15 +153,15 @@ export const FAQ_FIRST: { question: Copy; answer: Record<Language, string | stri
     answer: {
       en: [
         "Yes. You get 10 free dictations a month, and one dictation can hold several tasks. When they’re used up, you keep adding tasks with a short form, with no limit, until they come back the next month. Reminders are free too, even the ones that come more and more often as the day gets closer.",
-        "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation and file space (with a safety limit of 50 dictations a day). It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
+        "TaskFlow Pro is a monthly subscription that renews until you cancel it in Google Play. It gives you unlimited dictation (with a safety limit of 50 dictations a day) and 500 MB of files a month. It also turns sentences you type into tasks, and lets you ask for reminders in your own words. It makes notes from the meetings you record too, up to 20 hours a month. Its price isn’t set yet.",
       ],
       es: [
         "Sí. Tienes 10 dictados gratis al mes, y en un dictado caben varias tareas. Cuando se acaban, sigues añadiendo tareas con un formulario sencillo, sin límite, hasta que vuelven el mes siguiente. Los recordatorios también son gratis, incluso los que llegan cada vez más a menudo según se acerca el día.",
-        "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado y espacio para archivos ilimitados (con un límite de seguridad de 50 dictados al día). Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
+        "TaskFlow Pro es una suscripción mensual que se renueva hasta que la cancelas en Google Play. Te da dictado ilimitado (con un límite de seguridad de 50 dictados al día) y 500 MB de archivos al mes. Además, convierte en tareas las frases que escribes y te deja pedir los recordatorios con tus palabras. También toma notas de las reuniones que grabas, hasta 20 horas al mes. Su precio aún no está decidido.",
       ],
       ca: [
         "Sí. Tens 10 dictats gratuïts al mes, i en un dictat hi caben diverses tasques. Quan s’acaben, continues afegint tasques amb un formulari senzill, sense límit, fins que tornen el mes següent. Els recordatoris també són gratuïts, fins i tot els que arriben cada cop més sovint a mesura que s’acosta el dia.",
-        "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat i espai per a fitxers il·limitats (amb un límit de seguretat de 50 dictats al dia). A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
+        "TaskFlow Pro és una subscripció mensual que es renova fins que la cancel·les a Google Play. Et dona dictat il·limitat (amb un límit de seguretat de 50 dictats al dia) i 500 MB de fitxers al mes. A més, converteix en tasques les frases que escrius i et deixa demanar els recordatoris amb les teves paraules. També pren notes de les reunions que enregistres, fins a 20 hores al mes. El preu encara no està decidit.",
       ],
     },
   },

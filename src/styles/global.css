@@ -1540,6 +1540,471 @@ summary::-webkit-details-marker {
     scroll-margin-top: -65px;
   }
 }
+/* ---------- Motion ----------
+   The movement of garbar.tech, in TaskFlow's colours: one soft easing curve, a hero that
+   assembles itself, things that rise into place the first time they're seen, slow living
+   details, and lights that follow the mouse. Motion.tsx sets data-motion="full" on <html> and
+   reveals [data-reveal] elements as they scroll in; until it runs (or without JavaScript)
+   nothing is hidden. Under prefers-reduced-motion everything stands still (the next block). */
+:root {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --glow: rgb(255 255 255 / 0.6);
+  --shine: #3c9a73;
+}
+:root[data-theme="dark"] {
+  --glow: rgb(255 255 255 / 0.06);
+  --shine: #d4eca3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --glow: rgb(255 255 255 / 0.06);
+    --shine: #d4eca3;
+  }
+}
+
+/* A thin reading-progress line over the header. */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green), #6fbf8f, var(--lime));
+  transform-origin: left;
+  transform: scaleX(var(--scroll, 0));
+  pointer-events: none;
+}
+/* The header lifts off the page once it scrolls. */
+.site-header {
+  transition:
+    box-shadow 0.4s var(--ease),
+    background 0.4s;
+}
+[data-scrolled] .site-header {
+  box-shadow: 0 8px 24px #24382e0c;
+}
+[data-theme="dark"][data-scrolled] .site-header {
+  box-shadow: 0 8px 24px #0005;
+}
+
+/* Buttons and links answer the mouse with a little travel. */
+.button {
+  transition:
+    transform 0.35s var(--ease),
+    background 0.25s,
+    box-shadow 0.35s var(--ease);
+}
+.button svg,
+.inline-link svg {
+  transition: transform 0.35s var(--ease);
+}
+.link-circle {
+  transition:
+    transform 0.35s var(--ease),
+    border-color 0.25s;
+}
+@media (hover: hover) {
+  .button:hover {
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--green) 28%, transparent);
+  }
+  .button:hover svg,
+  .inline-link:hover svg {
+    transform: translateX(4px);
+  }
+  .text-link:hover .link-circle {
+    border-color: var(--green);
+  }
+}
+
+/* Headings: each line slides up from behind a mask. The padding keeps accents and descenders
+   inside the mask. */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.14em;
+  margin-block: -0.14em;
+}
+.line > span {
+  display: inline-block;
+}
+h1 .line > span {
+  text-wrap: balance;
+}
+/* The accent shimmers slowly between two greens; its colour stays set for tools that read it. */
+.hero-accent {
+  background: linear-gradient(
+      100deg,
+      var(--green) 20%,
+      var(--shine) 50%,
+      var(--green) 80%
+    )
+    0 0 / 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 9s ease-in-out infinite alternate;
+}
+
+/* The hero assembles itself on arrival. */
+.hero h1 .line > span {
+  animation: line-up 1.1s var(--ease) both;
+  animation-delay: calc(0.08s + var(--i, 0) * 0.13s);
+}
+.hero-description {
+  animation: rise 1s var(--ease) 0.35s both;
+}
+.hero-buttons {
+  animation: rise 1s var(--ease) 0.47s both;
+}
+.hero-status,
+.hero-free {
+  animation: rise 1s var(--ease) 0.58s both;
+}
+.hero-art {
+  animation: rise-tilt 1.3s var(--ease) 0.25s both;
+}
+/* Then the art keeps breathing: the phone and the note float, the wave talks, the orbits turn. */
+.hero-phone {
+  animation: float 7s ease-in-out 1.6s infinite;
+}
+.floating-note {
+  animation: float 6s ease-in-out -2s infinite;
+}
+.mini-wave i {
+  transform-origin: center;
+  animation: wave 1.1s ease-in-out infinite;
+}
+.mini-wave i:nth-child(2) {
+  animation-delay: -0.15s;
+}
+.mini-wave i:nth-child(3) {
+  animation-delay: -0.3s;
+}
+.mini-wave i:nth-child(4) {
+  animation-delay: -0.45s;
+}
+.mini-wave i:nth-child(5) {
+  animation-delay: -0.6s;
+}
+.mini-wave i:nth-child(6) {
+  animation-delay: -0.75s;
+}
+.mini-wave i:nth-child(7) {
+  animation-delay: -0.9s;
+}
+.orbit {
+  animation: spin 46s linear infinite;
+}
+.orbit-two {
+  animation-duration: 70s;
+  animation-direction: reverse;
+}
+/* A small light rides each orbit, so the turning shows. */
+.orbit::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  opacity: 0.45;
+}
+.orbit-two::after {
+  left: auto;
+  right: -3px;
+  width: 5px;
+  height: 5px;
+}
+.stage-cross {
+  animation: spin 16s linear infinite;
+}
+.stage-dot {
+  animation: ping 3.2s ease-out infinite;
+}
+/* With a mouse over the art, the stage catches the light and the phone leans toward it. */
+.hero-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    420px circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.3) * 100%),
+    var(--glow),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+[data-hover] > .hero-stage::after {
+  opacity: 1;
+}
+[data-motion="full"] .hero-phone {
+  transform: perspective(1400px) rotateY(calc((var(--mx, 0.5) - 0.5) * 10deg))
+    rotateX(calc((var(--my, 0.5) - 0.5) * -6deg));
+  transition: transform 0.8s var(--ease);
+}
+
+/* Reveal: things rise into place the first time they're seen, one after another. */
+[data-motion="full"] [data-reveal] {
+  transition:
+    opacity 0.9s var(--ease) calc(var(--i, 0) * 0.09s),
+    transform 0.9s var(--ease) calc(var(--i, 0) * 0.09s);
+}
+[data-motion="full"] [data-reveal]:not([data-visible]) {
+  opacity: 0;
+  transform: translateY(36px);
+}
+/* A heading doesn't fade; its lines slide up instead. */
+[data-motion="full"] h2[data-reveal]:not([data-visible]) {
+  opacity: 1;
+  transform: none;
+}
+[data-motion="full"] [data-reveal] .line > span {
+  transition: transform 1s var(--ease) calc(var(--i, 0) * 0.12s);
+}
+[data-motion="full"] [data-reveal]:not([data-visible]) .line > span {
+  transform: translateY(115%);
+}
+[data-motion="full"] .closing-card[data-reveal]:not([data-visible]) {
+  transform: translateY(36px) scale(0.97);
+}
+/* Inside the calendar card, the week and its plans settle in after the card. */
+[data-motion="full"] .feature-calendar .mini-event {
+  transition:
+    opacity 0.8s var(--ease) 0.45s,
+    transform 0.8s var(--ease) 0.45s;
+}
+[data-motion="full"] .feature-calendar .event-secondary {
+  transition-delay: 0.6s;
+}
+[data-motion="full"] .feature-calendar:not([data-visible]) .mini-event {
+  opacity: 0;
+  transform: translateX(24px);
+}
+[data-motion="full"] .meeting-illustration li {
+  transition:
+    opacity 0.7s var(--ease) calc(0.35s + var(--n, 0) * 0.1s),
+    transform 0.7s var(--ease) calc(0.35s + var(--n, 0) * 0.1s);
+}
+.meeting-illustration li:nth-child(2) {
+  --n: 1;
+}
+.meeting-illustration li:nth-child(3) {
+  --n: 2;
+}
+.meeting-illustration li:nth-child(n + 4) {
+  --n: 3;
+}
+[data-motion="full"] .feature-meetings:not([data-visible]) li {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+/* Cards: a soft light follows the mouse, and the example inside lifts a little. */
+.feature-card {
+  position: relative;
+  isolation: isolate;
+}
+.feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    460px circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+    var(--glow),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.45s var(--ease);
+  pointer-events: none;
+}
+.feature-card[data-hover]::before {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .calendar-illustration,
+  .meeting-illustration {
+    transition: transform 0.7s var(--ease);
+  }
+  .feature-card:hover .calendar-illustration,
+  .feature-card:hover .meeting-illustration {
+    transform: translateY(-6px);
+  }
+}
+
+/* Questions: answers slide open where the browser can animate a <details>. */
+@supports selector(::details-content) {
+  .faq-item {
+    interpolate-size: allow-keywords;
+  }
+  .faq-item::details-content {
+    block-size: 0;
+    overflow: clip;
+    opacity: 0;
+    transition:
+      block-size 0.5s var(--ease),
+      opacity 0.4s,
+      content-visibility 0.5s allow-discrete;
+  }
+  .faq-item[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+.faq-plus {
+  transition:
+    transform 0.45s var(--ease),
+    color 0.25s,
+    border-color 0.25s;
+}
+.faq-item summary {
+  transition: color 0.25s;
+}
+
+/* The closing card: slow colour drifting behind it, and a spark that turns. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.blob-a {
+  width: 620px;
+  height: 620px;
+  left: -180px;
+  top: -300px;
+  background: radial-gradient(circle, #3f9a6e66 0%, transparent 65%);
+  animation: drift-a 22s ease-in-out infinite alternate;
+}
+.blob-b {
+  width: 560px;
+  height: 560px;
+  right: -160px;
+  top: -80px;
+  background: radial-gradient(circle, #d4eca333 0%, transparent 65%);
+  animation: drift-b 26s ease-in-out infinite alternate;
+}
+.blob-c {
+  width: 520px;
+  height: 520px;
+  left: 35%;
+  bottom: -340px;
+  background: radial-gradient(circle, #2b8a8a55 0%, transparent 65%);
+  animation: drift-c 30s ease-in-out infinite alternate;
+}
+.closing-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    520px circle at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+    rgb(255 255 255 / 0.07),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+  pointer-events: none;
+}
+.closing-card[data-hover]::before {
+  opacity: 1;
+}
+.closing-spark svg {
+  animation: spin 14s linear infinite;
+}
+.button-lime {
+  box-shadow: 0 12px 34px #d4eca326;
+}
+@media (hover: hover) {
+  .button-lime:hover {
+    box-shadow: 0 16px 42px #d4eca340;
+  }
+}
+
+@keyframes line-up {
+  from {
+    transform: translateY(115%);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+@keyframes rise-tilt {
+  from {
+    opacity: 0;
+    transform: translateY(56px) rotate(2deg) scale(0.96);
+  }
+}
+@keyframes float {
+  50% {
+    translate: 0 -11px;
+  }
+}
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--green) 0%, transparent);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes drift-a {
+  to {
+    transform: translate(220px, 140px) scale(1.15);
+  }
+}
+@keyframes drift-b {
+  to {
+    transform: translate(-200px, 120px) scale(0.9);
+  }
+}
+@keyframes drift-c {
+  to {
+    transform: translate(-160px, -170px) scale(1.2);
+  }
+}
+@media print {
+  [data-reveal],
+  [data-reveal] .line > span {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .scroll-progress,
+  .aurora {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1548,8 +2013,18 @@ summary::-webkit-details-marker {
     animation: none !important;
     transition: none !important;
   }
+  .hero-phone {
+    transform: none;
+  }
+  .scroll-progress {
+    display: none;
+  }
 }
 @media (forced-colors: active) {
+  .hero-accent {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
   .button,
   .brand-mark {
     border: 1px solid ButtonText;

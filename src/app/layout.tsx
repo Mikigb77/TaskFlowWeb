@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Motion from "../components/Motion";
 import SkipLink from "../components/SkipLink";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { copy } from "../content/site";
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className={manropeSubset.className}>
         <ThemeProvider>
           <SkipLink />
+          <Motion />
           <Header />
           <main id="main-content">{children}</main>
           <Footer />

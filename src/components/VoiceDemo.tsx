@@ -886,7 +886,7 @@ export default function VoiceDemo() {
       aria-labelledby="voice-title"
     >
       <div className="container">
-        <div className="voice-heading">
+        <div className="voice-heading" data-reveal>
           <h2 id="voice-title">{t.title}</h2>
           <p>{t.intro}</p>
           <span className="voice-trial-badge">{t.badge}</span>

@@ -1,7 +1,37 @@
+import type { CSSProperties, ReactNode } from "react";
 import Icon from "./Icon";
 import Phone from "./Phone";
 import VoiceDemo from "./VoiceDemo";
 import { copy, type SiteLanguage } from "../content/site";
+
+// A stagger index for an entrance, read by global.css as --i.
+const order = (i: number) => ({ "--i": i }) as CSSProperties;
+
+// A line of a heading that slides up from behind a mask when it first appears.
+function Line({
+  children,
+  index = 0,
+}: {
+  children: ReactNode;
+  index?: number;
+}) {
+  return (
+    <span className="line" style={order(index)}>
+      <span>{children}</span>
+    </span>
+  );
+}
+
+// Slow colour drifting behind a dark card, as on garbar.tech, in TaskFlow's greens.
+function Aurora() {
+  return (
+    <div className="aurora" aria-hidden="true">
+      <span className="blob blob-a"></span>
+      <span className="blob blob-b"></span>
+      <span className="blob blob-c"></span>
+    </div>
+  );
+}
 
 export default function HomePage({ language }: { language: SiteLanguage }) {
   const { hero, features, faq, closing } = copy[language];
@@ -10,8 +40,10 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
       <section className="hero container" aria-labelledby="hero-title">
         <div className="hero-copy">
           <h1 id="hero-title">
-            {hero.title}
-            <span className="hero-accent">{hero.titleAccent}</span>
+            <Line index={0}>{hero.title}</Line>
+            <Line index={1}>
+              <span className="hero-accent">{hero.titleAccent}</span>
+            </Line>
           </h1>
           <p className="hero-description">{hero.description}</p>
           <div className="hero-buttons">
@@ -28,7 +60,7 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
           <p className="hero-status">{hero.status}</p>
           <p className="hero-free">{hero.free}</p>
         </div>
-        <div className="hero-art">
+        <div className="hero-art" data-pointer>
           <div className="hero-stage" aria-hidden="true">
             <span className="orbit orbit-one"></span>
             <span className="orbit orbit-two"></span>
@@ -57,9 +89,16 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
         className="features-section section-space container"
         aria-labelledby="features-title"
       >
-        <h2 id="features-title">{features.title}</h2>
+        <h2 id="features-title" data-reveal>
+          <Line>{features.title}</Line>
+        </h2>
         <div className="feature-grid">
-          <article className="feature-calendar feature-card">
+          <article
+            className="feature-calendar feature-card"
+            style={order(0)}
+            data-reveal
+            data-pointer
+          >
             <div className="feature-card-copy">
               <span className="feature-icon">
                 <Icon name="calendar" size={23} />
@@ -102,7 +141,12 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
               </div>
             </div>
           </article>
-          <article className="feature-voice feature-card">
+          <article
+            className="feature-voice feature-card"
+            style={order(1)}
+            data-reveal
+            data-pointer
+          >
             <div className="feature-card-copy">
               <span className="feature-icon">
                 <Icon name="mic" size={23} />
@@ -114,14 +158,24 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
               </a>
             </div>
           </article>
-          <article className="feature-details feature-card">
+          <article
+            className="feature-details feature-card"
+            style={order(2)}
+            data-reveal
+            data-pointer
+          >
             <span className="feature-icon">
               <Icon name="notes" size={23} />
             </span>
             <h3>{features.details.title}</h3>
             <p>{features.details.body}</p>
           </article>
-          <article className="feature-meetings feature-card">
+          <article
+            className="feature-meetings feature-card"
+            style={order(0)}
+            data-reveal
+            data-pointer
+          >
             <div className="feature-card-copy">
               <span className="feature-icon">
                 <Icon name="people" size={23} />
@@ -159,7 +213,12 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
               </span>
             </div>
           </article>
-          <article className="feature-offline feature-card">
+          <article
+            className="feature-offline feature-card"
+            style={order(0)}
+            data-reveal
+            data-pointer
+          >
             <span className="feature-icon">
               <Icon name="wifiOff" size={23} />
             </span>
@@ -175,11 +234,18 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
         aria-labelledby="questions-title"
       >
         <div className="faq-intro">
-          <h2 id="questions-title">{faq.title}</h2>
+          <h2 id="questions-title" data-reveal>
+            <Line>{faq.title}</Line>
+          </h2>
         </div>
         <div className="faq-list">
-          {faq.items.map(({ question, answer }) => (
-            <details key={question} className="faq-item">
+          {faq.items.map(({ question, answer }, i) => (
+            <details
+              key={question}
+              className="faq-item"
+              style={order(Math.min(i, 6))}
+              data-reveal
+            >
               <summary>
                 {question}
                 <span className="faq-plus">
@@ -199,7 +265,8 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
         className="closing-section container"
         aria-labelledby="closing-title"
       >
-        <div className="closing-card">
+        <div className="closing-card" data-reveal data-pointer>
+          <Aurora />
           <div className="closing-spark" aria-hidden="true">
             <Icon name="asterisk" size={44} />
           </div>

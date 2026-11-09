@@ -1,0 +1,919 @@
+/* ==========================================================================
+   Daybook: an exploratory redesign. Paper, ink, a red pen, a blue pen and a highlighter.
+   Scoped to <html data-variant="daybook">.
+   ========================================================================== */
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/InstrumentSerif-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/InstrumentSerif-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@keyframes db-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+@keyframes db-caret {
+  50% {
+    border-color: transparent;
+  }
+}
+@keyframes db-write {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) rotate(-2deg);
+  }
+}
+@keyframes db-strike {
+  from {
+    background-size: 0 2px;
+  }
+}
+@keyframes db-tick {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes db-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.8);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-8deg) scale(0.94);
+  }
+}
+
+:root[data-variant="daybook"] {
+  --serif: "Instrument Serif", Georgia, serif;
+  --mono: "Plex Mono", ui-monospace, monospace;
+  --red: #d8321f;
+  --blue: #1f43e0;
+  --hl: #fff066;
+
+  --paper: #f3eee4;
+  --surface: #fbf8f2;
+  --ink: #141210;
+  --muted: #5b554d;
+  --green: #d8321f;
+  --green-hover: #b0240f;
+  --mint: #e9e2d3;
+  --mint-strong: #e1d8c6;
+  --line: #d9d0bf;
+  --soft: #ece5d7;
+  --lavender: #e9e2d3;
+  --peach: #f1e3d2;
+  --lime: #fff066;
+  --shine: #d8321f;
+  --shadow: 0 2px 0 #14121014;
+
+  &[data-theme="dark"] {
+    --red: #ff6a57;
+    --blue: #8ea2ff;
+    --hl: #6b5f10;
+    --paper: #151412;
+    --surface: #1e1c19;
+    --ink: #efe9dd;
+    --muted: #b3aa9b;
+    --green: #ff6a57;
+    --green-hover: #ff8b7c;
+    --mint: #2a2723;
+    --mint-strong: #34302a;
+    --line: #3a352e;
+    --soft: #1b1916;
+    --lavender: #2a2723;
+    --peach: #2c231c;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:not([data-theme="light"]) {
+      --red: #ff6a57;
+      --blue: #8ea2ff;
+      --hl: #6b5f10;
+      --paper: #151412;
+      --surface: #1e1c19;
+      --ink: #efe9dd;
+      --muted: #b3aa9b;
+      --green: #ff6a57;
+      --green-hover: #ff8b7c;
+      --mint: #2a2723;
+      --mint-strong: #34302a;
+      --line: #3a352e;
+      --soft: #1b1916;
+      --lavender: #2a2723;
+      --peach: #2c231c;
+    }
+  }
+
+  body {
+    /* Faint paper grain. */
+    background-image:
+      radial-gradient(#1412100a 1px, transparent 1px),
+      radial-gradient(#14121006 1px, transparent 1px);
+    background-size:
+      7px 7px,
+      11px 11px;
+    background-position:
+      0 0,
+      3px 5px;
+  }
+  ::selection {
+    background: var(--hl);
+    color: #141210;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+  }
+  .scroll-progress {
+    background: var(--red);
+  }
+
+  /* Header: a printed rule. */
+  .site-header {
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+  }
+  .header-inner {
+    border-bottom: 2px solid var(--ink);
+  }
+  .brand {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
+  }
+  .brand-mark {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 50%;
+  }
+  .brand-period {
+    color: var(--red);
+  }
+  .desktop-nav a {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+  .language-switch a {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+  }
+  .language-switch a[aria-current="page"] {
+    box-shadow: none;
+    text-decoration: underline 2px var(--red);
+    text-underline-offset: 6px;
+  }
+  .button {
+    border-radius: 0;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9375rem;
+  }
+  .db-button {
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: 5px 5px 0 var(--red);
+  }
+  @media (hover: hover) {
+    .db-button:hover {
+      background: var(--ink);
+      box-shadow: 8px 8px 0 var(--red);
+      transform: translate(-3px, -3px);
+    }
+  }
+
+  .daybook {
+    overflow-x: clip;
+  }
+  .daybook h2 {
+    font-size: clamp(2.6rem, 5.6vw, 5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .db-kicker {
+    display: block;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--red);
+  }
+  .db-masthead {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-block: 12px;
+    border-bottom: 1px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ---------- Front page ---------- */
+  .db-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+    gap: 56px;
+    padding-block: 56px 90px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .daybook h1 {
+    font-size: clamp(3.8rem, 8.4vw, 8.6rem);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    font-weight: 400;
+  }
+  .db-red {
+    color: var(--red);
+    font-style: italic;
+  }
+  .db-hero-columns {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 36px;
+    margin-top: 42px;
+    padding-top: 26px;
+    border-top: 1px solid var(--ink);
+  }
+  .db-lede {
+    font-size: 1.25rem;
+    line-height: 1.55;
+  }
+  .db-hero-side {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    align-content: start;
+  }
+  .db-underline {
+    font-weight: 750;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: underline 2px var(--red);
+    text-underline-offset: 6px;
+  }
+  .db-small {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .db-small mark {
+    background: linear-gradient(transparent 45%, var(--hl) 45%);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* The planner page. */
+  .db-page {
+    position: relative;
+    align-self: center;
+    padding: 26px 26px 30px;
+    background:
+      repeating-linear-gradient(
+        transparent 0 33px,
+        color-mix(in srgb, var(--blue) 18%, transparent) 33px 34px
+      ),
+      var(--surface);
+    border: 1px solid var(--line);
+    box-shadow:
+      8px 8px 0 var(--ink),
+      0 30px 50px #14121014;
+    transform: rotate(2.5deg);
+  }
+  .db-page::before {
+    /* The red margin line. */
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 68px;
+    width: 1.5px;
+    background: color-mix(in srgb, var(--red) 55%, transparent);
+  }
+  .db-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    line-height: 1;
+  }
+  .db-mic {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--red) 18%, transparent);
+  }
+  .db-typed {
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--blue);
+  }
+  .db-typed span {
+    border-right: 2px solid var(--blue);
+    padding-right: 3px;
+    animation:
+      db-type 2.4s steps(40) 0.6s both,
+      db-caret 0.9s step-end infinite;
+  }
+  .db-hours {
+    margin-top: 14px;
+  }
+  .db-hour {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    height: 34px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .db-hour time {
+    width: 40px;
+    white-space: nowrap;
+  }
+  .db-entry {
+    padding: 3px 10px;
+    background: color-mix(in srgb, var(--blue) 14%, transparent);
+    border-left: 3px solid var(--blue);
+    color: var(--ink);
+    font-family: Manrope, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+  .db-todo {
+    margin-top: 12px;
+    padding-left: 52px;
+  }
+  .db-todo strong {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--red);
+  }
+  .db-task {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--blue);
+    animation: db-write 0.7s var(--ease) both;
+    animation-delay: calc(3.1s + var(--i) * 0.35s);
+  }
+  .db-box {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid currentColor;
+    flex: none;
+  }
+  .db-task .db-box svg {
+    animation: db-tick 0.4s var(--ease) both;
+    animation-delay: calc(4.4s + var(--i) * 0.5s);
+  }
+  .db-task-text {
+    background: linear-gradient(currentColor, currentColor) 0 55% / 100% 2px no-repeat;
+    animation: db-strike 0.6s var(--ease) both;
+    animation-delay: calc(4.6s + var(--i) * 0.5s);
+  }
+  .db-stamp {
+    position: absolute;
+    right: -22px;
+    bottom: -22px;
+    padding: 8px 14px;
+    border: 3px solid var(--red);
+    color: var(--red);
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transform: rotate(-8deg);
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    animation: db-stamp 0.5s var(--ease) 3.6s both;
+  }
+
+  /* ---------- The method ---------- */
+  .db-method {
+    padding-block: 110px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .db-method h2 {
+    max-width: 14ch;
+  }
+  .db-method ol {
+    list-style: none;
+    margin: 56px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  }
+  .db-method li {
+    padding: 22px 26px 0 0;
+  }
+  .db-method li + li {
+    padding-left: 26px;
+    border-left: 1px solid color-mix(in srgb, var(--paper) 20%, transparent);
+  }
+  .db-numeral {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 6.5rem;
+    line-height: 0.9;
+    color: var(--red);
+  }
+  .db-method h3 {
+    margin-top: 14px;
+    font-size: 2rem;
+    line-height: 1.05;
+  }
+  .db-method p {
+    margin-top: 10px;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--paper) 72%, transparent);
+  }
+  &[data-theme="dark"] .db-method {
+    background: #0b0a09;
+    color: var(--ink);
+  }
+
+  /* ---------- The demo ---------- */
+  .voice-section {
+    background: transparent;
+    border-bottom: 2px solid var(--ink);
+  }
+  .voice-heading h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 5.6vw, 5rem) !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1;
+  }
+  .voice-trial-badge {
+    border-radius: 0;
+    background: var(--hl);
+    color: #141210;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+  .voice-panel {
+    border-radius: 0;
+    border: 2px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--ink);
+  }
+
+  /* ---------- Index ---------- */
+  .db-index {
+    padding-block: 110px 80px;
+  }
+  .db-section-head {
+    display: grid;
+    margin-bottom: 40px;
+  }
+  .db-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 2px solid var(--ink);
+  }
+  .db-rows li {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 0.9fr) minmax(0, 1.1fr) 60px;
+    gap: 30px;
+    align-items: start;
+    padding-block: 30px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .db-row-n {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    padding-top: 12px;
+    color: var(--red);
+  }
+  .db-rows h3 {
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1.02;
+  }
+  .db-hl {
+    background: linear-gradient(transparent 58%, var(--hl) 58%) 0 0 / 0% 100% no-repeat;
+    transition: background-size 0.8s var(--ease);
+  }
+  &:not([data-motion="full"]) .db-hl,
+  .db-rows li:hover .db-hl,
+  .db-rows li[data-visible] .db-hl {
+    background-size: 100% 100%;
+  }
+  .db-rows p {
+    line-height: 1.7;
+    color: var(--muted);
+    padding-top: 6px;
+  }
+  .db-row-icon {
+    justify-self: end;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    transition:
+      background 0.3s,
+      color 0.3s,
+      transform 0.5s var(--ease);
+  }
+  .db-rows li:hover .db-row-icon {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    transform: rotate(-12deg);
+  }
+
+  /* ---------- Spread ---------- */
+  .db-spread {
+    background: var(--red);
+    color: #fff8ef;
+    padding-block: 110px;
+  }
+  .db-spread-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 70px;
+    align-items: center;
+  }
+  .db-kicker-light {
+    color: #fff8ef;
+  }
+  .db-spread p {
+    margin-top: 22px;
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+  .db-memo {
+    margin: 0;
+    padding: 34px;
+    background: #fbf8f2;
+    color: #141210;
+    box-shadow: 12px 12px 0 #141210;
+    transform: rotate(-2deg);
+  }
+  .db-memo > strong {
+    display: block;
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 400;
+  }
+  .db-memo small {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: #5b554d;
+  }
+  .db-memo blockquote {
+    margin: 20px 0 0;
+    padding-left: 18px;
+    border-left: 4px solid #d8321f;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+  .db-memo-label {
+    display: block;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #d8321f;
+  }
+  .db-spread .db-memo-step,
+  .db-spread .db-memo-decision {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 1rem;
+  }
+  .db-spread .db-memo-decision {
+    font-weight: 700;
+  }
+
+  /* ---------- Receipts ---------- */
+  .db-plans {
+    padding-block: 110px 60px;
+  }
+  .db-plans h2 {
+    max-width: 18ch;
+  }
+  .db-receipts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 50px;
+    align-items: start;
+  }
+  .db-receipt {
+    position: relative;
+    padding: 30px 30px 26px;
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 0.9375rem;
+    filter: drop-shadow(0 18px 24px #14121018);
+    /* A torn bottom edge. */
+    mask:
+      conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 16px
+        100%;
+  }
+  .db-receipt-pro {
+    transform: rotate(1.5deg);
+    margin-top: 30px;
+  }
+  .db-receipt header {
+    text-align: center;
+    padding-bottom: 16px;
+    border-bottom: 2px dashed var(--ink);
+  }
+  .db-receipt h3 {
+    font-size: 2rem;
+  }
+  .db-receipt header span {
+    display: block;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .db-receipt ul {
+    list-style: none;
+    margin: 0;
+    padding: 14px 0;
+    border-bottom: 2px dashed var(--ink);
+  }
+  .db-receipt li {
+    display: flex;
+    gap: 10px;
+    padding-block: 7px;
+    line-height: 1.45;
+  }
+  .db-receipt li::before {
+    content: "✓";
+    color: var(--red);
+  }
+  .db-receipt footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 16px;
+    padding: 16px 0 18px;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+  .db-receipt footer strong {
+    font-size: 1.6rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .db-receipt-pro footer {
+    flex-direction: column;
+    align-items: start;
+    gap: 8px;
+  }
+  .db-receipt-pro footer strong {
+    font-size: 1rem;
+    color: var(--red);
+  }
+
+  /* ---------- Questions ---------- */
+  .db-faq {
+    padding-block: 90px 110px;
+  }
+  .db-faq-list {
+    columns: 2;
+    column-gap: 50px;
+  }
+  .db-q {
+    break-inside: avoid;
+    border-bottom: 1px solid var(--ink) !important;
+  }
+  .db-q:first-child {
+    border-top: 0 !important;
+  }
+  .db-q summary {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 1.15;
+  }
+  .db-q .faq-plus {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .db-q[open] .faq-plus {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+  .db-q p {
+    color: var(--ink);
+  }
+
+  /* ---------- Close ---------- */
+  .db-closing {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 50px;
+    align-items: center;
+    padding-block: 90px 110px;
+    border-top: 2px solid var(--ink);
+  }
+  .daybook .db-closing-stamp {
+    justify-self: start;
+    padding: 18px 30px 22px;
+    border: 6px double var(--red);
+    color: var(--red);
+    font-size: clamp(3rem, 6.8vw, 6.4rem);
+    line-height: 0.95;
+    transform: rotate(-4deg);
+    mix-blend-mode: multiply;
+  }
+  .db-closing-side p {
+    font-size: 1.25rem;
+    line-height: 1.55;
+    margin-bottom: 26px;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer-top {
+    border-top: 2px solid var(--ink);
+    padding-top: 30px;
+  }
+  .footer-legal a {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+
+  /* ---------- Narrower ---------- */
+  @media (max-width: 1100px) {
+    .db-hero {
+      grid-template-columns: 1fr;
+    }
+    .db-page {
+      max-width: 460px;
+      justify-self: center;
+      width: 100%;
+    }
+    .db-method ol {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 30px;
+    }
+    .db-method li:nth-child(3) {
+      border-left: 0;
+      padding-left: 0;
+    }
+  }
+  @media (max-width: 800px) {
+    .db-hero-columns,
+    .db-spread-inner,
+    .db-receipts,
+    .db-closing {
+      grid-template-columns: 1fr;
+    }
+    .db-rows li {
+      grid-template-columns: 44px minmax(0, 1fr) 50px;
+      gap: 14px;
+    }
+    .db-rows p {
+      grid-column: 2 / -1;
+    }
+    .db-rows .db-row-icon {
+      grid-row: 1;
+      grid-column: 3;
+      width: 46px;
+      height: 46px;
+    }
+    .db-faq-list {
+      columns: 1;
+    }
+  }
+  @media (max-width: 580px) {
+    .db-masthead span:last-child {
+      display: none;
+    }
+    .db-hero {
+      padding-block: 32px 60px;
+      gap: 44px;
+    }
+    .daybook h1 {
+      font-size: clamp(3.2rem, 15vw, 4.4rem);
+    }
+    .db-hero-columns {
+      margin-top: 28px;
+      gap: 24px;
+    }
+    .db-lede {
+      font-size: 1.125rem;
+    }
+    .db-page {
+      transform: rotate(1.5deg);
+      padding: 20px 18px 24px;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+    .db-page::before {
+      left: 54px;
+    }
+    .db-todo {
+      padding-left: 46px;
+    }
+    .db-stamp {
+      right: -6px;
+      bottom: -26px;
+    }
+    .daybook h2 {
+      font-size: clamp(2.5rem, 12vw, 3.2rem);
+    }
+    .db-method,
+    .db-spread {
+      padding-block: 76px;
+    }
+    .db-method ol {
+      grid-template-columns: 1fr;
+    }
+    .db-method li,
+    .db-method li + li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 18px;
+      padding: 18px 0;
+      border-left: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--paper) 20%, transparent);
+    }
+    .db-numeral {
+      grid-row: span 2;
+      font-size: 4.4rem;
+    }
+    .db-method h3 {
+      margin-top: 4px;
+      font-size: 1.6rem;
+    }
+    .db-index,
+    .db-plans {
+      padding-block: 76px 40px;
+    }
+    .db-memo {
+      padding: 24px;
+      box-shadow: 8px 8px 0 #141210;
+    }
+    .db-receipt-pro {
+      margin-top: 0;
+    }
+    .db-q summary {
+      font-size: 1.35rem;
+    }
+    .daybook .db-closing-stamp {
+      font-size: clamp(2.6rem, 12vw, 3.4rem);
+      padding: 14px 18px;
+    }
+  }
+}

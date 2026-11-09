@@ -10,6 +10,9 @@ import { copy } from "../content/site";
 import "../styles/global.css";
 import "../styles/voice.css";
 import "../styles/legal.css";
+import "../styles/nova.css";
+import "../styles/daybook.css";
+import "../styles/pop.css";
 
 // Manrope (public/fonts, SIL OFL 1.1) cut to Latin and Latin-1 plus the site's
 // punctuation, keeping its weight axis. next/font names the family after this
@@ -55,7 +58,11 @@ const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme'
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-variant={process.env.SITE_VARIANT || "nova"}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>

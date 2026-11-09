@@ -1,9 +1,11 @@
 /* ==========================================================================
-   Nova: an exploratory redesign. Night indigo, tangerine, lilac and butter on cream.
-   Loaded after global.css: it repaints the shared tokens (so the header, footer, demo and
-   legal pages follow) and styles the new home page's nv- sections.
-   ========================================================================== */
+   Nova: an exploratory redesign. A night panel, a hot accent, a sunny highlight and a soft
+   tint on a warm paper. Loaded after global.css: it repaints the shared tokens (so the
+   header, footer, demo and legal pages follow) and styles the home page's nv- sections.
 
+   Palettes: <html data-palette> (indigo, lagoon, ember, volt, daylight).
+   Type: <html data-font> (bricolage, fraunces, unbounded, space, syne).
+   ========================================================================== */
 
 @font-face {
   font-family: "Bricolage";
@@ -12,7 +14,6 @@
   font-stretch: 75% 100%;
   font-display: swap;
 }
-
 @font-face {
   font-family: "Instrument Serif";
   src: url("/fonts/InstrumentSerif-Italic.ttf") format("truetype");
@@ -20,88 +21,325 @@
   font-weight: 400;
   font-display: swap;
 }
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/Unbounded.ttf") format("truetype");
+  font-weight: 200 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk.ttf") format("truetype");
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Syne";
+  src: url("/fonts/Syne.ttf") format("truetype");
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSans.ttf") format("truetype");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Outfit";
+  src: url("/fonts/Outfit.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
 
+@property --nv-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes nv-angle {
+  to {
+    --nv-angle: 360deg;
+  }
+}
 @keyframes marquee {
   to {
     transform: translateX(-50%);
   }
 }
+@keyframes marquee-back {
+  from {
+    transform: translateX(-50%);
+  }
+}
+@keyframes nv-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes nv-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+}
 
 :root[data-variant="nova"] {
+  /* ---------- Palette: indigo (the default) ---------- */
+  & {
+    --night: #17123b;
+    --night-2: #261e63;
+    --deep: #05031a;
+    --hot: #ff6b3d;
+    --hot-hover: #ff8a63;
+    --on-hot: #17123b;
+    --sun: #ffd84d;
+    --tint: #b9a7ff;
+    --tint-bg: #ece7ff;
+    --accent: #5b3df5;
+    --accent-2: #8a5cff;
+    --on-accent: #ffffff;
+    --pink: #ff7fb0;
+    --on-night: #fbf7f0;
+    --on-night-2: #d9d4f2;
+    --on-night-3: #bdb6e0;
+    --page: #fbf7f0;
+    --page-ink: #17123b;
+    --link: #5b3df5;
+    --dark-base: var(--night);
+    --phone-hue: 78deg;
+    --phone-sat: 1.15;
+  }
+  &[data-palette="lagoon"] {
+    --night: #032229;
+    --night-2: #0a3a44;
+    --deep: #000f12;
+    --hot: #3ef0b0;
+    --hot-hover: #7af7cb;
+    --on-hot: #032229;
+    --sun: #d9ff6b;
+    --tint: #8be9e0;
+    --tint-bg: #daf4ef;
+    --accent: #0a7a63;
+    --accent-2: #1fb5a6;
+    --on-accent: #ffffff;
+    --pink: #ff8f7a;
+    --on-night: #f1fbf8;
+    --on-night-2: #c6e4de;
+    --on-night-3: #96bfb8;
+    --page: #f3f8f4;
+    --page-ink: #062a31;
+    --link: #08705b;
+    --phone-hue: -6deg;
+    --phone-sat: 1.25;
+  }
+  &[data-palette="ember"] {
+    --night: #2a0c23;
+    --night-2: #48163c;
+    --deep: #11030d;
+    --hot: #ff9757;
+    --hot-hover: #ffb07f;
+    --on-hot: #2a0c23;
+    --sun: #ffd36e;
+    --tint: #ff9dbd;
+    --tint-bg: #ffe5ed;
+    --accent: #c01d5c;
+    --accent-2: #ff5d8f;
+    --on-accent: #ffffff;
+    --pink: #ff5d8f;
+    --on-night: #fff4ec;
+    --on-night-2: #f2d3de;
+    --on-night-3: #d6a9ba;
+    --page: #fff7f1;
+    --page-ink: #2a0c23;
+    --link: #b3164f;
+    --phone-hue: 172deg;
+    --phone-sat: 1.1;
+  }
+  &[data-palette="volt"] {
+    --night: #0c0c11;
+    --night-2: #1d1d29;
+    --deep: #000000;
+    --hot: #d4ff3f;
+    --hot-hover: #e3ff7d;
+    --on-hot: #0c0c11;
+    --sun: #7ef5ff;
+    --tint: #9c8bff;
+    --tint-bg: #ecebff;
+    --accent: #5b3dff;
+    --accent-2: #9c8bff;
+    --on-accent: #ffffff;
+    --pink: #ff5fd2;
+    --on-night: #f6f6f8;
+    --on-night-2: #cfcfdc;
+    --on-night-3: #a0a0b2;
+    --page: #f5f5f1;
+    --page-ink: #0c0c11;
+    --link: #4b2ff0;
+    --phone-hue: 82deg;
+    --phone-sat: 1.2;
+  }
+  /* A light hero: the "night" panel is a pale lilac and its text is ink. */
+  &[data-palette="daylight"] {
+    --night: #efe9ff;
+    --night-2: #e2d9ff;
+    --deep: #3b2c8a;
+    --hot: #ff6b3d;
+    --hot-hover: #ff8a63;
+    --on-hot: #17123b;
+    --sun: #ffb020;
+    --tint: #c9bcff;
+    --tint-bg: #f2eeff;
+    --accent: #5b3df5;
+    --accent-2: #8a5cff;
+    --on-accent: #ffffff;
+    --pink: #ff4f8b;
+    --on-night: #17123b;
+    --on-night-2: #3b3660;
+    --on-night-3: #5d5878;
+    --page: #fffdf9;
+    --page-ink: #17123b;
+    --link: #5b3df5;
+    --dark-base: #17123b;
+  }
+
+  /* ---------- Type: bricolage (the default) ---------- */
   & {
     --display: "Bricolage", Manrope, sans-serif;
     --serif: "Instrument Serif", Georgia, serif;
-    --night: #17123b;
-    --night-2: #261e63;
-    --tangerine: #ff6b3d;
-    --tangerine-hover: #ff8a63;
-    --butter: #ffd84d;
-    --lilac: #b9a7ff;
-    --lilac-soft: #ece7ff;
-    --cream-ink: #fbf7f0;
+    --body: Manrope, sans-serif;
+    --display-weight: 700;
+    --h1-weight: 700;
+    --h1-scale: 1;
+    --h1-track: -0.035em;
+    --h2-track: -0.035em;
+    --accent-style: italic;
+    --accent-weight: 400;
+  }
+  &[data-font="fraunces"] {
+    --display: "Fraunces", Georgia, serif;
+    --serif: "Fraunces", Georgia, serif;
+    --body: "Plus Jakarta Sans", sans-serif;
+    --display-weight: 600;
+    --h1-weight: 600;
+    --h1-scale: 1;
+    --h1-track: -0.03em;
+    --h2-track: -0.025em;
+    --accent-weight: 400;
+  }
+  &[data-font="unbounded"] {
+    --display: "Unbounded", sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --body: "Plus Jakarta Sans", sans-serif;
+    --display-weight: 600;
+    --h1-weight: 700;
+    --h1-scale: 0.78;
+    --h1-track: -0.04em;
+    --h2-track: -0.04em;
+  }
+  &[data-font="space"] {
+    --display: "Space Grotesk", sans-serif;
+    --serif: "Space Grotesk", sans-serif;
+    --body: "Space Grotesk", sans-serif;
+    --display-weight: 700;
+    --h1-weight: 700;
+    --h1-scale: 1;
+    --h1-track: -0.05em;
+    --h2-track: -0.04em;
+    --accent-style: normal;
+    --accent-weight: 300;
+  }
+  &[data-font="syne"] {
+    --display: "Syne", sans-serif;
+    --serif: "Fraunces", Georgia, serif;
+    --body: "Outfit", sans-serif;
+    --display-weight: 700;
+    --h1-weight: 800;
+    --h1-scale: 0.74;
+    --h1-track: -0.03em;
+    --h2-track: -0.025em;
+  }
 
-    --paper: #fbf7f0;
+  /* ---------- The page's shared tokens, from the palette ---------- */
+  & {
+    --paper: var(--page);
     --surface: #ffffff;
-    --ink: #17123b;
-    --muted: #5d5878;
-    --green: #5b3df5;
-    --green-hover: #4527d9;
-    --mint: #ece7ff;
-    --mint-strong: #ddd4ff;
-    --line: #e7e1d6;
-    --soft: #f4eee4;
-    --lavender: #ece7ff;
-    --peach: #ffe6da;
-    --lime: #ff6b3d;
-    --shine: #ff6b3d;
-    --shadow: 0 18px 50px #17123b14;
+    --ink: var(--page-ink);
+    --muted: color-mix(in srgb, var(--page-ink) 68%, var(--page));
+    --green: var(--link);
+    --green-hover: color-mix(in srgb, var(--link) 80%, black);
+    --mint: var(--tint-bg);
+    --mint-strong: color-mix(in srgb, var(--tint) 35%, white);
+    --line: color-mix(in srgb, var(--page-ink) 11%, var(--page));
+    --soft: color-mix(in srgb, var(--page-ink) 4%, var(--page));
+    --lavender: var(--tint-bg);
+    --peach: color-mix(in srgb, var(--hot) 16%, white);
+    --lime: var(--hot);
+    --shine: var(--hot);
+    --shadow: 0 18px 50px color-mix(in srgb, var(--page-ink) 8%, transparent);
   }
   &[data-theme="dark"] {
-    --paper: #0e0b24;
-    --surface: #1a1540;
-    --ink: #f4f0ff;
-    --muted: #b5aed6;
-    --green: #b9a7ff;
-    --green-hover: #d2c6ff;
-    --mint: #2a2363;
-    --mint-strong: #342b78;
-    --line: #2f285f;
-    --soft: #141033;
-    --lavender: #221b52;
-    --peach: #3a2030;
-    --shine: #ff8a63;
+    --paper: color-mix(in srgb, var(--dark-base) 75%, black);
+    --surface: color-mix(in srgb, var(--dark-base) 92%, white);
+    --ink: #f6f3ff;
+    --muted: color-mix(in srgb, #f6f3ff 70%, var(--dark-base));
+    --green: var(--tint);
+    --green-hover: color-mix(in srgb, var(--tint) 75%, white);
+    --mint: color-mix(in srgb, var(--dark-base) 75%, var(--tint));
+    --mint-strong: color-mix(in srgb, var(--dark-base) 65%, var(--tint));
+    --line: color-mix(in srgb, var(--dark-base) 82%, white);
+    --soft: color-mix(in srgb, var(--dark-base) 85%, black);
+    --lavender: color-mix(in srgb, var(--dark-base) 88%, var(--tint));
+    --peach: color-mix(in srgb, var(--dark-base) 85%, var(--hot));
+    --tint-bg: color-mix(in srgb, var(--dark-base) 80%, var(--tint));
     --shadow: 0 18px 50px #0006;
   }
   @media (prefers-color-scheme: dark) {
     &:not([data-theme="light"]) {
-      --paper: #0e0b24;
-      --surface: #1a1540;
-      --ink: #f4f0ff;
-      --muted: #b5aed6;
-      --green: #b9a7ff;
-      --green-hover: #d2c6ff;
-      --mint: #2a2363;
-      --mint-strong: #342b78;
-      --line: #2f285f;
-      --soft: #141033;
-      --lavender: #221b52;
-      --peach: #3a2030;
-      --shine: #ff8a63;
+      --paper: color-mix(in srgb, var(--dark-base) 75%, black);
+      --surface: color-mix(in srgb, var(--dark-base) 92%, white);
+      --ink: #f6f3ff;
+      --muted: color-mix(in srgb, #f6f3ff 70%, var(--dark-base));
+      --green: var(--tint);
+      --green-hover: color-mix(in srgb, var(--tint) 75%, white);
+      --mint: color-mix(in srgb, var(--dark-base) 75%, var(--tint));
+      --mint-strong: color-mix(in srgb, var(--dark-base) 65%, var(--tint));
+      --line: color-mix(in srgb, var(--dark-base) 82%, white);
+      --soft: color-mix(in srgb, var(--dark-base) 85%, black);
+      --lavender: color-mix(in srgb, var(--dark-base) 88%, var(--tint));
+      --peach: color-mix(in srgb, var(--dark-base) 85%, var(--hot));
+      --tint-bg: color-mix(in srgb, var(--dark-base) 80%, var(--tint));
       --shadow: 0 18px 50px #0006;
     }
   }
+  body {
+    font-family: var(--body);
+  }
   ::selection {
-    background: var(--butter);
+    background: var(--sun);
     color: var(--night);
   }
   h1,
   h2,
   h3 {
     font-family: var(--display);
-    font-weight: 700;
+    font-weight: var(--display-weight);
   }
   .scroll-progress {
-    background: linear-gradient(90deg, var(--green), var(--tangerine), var(--butter));
+    background: linear-gradient(90deg, var(--green), var(--hot), var(--sun));
   }
 
   /* ---------- The frame: a floating pill header ---------- */
@@ -120,18 +358,18 @@
     padding: 6px 8px 6px 18px;
     background: color-mix(in srgb, var(--surface) 82%, transparent);
     backdrop-filter: blur(18px) saturate(1.4);
-    box-shadow: 0 10px 30px #17123b10;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--night) 6%, transparent);
   }
   .brand {
     font-family: var(--display);
     letter-spacing: -1px;
   }
   .brand-period {
-    color: var(--tangerine);
+    color: var(--hot);
   }
   .brand-mark {
-    background: linear-gradient(135deg, var(--green), #8a5cff 55%, var(--tangerine));
-    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2) 55%, var(--hot));
+    color: var(--on-accent);
     border-radius: 12px;
   }
   .desktop-nav a {
@@ -167,19 +405,19 @@
     font-weight: 800;
   }
   .nv-button-hot {
-    background: var(--tangerine);
-    color: var(--night);
-    box-shadow: 0 14px 40px #ff6b3d55;
+    background: var(--hot);
+    color: var(--on-hot);
+    box-shadow: 0 14px 40px color-mix(in srgb, var(--hot) 33%, transparent);
   }
   @media (hover: hover) {
     .nv-button-hot:hover {
-      background: var(--tangerine-hover);
-      box-shadow: 0 18px 46px #ff6b3d77;
+      background: var(--hot-hover);
+      box-shadow: 0 18px 46px color-mix(in srgb, var(--hot) 47%, transparent);
     }
   }
   .nv-button-night {
     background: var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
   }
   @media (hover: hover) {
     .nv-button-night:hover {
@@ -193,14 +431,14 @@
     min-height: 54px;
     padding-inline: 22px;
     border-radius: 999px;
-    border: 1px solid #ffffff38;
-    color: var(--cream-ink);
+    border: 1px solid color-mix(in srgb, var(--on-night) 22%, transparent);
+    color: var(--on-night);
     font-weight: 750;
     transition: background 0.25s;
   }
   @media (hover: hover) {
     .nv-ghost:hover {
-      background: #ffffff14;
+      background: color-mix(in srgb, var(--on-night) 8%, transparent);
     }
   }
 
@@ -210,17 +448,17 @@
   }
   .nova h2 {
     font-size: clamp(2.4rem, 5.4vw, 4.6rem);
-    line-height: 1.02;
-    letter-spacing: -0.035em;
+    line-height: 1.04;
+    letter-spacing: var(--h2-track);
     text-wrap: balance;
   }
   .nv-num {
     display: block;
     font-family: var(--serif);
-    font-style: italic;
+    font-style: var(--accent-style);
     font-size: 3.4rem;
     line-height: 1;
-    color: var(--tangerine);
+    color: var(--hot);
   }
   .nv-chip-check {
     display: grid;
@@ -241,7 +479,7 @@
     padding: 150px 0 110px;
     border-radius: 0 0 44px 44px;
     background: var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
   }
   /* A fine dot grid, fading out toward the bottom. */
   .nv-hero::before {
@@ -249,7 +487,7 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background-image: radial-gradient(#ffffff1f 1px, transparent 1.4px);
+    background-image: radial-gradient(color-mix(in srgb, var(--on-night) 12%, transparent) 1px, transparent 1.4px);
     background-size: 26px 26px;
     mask-image: linear-gradient(180deg, #000 30%, transparent 95%);
   }
@@ -269,7 +507,7 @@
     height: 760px;
     right: -160px;
     top: -200px;
-    background: radial-gradient(circle, #5b3df5aa, transparent 66%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 67%, transparent), transparent 66%);
     animation: drift-a 24s ease-in-out infinite alternate;
   }
   .nv-hero-glow span:nth-child(2) {
@@ -277,7 +515,7 @@
     height: 560px;
     right: 18%;
     bottom: -320px;
-    background: radial-gradient(circle, #ff6b3d77, transparent 66%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--hot) 47%, transparent), transparent 66%);
     animation: drift-b 28s ease-in-out infinite alternate;
   }
   .nv-hero-glow span:nth-child(3) {
@@ -285,7 +523,7 @@
     height: 520px;
     left: -240px;
     top: 10%;
-    background: radial-gradient(circle, #b9a7ff40, transparent 66%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--tint) 25%, transparent), transparent 66%);
     animation: drift-c 32s ease-in-out infinite alternate;
   }
   .nv-hero-grid {
@@ -300,8 +538,8 @@
     gap: 10px;
     padding: 8px 16px 8px 12px;
     border-radius: 999px;
-    border: 1px solid #ffffff2a;
-    background: #ffffff0f;
+    border: 1px solid color-mix(in srgb, var(--on-night) 16%, transparent);
+    background: color-mix(in srgb, var(--on-night) 6%, transparent);
     font-size: 0.875rem;
     font-weight: 750;
     letter-spacing: 0.02em;
@@ -310,23 +548,23 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--butter);
-    box-shadow: 0 0 0 4px #ffd84d33;
+    background: var(--sun);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--sun) 20%, transparent);
   }
   .nova h1 {
     margin-top: 26px;
-    font-size: clamp(3.4rem, 7.6vw, 7.4rem);
+    font-size: calc(clamp(3.4rem, 7.6vw, 7.4rem) * var(--h1-scale));
     line-height: 0.98;
-    letter-spacing: -0.035em;
-    font-weight: 700;
+    letter-spacing: var(--h1-track);
+    font-weight: var(--h1-weight);
   }
   .nv-accent {
     font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
+    font-style: var(--accent-style);
+    font-weight: var(--accent-weight);
     letter-spacing: -0.02em;
     padding-right: 0.08em;
-    background: linear-gradient(95deg, var(--butter), var(--tangerine) 55%, #ff7fb0);
+    background: linear-gradient(95deg, var(--sun), var(--hot) 55%, var(--pink));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -336,7 +574,7 @@
     max-width: 33rem;
     font-size: 1.1875rem;
     line-height: 1.6;
-    color: #d9d4f2;
+    color: var(--on-night-2);
   }
   .nv-hero-buttons {
     display: flex;
@@ -349,14 +587,14 @@
     gap: 6px;
     margin-top: 30px;
     padding-top: 22px;
-    border-top: 1px solid #ffffff1f;
+    border-top: 1px solid color-mix(in srgb, var(--on-night) 12%, transparent);
     max-width: 33rem;
     font-size: 0.9375rem;
     line-height: 1.5;
-    color: #bdb6e0;
+    color: var(--on-night-3);
   }
   .nv-hero-facts p:first-child {
-    color: var(--cream-ink);
+    color: var(--on-night);
     font-weight: 700;
   }
   .nv-hero-art {
@@ -374,19 +612,19 @@
     position: absolute;
     inset: -60px -90px;
     border-radius: 50%;
-    border: 1px dashed #ffffff2e;
+    border: 1px dashed color-mix(in srgb, var(--on-night) 18%, transparent);
     animation: spin 60s linear infinite;
   }
   .nv-phone {
     width: 290px;
-    border-color: #0b0920;
+    border-color: var(--deep);
     box-shadow:
-      0 40px 90px #05031a99,
-      0 0 0 1px #ffffff22;
+      0 40px 90px color-mix(in srgb, var(--deep) 60%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--on-night) 13%, transparent);
   }
   /* The app is still green; tinted here to preview it in Nova's colours. */
   .nova .phone-screen img {
-    filter: hue-rotate(78deg) saturate(1.15);
+    filter: hue-rotate(var(--phone-hue, 78deg)) saturate(var(--phone-sat, 1.15));
   }
   .nv-bubble {
     position: absolute;
@@ -399,9 +637,9 @@
     max-width: 330px;
     padding: 14px 18px 14px 14px;
     border-radius: 22px 22px 22px 6px;
-    background: var(--cream-ink);
+    background: var(--on-night);
     color: var(--night);
-    box-shadow: 0 20px 50px #05031a66;
+    box-shadow: 0 20px 50px color-mix(in srgb, var(--deep) 40%, transparent);
     transform: rotate(-4deg);
     animation: float 6s ease-in-out -1s infinite;
   }
@@ -416,7 +654,7 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: var(--tangerine);
+    background: var(--hot);
     color: var(--night);
     flex: none;
   }
@@ -441,9 +679,9 @@
     padding: 11px 16px 11px 11px;
     border-radius: 16px;
     background: var(--night-2);
-    border: 1px solid #ffffff30;
-    color: var(--cream-ink);
-    box-shadow: 0 16px 40px #05031a88;
+    border: 1px solid color-mix(in srgb, var(--on-night) 19%, transparent);
+    color: var(--on-night);
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--deep) 53%, transparent);
     animation: float 7s ease-in-out infinite;
     animation-delay: calc(var(--i, 0) * -2.4s);
   }
@@ -451,7 +689,7 @@
     margin-left: 34px;
   }
   .nv-chips .nv-chip-check {
-    color: var(--butter);
+    color: var(--sun);
   }
   .nv-chips strong {
     font-weight: 750;
@@ -460,7 +698,7 @@
     margin-left: 6px;
     padding: 3px 9px;
     border-radius: 999px;
-    background: var(--butter);
+    background: var(--sun);
     color: var(--night);
     font-size: 0.75rem;
     font-weight: 800;
@@ -472,11 +710,11 @@
     z-index: 2;
     margin: -34px -20px 0;
     padding: 18px 0;
-    background: var(--tangerine);
-    color: var(--night);
-    transform: rotate(-2deg);
+    background: var(--hot);
+    color: var(--on-hot);
+    transform: rotate(-3deg);
     overflow: hidden;
-    box-shadow: 0 18px 40px #ff6b3d33;
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--hot) 20%, transparent);
   }
   .nv-marquee-track {
     display: flex;
@@ -530,7 +768,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--tangerine);
+    background: var(--hot);
   }
   .nv-steps li + li::before {
     left: 28px;
@@ -552,22 +790,22 @@
     margin-inline: 12px;
     border-radius: 44px;
     background:
-      radial-gradient(900px 500px at 90% 0%, #b9a7ff55, transparent 70%),
-      radial-gradient(700px 500px at 0% 100%, #ffd84d40, transparent 70%),
-      var(--lilac-soft);
+      radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--tint) 33%, transparent), transparent 70%),
+      radial-gradient(700px 500px at 0% 100%, color-mix(in srgb, var(--sun) 25%, transparent), transparent 70%),
+      var(--tint-bg);
   }
   &[data-theme="dark"] .voice-section {
     background:
-      radial-gradient(900px 500px at 90% 0%, #5b3df555, transparent 70%),
-      radial-gradient(700px 500px at 0% 100%, #ff6b3d26, transparent 70%),
-      #171238;
+      radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--accent) 33%, transparent), transparent 70%),
+      radial-gradient(700px 500px at 0% 100%, color-mix(in srgb, var(--hot) 15%, transparent), transparent 70%),
+      var(--night);
   }
   @media (prefers-color-scheme: dark) {
     &:not([data-theme="light"]) .voice-section {
       background:
-        radial-gradient(900px 500px at 90% 0%, #5b3df555, transparent 70%),
-        radial-gradient(700px 500px at 0% 100%, #ff6b3d26, transparent 70%),
-        #171238;
+        radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--accent) 33%, transparent), transparent 70%),
+        radial-gradient(700px 500px at 0% 100%, color-mix(in srgb, var(--hot) 15%, transparent), transparent 70%),
+        var(--night);
     }
   }
   .voice-heading {
@@ -576,21 +814,21 @@
   .voice-heading h2 {
     font-size: clamp(2.4rem, 5.4vw, 4.6rem) !important;
     line-height: 1.02;
-    letter-spacing: -0.045em !important;
+    letter-spacing: var(--h2-track) !important;
   }
   .voice-heading > p {
     margin-inline: auto;
   }
   .voice-trial-badge {
     background: var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
   }
   .voice-panel {
     max-width: 880px;
     margin-inline: auto;
     border-radius: 32px;
     border: 0;
-    box-shadow: 0 30px 80px #17123b1f;
+    box-shadow: 0 30px 80px color-mix(in srgb, var(--night) 12%, transparent);
   }
 
   /* ---------- 5. Feature chapters ---------- */
@@ -635,7 +873,7 @@
     border-bottom: 2px solid currentColor;
   }
   .nv-c-voice {
-    background: var(--lilac);
+    background: var(--tint);
     color: var(--night);
   }
   .nv-c-voice .nv-num {
@@ -651,9 +889,9 @@
     padding: 22px 26px;
     border-radius: 26px 26px 26px 8px;
     background: var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
     font-family: var(--serif);
-    font-style: italic;
+    font-style: var(--accent-style);
     font-size: clamp(1.5rem, 2.4vw, 2rem) !important;
     line-height: 1.2 !important;
     transform: rotate(-2deg);
@@ -676,8 +914,8 @@
     gap: 12px;
     padding: 16px 18px;
     border-radius: 18px;
-    background: var(--cream-ink);
-    box-shadow: 0 12px 30px #17123b1f;
+    background: var(--on-night);
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--night) 12%, transparent);
   }
   .nv-split li:nth-child(2) {
     margin-left: 30px;
@@ -692,7 +930,7 @@
   .nv-split small {
     padding: 3px 10px;
     border-radius: 999px;
-    background: var(--lilac-soft);
+    background: var(--tint-bg);
     font-weight: 800;
     font-size: 0.75rem;
   }
@@ -701,7 +939,7 @@
   }
 
   .nv-c-calendar {
-    background: var(--butter);
+    background: var(--sun);
     color: var(--night);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -713,8 +951,8 @@
     padding: 26px;
     border-radius: 28px;
     background: var(--night);
-    color: var(--cream-ink);
-    box-shadow: 0 30px 60px #17123b40;
+    color: var(--on-night);
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--night) 25%, transparent);
     transform: rotate(-2deg);
   }
   .nv-cal-head {
@@ -736,19 +974,19 @@
     border-radius: 14px;
     font-size: 0.8125rem;
     font-weight: 700;
-    color: #bdb6e0;
+    color: var(--on-night-3);
   }
   .nv-cal-week i {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: var(--lilac);
+    background: var(--tint);
   }
   .nv-cal-week span:nth-last-child(-n + 2) i {
     background: transparent;
   }
   .nv-cal-week .is-today {
-    background: var(--tangerine);
+    background: var(--hot);
     color: var(--night);
   }
   .nv-cal-week .is-today i {
@@ -761,15 +999,15 @@
     margin-top: 10px;
     padding: 14px 16px;
     border-radius: 16px;
-    background: #ffffff10;
-    border-left: 4px solid var(--tangerine);
+    background: color-mix(in srgb, var(--on-night) 6%, transparent);
+    border-left: 4px solid var(--hot);
   }
   .nv-event-1 {
-    border-left-color: var(--lilac);
+    border-left-color: var(--tint);
   }
   .nv-event time {
     font-size: 0.8125rem;
-    color: #bdb6e0;
+    color: var(--on-night-3);
   }
   .nv-event strong {
     display: block;
@@ -777,35 +1015,35 @@
   }
   .nv-event small {
     display: block;
-    color: #bdb6e0;
+    color: var(--on-night-3);
     font-size: 0.8125rem;
     margin-top: 2px;
   }
 
   .nv-c-meetings {
     background: var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
   }
   .nv-c-meetings::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: radial-gradient(600px 400px at 100% 100%, #5b3df566, transparent 70%);
+    background: radial-gradient(600px 400px at 100% 100%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 70%);
     pointer-events: none;
   }
   .nv-c-meetings > * {
     position: relative;
   }
   .nv-c-meetings p {
-    color: #d9d4f2;
+    color: var(--on-night-2);
   }
   .nv-pro {
     display: inline-block;
     margin-top: 16px;
     padding: 4px 12px;
     border-radius: 999px;
-    background: linear-gradient(95deg, var(--butter), var(--tangerine));
+    background: linear-gradient(95deg, var(--sun), var(--hot));
     color: var(--night);
     font-size: 0.8125rem;
     font-weight: 800;
@@ -816,10 +1054,10 @@
     align-self: stretch;
     padding: 28px;
     border-radius: 26px;
-    background: var(--cream-ink);
+    background: var(--on-night);
     color: var(--night);
     transform: rotate(2deg);
-    box-shadow: 0 30px 60px #05031a66;
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--deep) 40%, transparent);
   }
   .nv-note > * {
     display: block;
@@ -830,14 +1068,14 @@
   }
   .nv-note small {
     margin-top: 4px;
-    color: #5d5878;
+    color: color-mix(in srgb, var(--night) 68%, white);
     font-size: 0.8125rem;
   }
   .nv-note p {
     margin-top: 14px !important;
     font-size: 0.9375rem !important;
     line-height: 1.55 !important;
-    color: #3b3660 !important;
+    color: color-mix(in srgb, var(--night) 85%, white) !important;
   }
   .nv-note-label {
     margin-top: 16px;
@@ -864,7 +1102,7 @@
     width: 18px;
     height: 18px;
     border-radius: 6px;
-    border: 2px solid #5b3df5;
+    border: 2px solid var(--accent);
     flex: none;
   }
   .nv-note-decision {
@@ -877,8 +1115,8 @@
     margin-top: 18px;
     padding: 9px 16px;
     border-radius: 999px;
-    background: #5b3df5;
-    color: #fff;
+    background: var(--accent);
+    color: var(--on-accent);
     font-size: 0.875rem;
     font-weight: 800;
   }
@@ -905,7 +1143,7 @@
     background: var(--peach);
   }
   .nv-c-details .nv-tile-icon {
-    background: var(--tangerine);
+    background: var(--hot);
     color: var(--night);
   }
   .nv-c-offline {
@@ -967,26 +1205,26 @@
     overflow: hidden;
     border: 0;
     background:
-      radial-gradient(500px 360px at 100% 0%, #ff6b3d55, transparent 70%),
-      radial-gradient(500px 360px at 0% 100%, #5b3df588, transparent 70%),
+      radial-gradient(500px 360px at 100% 0%, color-mix(in srgb, var(--hot) 33%, transparent), transparent 70%),
+      radial-gradient(500px 360px at 0% 100%, color-mix(in srgb, var(--accent) 53%, transparent), transparent 70%),
       var(--night);
-    color: var(--cream-ink);
+    color: var(--on-night);
   }
   .nv-plan-pro h3 {
-    background: linear-gradient(95deg, var(--butter), var(--tangerine));
+    background: linear-gradient(95deg, var(--sun), var(--hot));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
   }
   .nv-plan-pro li svg {
-    color: var(--butter);
+    color: var(--sun);
   }
   .nv-plan-pro p {
     margin-top: 26px;
     padding-top: 18px;
-    border-top: 1px solid #ffffff22;
-    color: #bdb6e0;
+    border-top: 1px solid color-mix(in srgb, var(--on-night) 13%, transparent);
+    color: var(--on-night-3);
     font-size: 0.9375rem;
     line-height: 1.5;
   }
@@ -1006,7 +1244,7 @@
   .nv-faq-intro p {
     margin-top: 18px;
     font-family: var(--serif);
-    font-style: italic;
+    font-style: var(--accent-style);
     font-size: 1.75rem;
     line-height: 1.2;
     color: var(--muted);
@@ -1026,7 +1264,7 @@
       border-color 0.3s;
   }
   .nova .nv-q[open] {
-    background: var(--lilac-soft);
+    background: var(--tint-bg);
     border-color: transparent !important;
   }
   &[data-theme="dark"] .nova .nv-q[open] {
@@ -1045,10 +1283,10 @@
   }
   .nv-q-n {
     font-family: var(--serif);
-    font-style: italic;
+    font-style: var(--accent-style);
     font-size: 1.5rem;
     line-height: 1;
-    color: var(--tangerine);
+    color: var(--hot);
     min-width: 1.6em;
   }
   .nv-q-text {
@@ -1062,7 +1300,7 @@
     color: var(--paper);
   }
   .nova .nv-q[open] .faq-plus {
-    background: var(--tangerine);
+    background: var(--hot);
     color: var(--night);
   }
   .nova .nv-q p {
@@ -1076,7 +1314,7 @@
     margin: 0 12px 60px;
     border-radius: 44px;
     padding-block: 110px;
-    background: var(--tangerine);
+    background: var(--hot);
     color: var(--night);
     position: relative;
     overflow: hidden;
@@ -1091,7 +1329,7 @@
     right: -300px;
     top: -420px;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--butter), transparent 65%);
+    background: radial-gradient(circle, var(--sun), transparent 65%);
     opacity: 0.8;
   }
   .nv-closing-inner {
@@ -1101,9 +1339,9 @@
     align-items: end;
   }
   .nova .nv-closing h2 {
-    font-size: clamp(3.4rem, 9vw, 8.5rem);
-    line-height: 0.9;
-    letter-spacing: -0.06em;
+    font-size: calc(clamp(3.4rem, 9vw, 8.5rem) * var(--h1-scale));
+    line-height: 0.92;
+    letter-spacing: calc(var(--h1-track) - 0.015em);
   }
   .nv-closing-side p {
     font-size: 1.125rem;
@@ -1113,7 +1351,7 @@
   }
   .nv-closing :focus-visible,
   .nv-hero :focus-visible {
-    outline-color: var(--butter);
+    outline-color: var(--sun);
   }
 
   /* ---------- Footer ---------- */
@@ -1213,7 +1451,7 @@
       border-radius: 0 0 30px 30px;
     }
     .nova h1 {
-      font-size: clamp(2.9rem, 13.5vw, 4rem);
+      font-size: calc(clamp(2.9rem, 13.5vw, 4rem) * var(--h1-scale));
       margin-top: 20px;
     }
     .nv-hero-description {
@@ -1380,4 +1618,409 @@
     }
   }
 
+
+  /* ==========================================================================
+     Round 2: the header sits on the hero, two crossing tapes, a glow behind the phone,
+     chips that pop in, feature chapters that stack as you scroll, a Pro card whose edge
+     turns.
+     ========================================================================== */
+  .site-header .header-inner,
+  .site-header .desktop-nav a,
+  .site-header .language-switch a,
+  .site-header .theme-toggle {
+    transition:
+      background 0.4s var(--ease),
+      color 0.4s,
+      border-color 0.4s,
+      box-shadow 0.4s;
+  }
+  &:not([data-scrolled]):has(.nv-hero) .site-header {
+    .header-inner {
+      background: color-mix(in srgb, var(--night-2) 50%, transparent);
+      border-color: color-mix(in srgb, var(--on-night) 14%, transparent);
+      color: var(--on-night);
+      box-shadow: none;
+    }
+    .desktop-nav a,
+    .header-languages a {
+      color: color-mix(in srgb, var(--on-night) 78%, transparent);
+    }
+    .header-languages a[aria-current="page"] {
+      background: var(--on-night);
+      color: var(--night);
+    }
+    .theme-toggle,
+    .header-menu summary {
+      border-color: color-mix(in srgb, var(--on-night) 26%, transparent) !important;
+      color: var(--on-night);
+    }
+    .header-menu-panel {
+      color: var(--ink);
+    }
+  }
+
+  .nv-tapes {
+    position: relative;
+    z-index: 2;
+    isolation: isolate;
+    margin-top: -34px;
+  }
+  .nv-tapes .nv-marquee {
+    margin-top: 0;
+  }
+  .nv-marquee-back {
+    position: absolute !important;
+    inset: 0 -20px auto;
+    z-index: -1;
+    background: var(--sun) !important;
+    color: var(--on-hot) !important;
+    transform: rotate(3deg) translateY(-6px) !important;
+    box-shadow: none !important;
+  }
+  .nv-marquee-back .nv-marquee-track {
+    animation: marquee-back 46s linear infinite;
+  }
+
+  .nv-phone-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -30px -60px;
+    z-index: -1;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      var(--hot),
+      var(--accent-2),
+      var(--tint),
+      var(--sun),
+      var(--hot)
+    );
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: nv-spin 16s linear infinite;
+  }
+  .nv-chips li {
+    animation:
+      nv-pop 0.8s var(--ease) both,
+      float 7s ease-in-out infinite;
+    animation-delay:
+      calc(1.3s + var(--i, 0) * 0.3s),
+      calc(var(--i, 0) * -2.4s);
+  }
+  .nv-bubble {
+    animation:
+      nv-pop 0.8s var(--ease) 0.9s both,
+      float 6s ease-in-out -1s infinite;
+  }
+
+  @media (min-width: 801px) {
+    .nv-features > .nv-chapter {
+      position: sticky;
+      top: 104px;
+      box-shadow: 0 -18px 50px color-mix(in srgb, var(--page-ink) 10%, transparent);
+    }
+  }
+
+  .nv-plan-pro {
+    border: 2px solid transparent;
+    background:
+      radial-gradient(500px 360px at 100% 0%, color-mix(in srgb, var(--hot) 33%, transparent), transparent 70%) padding-box,
+      radial-gradient(500px 360px at 0% 100%, color-mix(in srgb, var(--accent) 53%, transparent), transparent 70%) padding-box,
+      linear-gradient(var(--night), var(--night)) padding-box,
+      conic-gradient(from var(--nv-angle), var(--hot), var(--sun), var(--tint), var(--accent-2), var(--hot)) border-box;
+    animation: nv-angle 6s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nv-marquee-back .nv-marquee-track,
+    .nv-phone-wrap::before,
+    .nv-plan-pro {
+      animation: none !important;
+    }
+  }
+
+  /* ---------- The app, redrawn ---------- */
+  .nv-device {
+    position: relative;
+    width: 296px;
+    aspect-ratio: 9 / 19;
+    padding: 9px;
+    border-radius: 46px;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--deep) 70%, #555), var(--deep) 40%);
+    box-shadow:
+      0 40px 90px color-mix(in srgb, var(--deep) 60%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--on-night) 18%, transparent),
+      inset 0 0 0 1.5px color-mix(in srgb, white 14%, transparent);
+  }
+  .nv-device-camera {
+    position: absolute;
+    z-index: 2;
+    top: 20px;
+    left: 50%;
+    width: 11px;
+    height: 11px;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: var(--deep);
+    box-shadow: 0 0 0 2px color-mix(in srgb, white 8%, transparent);
+  }
+  .nv-screen {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 16px 10px;
+    border-radius: 38px;
+    background:
+      radial-gradient(260px 200px at 100% 0%, color-mix(in srgb, var(--tint) 30%, transparent), transparent 70%),
+      var(--page);
+    color: var(--page-ink);
+    font-family: var(--body);
+    text-align: left;
+  }
+  .nv-app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nv-app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--display);
+    font-weight: var(--display-weight);
+    font-size: 0.9375rem;
+    letter-spacing: -0.02em;
+  }
+  .nv-app-mark {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2) 55%, var(--hot));
+    color: var(--on-accent);
+  }
+  .nv-app-dot {
+    color: var(--hot);
+  }
+  .nv-app-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sun), var(--hot));
+  }
+  .nv-app-kicker {
+    margin-top: 18px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--page-ink) 55%, var(--page));
+  }
+  .nv-app-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    margin-top: 8px;
+  }
+  .nv-app-week span {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px 0 9px;
+    border-radius: 12px;
+    font-size: 0.8125rem;
+    font-weight: 750;
+  }
+  .nv-app-week small {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--page-ink) 50%, var(--page));
+  }
+  .nv-app-week i {
+    position: absolute;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--hot);
+  }
+  .nv-app-week .is-on {
+    background: var(--night);
+    color: var(--on-night);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--night) 35%, transparent);
+  }
+  .nv-app-week .is-on small {
+    color: var(--on-night-3);
+  }
+  .nv-app-day {
+    margin-top: 16px;
+    font-family: var(--display);
+    font-weight: var(--display-weight);
+    font-size: 1.75rem;
+    line-height: 1;
+    letter-spacing: var(--h2-track);
+  }
+  .nv-app-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .nv-app-event {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: var(--tint-bg);
+    border-left: 4px solid var(--accent);
+  }
+  .nv-app-event time {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--page-ink) 60%, var(--page));
+  }
+  .nv-app-event strong,
+  .nv-app-task strong {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 750;
+    line-height: 1.25;
+  }
+  .nv-app-event small {
+    display: block;
+    font-size: 0.6875rem;
+    color: color-mix(in srgb, var(--page-ink) 60%, var(--page));
+  }
+  .nv-app-task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow:
+      0 6px 16px color-mix(in srgb, var(--page-ink) 8%, transparent),
+      inset 0 0 0 1.5px color-mix(in srgb, var(--hot) 55%, transparent);
+    animation: nv-pop 0.7s var(--ease) both;
+    animation-delay: calc(1.6s + var(--n, 0) * 0.25s);
+  }
+  .nv-app-task-1 {
+    --n: 1;
+  }
+  .nv-app-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--page-ink) 35%, transparent);
+    flex: none;
+  }
+  .nv-app-new {
+    margin-left: auto;
+    color: var(--hot);
+  }
+  .nv-app-fab {
+    position: relative;
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 22px 13px 16px;
+    border-radius: 999px;
+    background: var(--hot);
+    color: var(--on-hot);
+    font-size: 0.875rem;
+    font-weight: 800;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--hot) 45%, transparent);
+  }
+  .nv-app-fab-ring {
+    position: absolute;
+    inset: -5px;
+    border-radius: inherit;
+    border: 2px solid color-mix(in srgb, var(--hot) 55%, transparent);
+    animation: ring-out 2.4s ease-out infinite;
+  }
+  .nv-app-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--page-ink) 9%, transparent);
+  }
+  .nv-app-tabs span {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 5px 0;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--page-ink) 50%, var(--page));
+  }
+  .nv-app-tabs .is-on {
+    color: var(--accent);
+  }
+  .nv-app-tabs .is-on svg {
+    padding: 2px 10px;
+    width: 38px;
+    border-radius: 999px;
+    background: var(--tint-bg);
+    box-sizing: content-box;
+  }
+  @media (max-width: 580px) {
+    .nv-device {
+      width: 250px;
+      padding: 8px;
+      border-radius: 40px;
+    }
+    .nv-screen {
+      border-radius: 33px;
+      padding: 36px 13px 8px;
+    }
+    .nv-app-day {
+      font-size: 1.5rem;
+    }
+    .nv-app-list {
+      gap: 6px;
+    }
+    .nv-app-event,
+    .nv-app-task {
+      padding: 9px 10px;
+    }
+  }
+
+  .nv-toast {
+    position: absolute;
+    z-index: 3;
+    right: -10px;
+    top: 52%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px 12px 12px;
+    border-radius: 18px;
+    background: var(--night-2);
+    border: 1px solid color-mix(in srgb, var(--on-night) 19%, transparent);
+    color: var(--on-night);
+    font-weight: 800;
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--deep) 53%, transparent);
+    animation:
+      nv-pop 0.8s var(--ease) 1.4s both,
+      float 7s ease-in-out -2s infinite;
+  }
+  .nv-toast .nv-chip-check {
+    color: var(--on-hot);
+    background: var(--sun);
+    border-color: var(--sun);
+  }
+  @media (max-width: 580px) {
+    .nv-toast {
+      right: 0;
+      top: 56%;
+      padding: 9px 14px 9px 9px;
+      font-size: 0.875rem;
+    }
+  }
 }

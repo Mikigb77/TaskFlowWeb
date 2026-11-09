@@ -9,6 +9,7 @@ export type NovaCopy = {
   free: { name: string; items: string[] };
   pro: { name: string; items: string[]; note: string };
   questionsLead: string;
+  app: { addTask: string; tabs: string[]; greeting: string };
 };
 
 export const nova: Record<SiteLanguage, NovaCopy> = {
@@ -51,6 +52,11 @@ export const nova: Record<SiteLanguage, NovaCopy> = {
       note: "A monthly subscription in Google Play. Its price isn’t set yet.",
     },
     questionsLead: "Everything people ask before trying it.",
+    app: {
+      addTask: "Add a task",
+      tabs: ["Calendar", "Tasks", "Notes", "Settings"],
+      greeting: "Your week",
+    },
   },
   es: {
     howTitle: "De una idea a tu calendario.",
@@ -91,6 +97,11 @@ export const nova: Record<SiteLanguage, NovaCopy> = {
       note: "Una suscripción mensual en Google Play. Su precio aún no está fijado.",
     },
     questionsLead: "Todo lo que se pregunta antes de probarla.",
+    app: {
+      addTask: "Añadir tarea",
+      tabs: ["Calendario", "Tareas", "Notas", "Ajustes"],
+      greeting: "Tu semana",
+    },
   },
   ca: {
     howTitle: "D’una idea al teu calendari.",
@@ -134,5 +145,10 @@ export const nova: Record<SiteLanguage, NovaCopy> = {
       note: "Una subscripció mensual a Google Play. El preu encara no està fixat.",
     },
     questionsLead: "Tot el que es pregunta abans de provar-la.",
+    app: {
+      addTask: "Afegeix una tasca",
+      tabs: ["Calendari", "Tasques", "Notes", "Configuració"],
+      greeting: "La teva setmana",
+    },
   },
 };

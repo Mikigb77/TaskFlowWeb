@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
 import Icon from "./Icon";
-import Phone from "./Phone";
 import VoiceDemo from "./VoiceDemo";
 import { copy, type SiteLanguage } from "../content/site";
 import { nova } from "../content/site/nova";
@@ -23,6 +22,72 @@ function Line({
     <span className="line" style={order(index)}>
       <span>{children}</span>
     </span>
+  );
+}
+
+// The app, redrawn in Nova's colours and type: tomorrow on the calendar, the two things
+// just said, and the one button. A design proposal, not a screenshot.
+function NovaPhone({ language }: { language: SiteLanguage }) {
+  const { hero, features, voice } = copy[language];
+  const app = nova[language].app;
+  const tabs = ["calendar", "check", "notes", "sliders"];
+  return (
+    <div className="nv-device" role="img" aria-label={hero.imageAlt}>
+      <span className="nv-device-camera" aria-hidden="true"></span>
+      <div className="nv-screen" aria-hidden="true">
+        <div className="nv-app-bar">
+          <span className="nv-app-brand">
+            <span className="nv-app-mark">
+              <Icon name="logo" size={14} />
+            </span>
+            <span>
+              taskflow<span className="nv-app-dot">.</span>
+            </span>
+          </span>
+          <span className="nv-app-avatar"></span>
+        </div>
+        <p className="nv-app-kicker">{app.greeting}</p>
+        <div className="nv-app-week">
+          {features.calendar.weekdays.map((day, i) => (
+            <span key={i} className={i === 4 ? "is-on" : ""}>
+              <small>{day}</small>
+              {19 + i}
+              {(i === 0 || i === 2 || i === 4) && <i></i>}
+            </span>
+          ))}
+        </div>
+        <p className="nv-app-day">{voice.tomorrow}</p>
+        <div className="nv-app-list">
+          <div className="nv-app-event">
+            <time>10:00</time>
+            <div>
+              <strong>{features.calendar.events[0].title}</strong>
+              <small>{features.calendar.events[0].detail}</small>
+            </div>
+          </div>
+          {voice.example.tasks.map((task, i) => (
+            <div key={task.title} className={`nv-app-task nv-app-task-${i}`}>
+              <span className="nv-app-check"></span>
+              <strong>{task.title}</strong>
+              <Icon name="spark" size={13} className="nv-app-new" />
+            </div>
+          ))}
+        </div>
+        <div className="nv-app-fab">
+          <span className="nv-app-fab-ring"></span>
+          <Icon name="mic" size={20} />
+          {app.addTask}
+        </div>
+        <nav className="nv-app-tabs">
+          {app.tabs.map((label, i) => (
+            <span key={label} className={i === 0 ? "is-on" : ""}>
+              <Icon name={tabs[i]} size={17} />
+              {label}
+            </span>
+          ))}
+        </nav>
+      </div>
+    </div>
   );
 }
 
@@ -91,38 +156,49 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
                 ))}
               </span>
             </div>
-            <ul className="nv-chips" aria-hidden="true">
-              {voice.example.tasks.map((task, i) => (
-                <li key={task.title} style={order(i)}>
-                  <span className="nv-chip-check">
-                    <Icon name="check" size={14} />
-                  </span>
-                  <strong>{task.title}</strong>
-                  <small>{task.date}</small>
-                </li>
-              ))}
-            </ul>
+            <p className="nv-toast" aria-hidden="true">
+              <span className="nv-chip-check">
+                <Icon name="check" size={14} />
+              </span>
+              {voice.example.heading}
+            </p>
             <div className="nv-phone-wrap">
               <span className="nv-ring" aria-hidden="true"></span>
-              <Phone language={language} className="nv-phone" />
+              <NovaPhone language={language} />
             </div>
           </div>
         </div>
       </section>
 
       {/* 2. A running strip of what it does. */}
-      <div className="nv-marquee" aria-hidden="true">
-        <div className="nv-marquee-track">
-          {[0, 1].map((copyIndex) => (
-            <span key={copyIndex}>
-              {chapters.map((title) => (
-                <span key={title} className="nv-marquee-item">
-                  {title}
-                  <Icon name="asterisk" size={22} />
-                </span>
-              ))}
-            </span>
-          ))}
+      <div className="nv-tapes" aria-hidden="true">
+        <div className="nv-marquee nv-marquee-back">
+          <div className="nv-marquee-track">
+            {[0, 1, 2].map((copyIndex) => (
+              <span key={copyIndex}>
+                {n.steps.map((step) => (
+                  <span key={step.title} className="nv-marquee-item">
+                    {step.title}
+                    <Icon name="arrow" size={22} />
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="nv-marquee">
+          <div className="nv-marquee-track">
+            {[0, 1].map((copyIndex) => (
+              <span key={copyIndex}>
+                {chapters.map((title) => (
+                  <span key={title} className="nv-marquee-item">
+                    {title}
+                    <Icon name="asterisk" size={22} />
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 

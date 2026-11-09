@@ -61,6 +61,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       data-variant={process.env.SITE_VARIANT || "nova"}
+      data-palette={process.env.SITE_PALETTE || "indigo"}
+      data-font={process.env.SITE_FONT || "bricolage"}
       suppressHydrationWarning
     >
       <head>

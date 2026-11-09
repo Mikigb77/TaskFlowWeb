@@ -77,8 +77,9 @@ Playwright starts the production server when needed. It checks desktop and phone
 
 **A merge into `main` deploys the site.** Nothing runs on your computer.
 
-- `.github/workflows/checks.yml` runs on every pull request into `main` or `dev`: `npm run check`, `npm run legal:check`, the build and the unit tests. The Playwright suite stays in the UX web loop, since it takes about half an hour.
-- `.github/workflows/deploy.yml` runs on every push to `main`, which includes merged pull requests. It does what `deploy-cloud` does: Cloud Build builds the image from that commit, Cloud Run gets the new revision with voice on, and the job fails unless `/health/` reports that commit. When `edge/` changed, it also publishes the Cloudflare edge worker. Pushes that only touch the agents' records, `docs/`, `tests/` or root Markdown files don't deploy.
+- `dev` is the default branch, and every pull request goes into it. `main` is production: a pull request from `dev` into `main` is a release.
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request into `dev` or `main`: `npm run check`, `npm run legal:check`, the build and the unit tests. The Playwright suite stays in the UX web loop, since it takes about half an hour.
+- **Deploy** (`.github/workflows/deploy.yml`) runs on every push to `main`, which includes merged pull requests. It does what `deploy-cloud` does: Cloud Build builds the image from that commit, Cloud Run gets the new revision with voice on, and the job fails unless `/health/` reports that commit. When `edge/` changed, it also publishes the Cloudflare edge worker. Pushes that only touch the agents' records, `docs/`, `tests/` or root Markdown files don't deploy.
 - To deploy again without a new commit, use **Actions → Deploy → Run workflow** on `main`, and tick the edge box to republish the worker too.
 
 Google sign-in is keyless (Workload Identity Federation), and only `main` of this repo and of `TaskFlow` can use it. The deployer identity can build, deploy the existing services and run the migration job, but can't read secrets or change who may open a service.

@@ -1,18 +1,19 @@
-# Checks every pull request into main or dev. A merge into main then deploys
-# (deploy.yml). The Playwright suite isn't here: it takes about half an hour,
+# CI: checks every pull request into dev or main. Pull requests go into dev,
+# the default branch; a pull request from dev into main is a release, and
+# merging it deploys (deploy.yml). The Playwright suite isn't here: it takes about half an hour,
 # and the UX web loop runs it before work is reported done.
-name: Checks
+name: CI
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [dev, main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: checks-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

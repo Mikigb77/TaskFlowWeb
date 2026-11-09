@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-time Google Cloud setup so GitHub Actions can deploy from main:
 #   - this repo's website (.github/workflows/deploy.yml), and
-#   - the app repo's staging API (TaskFlow: .github/workflows/deploy-backend.yml).
+#   - the app repo's staging API (TaskFlow: .github/workflows/deploy.yml).
 #
 # Run it once, as the project owner, in Google Cloud Shell
 # (https://shell.cloud.google.com, nothing to install) or anywhere gcloud is

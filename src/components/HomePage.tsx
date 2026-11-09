@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import Icon from "./Icon";
+import Motes from "./Motes";
 import Phone from "./Phone";
 import VoiceDemo from "./VoiceDemo";
 import { copy, type SiteLanguage } from "../content/site";
@@ -57,10 +58,14 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
               </span>
             </a>
           </div>
-          <p className="hero-status">{hero.status}</p>
+          <p className="hero-status">
+            <span className="status-dot" aria-hidden="true"></span>
+            {hero.status}
+          </p>
           <p className="hero-free">{hero.free}</p>
         </div>
         <div className="hero-art" data-pointer>
+          <Motes className="hero-motes" />
           <div className="hero-stage" aria-hidden="true">
             <span className="orbit orbit-one"></span>
             <span className="orbit orbit-two"></span>
@@ -267,6 +272,8 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
       >
         <div className="closing-card" data-reveal data-pointer>
           <Aurora />
+          <Motes className="closing-motes" tone="light" density={9000} />
+          <span className="closing-glow" aria-hidden="true"></span>
           <div className="closing-spark" aria-hidden="true">
             <Icon name="asterisk" size={44} />
           </div>

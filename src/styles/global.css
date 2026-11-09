@@ -2067,28 +2067,29 @@ h1 .line > span {
   z-index: -1;
 }
 
-/* The status line: a dot with a ring that pings outward, like Lucid Saga's "Coming soon". */
+/* The status line: a dot with a ring that pings outward, like Lucid Saga's "Coming soon". Drawn
+   by the line's own pseudo-elements, hanging in the margin before it, so the text keeps its
+   place at the copy column's edge. */
 .hero-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.status-dot {
   position: relative;
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 60%, transparent);
-  margin-top: 0.5lh;
-  translate: 0 -50%;
 }
-.status-dot::after {
+.hero-status::before,
+.hero-status::after {
   content: "";
   position: absolute;
-  inset: -4px;
+  top: 0.5lh;
+  left: -16px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+.hero-status::before {
+  background: var(--green);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 60%, transparent);
+}
+.hero-status::after {
   border: 1px solid var(--green);
   animation: ring-out 2.4s ease-out infinite;
 }
@@ -2151,11 +2152,17 @@ h1 .line > span {
 
 /* The feature icons light up one after another, as Lucid Saga's hints do. */
 .feature-icon {
-  padding: 6px;
-  margin: -6px;
+  position: relative;
+}
+.feature-icon::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -1;
   border-radius: 12px;
   animation: light-up 10s ease-in-out infinite;
   animation-delay: calc(var(--i, 0) * 2s);
+  pointer-events: none;
 }
 
 /* Behind the closing card's spark, a glow breathes like the light through Lucid Saga's gate. */
@@ -2222,6 +2229,9 @@ h1 .line > span {
   }
 }
 @media (forced-colors: active) {
+  .hero-status::before,
+  .hero-status::after,
+  .feature-icon::before,
   .hero-buttons .button::after,
   .closing-card .button::after,
   .brand-mark::after,

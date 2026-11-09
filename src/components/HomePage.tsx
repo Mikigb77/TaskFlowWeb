@@ -58,10 +58,7 @@ export default function HomePage({ language }: { language: SiteLanguage }) {
               </span>
             </a>
           </div>
-          <p className="hero-status">
-            <span className="status-dot" aria-hidden="true"></span>
-            {hero.status}
-          </p>
+          <p className="hero-status">{hero.status}</p>
           <p className="hero-free">{hero.free}</p>
         </div>
         <div className="hero-art" data-pointer>

@@ -10,6 +10,7 @@ import { copy } from "../content/site";
 import "../styles/global.css";
 import "../styles/voice.css";
 import "../styles/legal.css";
+import "../styles/nova.css";
 
 // Manrope (public/fonts, SIL OFL 1.1) cut to Latin and Latin-1 plus the site's
 // punctuation, keeping its weight axis. next/font names the family after this
@@ -45,8 +46,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#121c18" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f8f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#021a1f" },
   ],
   colorScheme: "light dark",
 };
@@ -55,7 +56,11 @@ const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme'
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-variant="nova"
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>

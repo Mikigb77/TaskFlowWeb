@@ -5,6 +5,10 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
 
+## 2026-11-09 — WD38: the site is Nova, in Lagoon
+- The owner chose the "Nova" home page from the redesign exploration, in its green "Lagoon" palette, with Bricolage Grotesque titles and an Instrument Serif italic accent ("Okey, lets go with the green version"). The Daybook and Pop directions, and the other palettes and fonts, were dropped.
+- The app follows the same palette: `../TaskFlow/.claude/ux-review/DECISIONS.md`, 2026-11-09.
+
 ## 2026-11-08 — WD37: file allowances replace "unlimited file space", and completed tasks' files go after 15 days
 - The owner, in the app (2026-11-08): every account's files on a task are deleted 15 days after it's completed; without Pro an account can upload 200 MB in all, for life, and with Pro 500 MB a month. The app's record: `../TaskFlow/.claude/ux-review/DECISIONS.md`, 2026-11-08.
 - WD2's Pro line changes with it: "unlimited dictation and file space" becomes "unlimited dictation and 500 MB of files a month", in the closing line and the FAQ. The files feature card adds the 15 days and both allowances.

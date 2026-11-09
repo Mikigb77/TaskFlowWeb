@@ -2039,3 +2039,204 @@ h1 .line > span {
     outline-offset: -2px;
   }
 }
+
+/* ---------- Lucid Saga's light ----------
+   From lucidsaga.garbar.tech, in TaskFlow's colours: motes of light rising through the hero
+   art and the closing card (Motes.tsx), a status line that pings like a live signal, a band of
+   light that crosses the main buttons now and then, feature icons that light up in turn, and a
+   glow that breathes behind the closing card's spark. Decoration only; under
+   prefers-reduced-motion the motes aren't drawn and everything else stands still. */
+.motes {
+  position: absolute;
+  pointer-events: none;
+}
+.hero-motes {
+  inset: 40px -4% 0;
+  width: 108%;
+  height: calc(100% - 40px);
+  z-index: 1;
+}
+.hero-phone {
+  position: relative;
+  z-index: 2;
+}
+.closing-motes {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* The status line: a dot with a ring that pings outward, like Lucid Saga's "Coming soon". Drawn
+   by the line's own pseudo-elements, hanging in the margin before it, so the text keeps its
+   place at the copy column's edge. */
+.hero-status {
+  position: relative;
+}
+.hero-status::before,
+.hero-status::after {
+  content: "";
+  position: absolute;
+  top: 0.5lh;
+  left: -16px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+.hero-status::before {
+  background: var(--green);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 60%, transparent);
+}
+.hero-status::after {
+  border: 1px solid var(--green);
+  animation: ring-out 2.4s ease-out infinite;
+}
+
+/* A band of light crosses the page's two main buttons now and then. */
+.hero-buttons .button,
+.closing-card .button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero-buttons .button::after,
+.closing-card .button::after {
+  content: "";
+  position: absolute;
+  inset: -50% auto -50% -60%;
+  width: 40%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgb(255 255 255 / 0.14) 45%,
+    rgb(255 255 255 / 0.3) 50%,
+    rgb(255 255 255 / 0.14) 55%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: glint 7s ease-in-out 2s infinite;
+  pointer-events: none;
+}
+.closing-card .button-lime::after {
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgb(255 255 255 / 0.3) 45%,
+    rgb(255 255 255 / 0.55) 50%,
+    rgb(255 255 255 / 0.3) 55%,
+    transparent
+  );
+}
+/* The brand mark catches the same light, less often. */
+.brand-mark {
+  position: relative;
+  overflow: hidden;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: -50% auto -50% -80%;
+  width: 50%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgb(255 255 255 / 0.45) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: glint 9s ease-in-out 4s infinite;
+  pointer-events: none;
+}
+
+/* The feature icons light up one after another, as Lucid Saga's hints do. */
+.feature-icon {
+  position: relative;
+}
+.feature-icon::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -1;
+  border-radius: 12px;
+  animation: light-up 10s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 2s);
+  pointer-events: none;
+}
+
+/* Behind the closing card's spark, a glow breathes like the light through Lucid Saga's gate. */
+.closing-glow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  width: 520px;
+  height: 420px;
+  translate: -50% 0;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    rgb(212 236 163 / 0.28),
+    rgb(212 236 163 / 0.08) 45%,
+    transparent
+  );
+  animation: breathe 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.closing-spark svg {
+  filter: drop-shadow(0 0 14px rgb(212 236 163 / 0.55));
+}
+
+@keyframes ring-out {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@keyframes glint {
+  0%,
+  72% {
+    left: -60%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+@keyframes light-up {
+  0%,
+  22%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    background: transparent;
+  }
+  6%,
+  15% {
+    box-shadow: 0 0 22px 2px color-mix(in srgb, var(--green) 24%, transparent);
+    background: color-mix(in srgb, var(--green) 9%, transparent);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (forced-colors: active) {
+  .hero-status::before,
+  .hero-status::after,
+  .feature-icon::before,
+  .hero-buttons .button::after,
+  .closing-card .button::after,
+  .brand-mark::after,
+  .closing-glow,
+  .motes {
+    display: none;
+  }
+}

@@ -31,8 +31,8 @@ export async function linkPreview(language: SiteLanguage) {
         width: "100%",
         height: "100%",
         position: "relative",
-        background: "#f7f8f2",
-        color: "#24382e",
+        background: "#f3f8f4",
+        color: "#062a31",
         fontFamily: "Manrope",
       }}
     >
@@ -53,7 +53,7 @@ export async function linkPreview(language: SiteLanguage) {
               width: 68,
               height: 68,
               borderRadius: 18,
-              background: "#176e59",
+              background: "#0a7a63",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -63,7 +63,7 @@ export async function linkPreview(language: SiteLanguage) {
               height="44"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#f7f8f2"
+              stroke="#f3f8f4"
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -71,7 +71,7 @@ export async function linkPreview(language: SiteLanguage) {
               <path d="m3 12 5 5L19 6m-6 8 3 3 7-8" />
             </svg>
           </div>
-          <span style={{ fontSize: 66, color: "#176e59", letterSpacing: -2 }}>
+          <span style={{ fontSize: 66, color: "#0a7a63", letterSpacing: -2 }}>
             {name}
           </span>
         </div>
@@ -95,9 +95,9 @@ export async function linkPreview(language: SiteLanguage) {
           right: 72,
           width: SCREEN_WIDTH + BEZEL * 2,
           height: SCREEN_HEIGHT,
-          border: `${BEZEL}px solid #24382e`,
+          border: `${BEZEL}px solid #062a31`,
           borderRadius: 60,
-          background: "#f7f8f2",
+          background: "#f3f8f4",
           overflow: "hidden",
         }}
       >

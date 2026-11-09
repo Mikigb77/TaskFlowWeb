@@ -33,7 +33,7 @@ test("the home loads without errors or outside requests, and its main button lea
   });
   await page.goto("/");
   await page
-    .locator(".hero")
+    .locator(".nv-hero")
     .getByRole("link", { name: "Try it with your voice" })
     .click();
   await expect(page).toHaveURL(/#voice$/);
@@ -123,15 +123,8 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    const heroImage = page.locator(`.hero img.${theme}-only`);
-    await expect(heroImage).toBeVisible();
-    await expect
-      .poll(() =>
-        heroImage.evaluate(
-          (image: HTMLImageElement) => image.complete && image.naturalWidth > 0,
-        ),
-      )
-      .toBe(true);
+    // The hero's phone is drawn in HTML, named as one image.
+    await expect(page.locator(".nv-hero [role=img]")).toBeVisible();
     await page.waitForFunction(() =>
       Array.from(document.images)
         .filter((image) => getComputedStyle(image).display !== "none")
@@ -143,7 +136,7 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
       path: `artifacts/${testInfo.project.name}-${theme}.png`,
       fullPage: true,
     });
-    await page.locator(".hero").screenshot({
+    await page.locator(".nv-hero").screenshot({
       path: `artifacts/${testInfo.project.name}-hero-${theme}.png`,
     });
   }

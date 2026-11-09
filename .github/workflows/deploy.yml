@@ -1,4 +1,5 @@
-# Deploys the website from main: a merge into main is a release.
+# Deploy: deploys the website from main. main is production; work lands on dev
+# first, and a pull request from dev into main is a release.
 #
 # - The site: Cloud Build builds the Docker image, Cloud Run serves it, and the
 #   job waits until /health/ reports this commit. Same steps as
@@ -21,7 +22,7 @@ on:
       - "*.md"
       - "docs/**"
       - "tests/**"
-      - ".github/workflows/checks.yml"
+      - ".github/workflows/ci.yml"
   workflow_dispatch:
     inputs:
       edge:

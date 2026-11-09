@@ -1,10 +1,9 @@
 /* ==========================================================================
-   Nova: an exploratory redesign. A night panel, a hot accent, a sunny highlight and a soft
-   tint on a warm paper. Loaded after global.css: it repaints the shared tokens (so the
-   header, footer, demo and legal pages follow) and styles the home page's nv- sections.
-
-   Palettes: <html data-palette> (indigo, lagoon, ember, volt, daylight).
-   Type: <html data-font> (bricolage, fraunces, unbounded, space, syne).
+   Nova, in Lagoon: the TaskFlow site. A deep night-teal panel, a bright mint for the main
+   taps, a lime spark and a soft aqua tint on a pale green page, with Bricolage Grotesque
+   for titles. The app uses the same palette (App/lib/theme/app_theme.dart, Lagoon).
+   Loaded after global.css: it repaints the shared tokens (so the header, footer, demo and
+   legal pages follow) and styles the home page's nv- sections.
    ========================================================================== */
 
 @font-face {
@@ -21,50 +20,6 @@
   font-weight: 400;
   font-display: swap;
 }
-@font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/Fraunces.ttf") format("truetype");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/Fraunces-Italic.ttf") format("truetype");
-  font-style: italic;
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Unbounded";
-  src: url("/fonts/Unbounded.ttf") format("truetype");
-  font-weight: 200 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Space Grotesk";
-  src: url("/fonts/SpaceGrotesk.ttf") format("truetype");
-  font-weight: 300 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Syne";
-  src: url("/fonts/Syne.ttf") format("truetype");
-  font-weight: 400 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Plus Jakarta Sans";
-  src: url("/fonts/PlusJakartaSans.ttf") format("truetype");
-  font-weight: 200 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Outfit";
-  src: url("/fonts/Outfit.ttf") format("truetype");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 @property --nv-angle {
   syntax: "<angle>";
   inherits: false;
@@ -98,32 +53,8 @@
 }
 
 :root[data-variant="nova"] {
-  /* ---------- Palette: indigo (the default) ---------- */
+  /* ---------- Palette: Lagoon ---------- */
   & {
-    --night: #17123b;
-    --night-2: #261e63;
-    --deep: #05031a;
-    --hot: #ff6b3d;
-    --hot-hover: #ff8a63;
-    --on-hot: #17123b;
-    --sun: #ffd84d;
-    --tint: #b9a7ff;
-    --tint-bg: #ece7ff;
-    --accent: #5b3df5;
-    --accent-2: #8a5cff;
-    --on-accent: #ffffff;
-    --pink: #ff7fb0;
-    --on-night: #fbf7f0;
-    --on-night-2: #d9d4f2;
-    --on-night-3: #bdb6e0;
-    --page: #fbf7f0;
-    --page-ink: #17123b;
-    --link: #5b3df5;
-    --dark-base: var(--night);
-    --phone-hue: 78deg;
-    --phone-sat: 1.15;
-  }
-  &[data-palette="lagoon"] {
     --night: #032229;
     --night-2: #0a3a44;
     --deep: #000f12;
@@ -143,80 +74,12 @@
     --page: #f3f8f4;
     --page-ink: #062a31;
     --link: #08705b;
+    --dark-base: var(--night);
     --phone-hue: -6deg;
     --phone-sat: 1.25;
   }
-  &[data-palette="ember"] {
-    --night: #2a0c23;
-    --night-2: #48163c;
-    --deep: #11030d;
-    --hot: #ff9757;
-    --hot-hover: #ffb07f;
-    --on-hot: #2a0c23;
-    --sun: #ffd36e;
-    --tint: #ff9dbd;
-    --tint-bg: #ffe5ed;
-    --accent: #c01d5c;
-    --accent-2: #ff5d8f;
-    --on-accent: #ffffff;
-    --pink: #ff5d8f;
-    --on-night: #fff4ec;
-    --on-night-2: #f2d3de;
-    --on-night-3: #d6a9ba;
-    --page: #fff7f1;
-    --page-ink: #2a0c23;
-    --link: #b3164f;
-    --phone-hue: 172deg;
-    --phone-sat: 1.1;
-  }
-  &[data-palette="volt"] {
-    --night: #0c0c11;
-    --night-2: #1d1d29;
-    --deep: #000000;
-    --hot: #d4ff3f;
-    --hot-hover: #e3ff7d;
-    --on-hot: #0c0c11;
-    --sun: #7ef5ff;
-    --tint: #9c8bff;
-    --tint-bg: #ecebff;
-    --accent: #5b3dff;
-    --accent-2: #9c8bff;
-    --on-accent: #ffffff;
-    --pink: #ff5fd2;
-    --on-night: #f6f6f8;
-    --on-night-2: #cfcfdc;
-    --on-night-3: #a0a0b2;
-    --page: #f5f5f1;
-    --page-ink: #0c0c11;
-    --link: #4b2ff0;
-    --phone-hue: 82deg;
-    --phone-sat: 1.2;
-  }
-  /* A light hero: the "night" panel is a pale lilac and its text is ink. */
-  &[data-palette="daylight"] {
-    --night: #efe9ff;
-    --night-2: #e2d9ff;
-    --deep: #3b2c8a;
-    --hot: #ff6b3d;
-    --hot-hover: #ff8a63;
-    --on-hot: #17123b;
-    --sun: #ffb020;
-    --tint: #c9bcff;
-    --tint-bg: #f2eeff;
-    --accent: #5b3df5;
-    --accent-2: #8a5cff;
-    --on-accent: #ffffff;
-    --pink: #ff4f8b;
-    --on-night: #17123b;
-    --on-night-2: #3b3660;
-    --on-night-3: #5d5878;
-    --page: #fffdf9;
-    --page-ink: #17123b;
-    --link: #5b3df5;
-    --dark-base: #17123b;
-  }
 
-  /* ---------- Type: bricolage (the default) ---------- */
+  /* ---------- Type: Bricolage Grotesque, with an Instrument Serif accent ---------- */
   & {
     --display: "Bricolage", Manrope, sans-serif;
     --serif: "Instrument Serif", Georgia, serif;
@@ -228,49 +91,6 @@
     --h2-track: -0.035em;
     --accent-style: italic;
     --accent-weight: 400;
-  }
-  &[data-font="fraunces"] {
-    --display: "Fraunces", Georgia, serif;
-    --serif: "Fraunces", Georgia, serif;
-    --body: "Plus Jakarta Sans", sans-serif;
-    --display-weight: 600;
-    --h1-weight: 600;
-    --h1-scale: 1;
-    --h1-track: -0.03em;
-    --h2-track: -0.025em;
-    --accent-weight: 400;
-  }
-  &[data-font="unbounded"] {
-    --display: "Unbounded", sans-serif;
-    --serif: "Instrument Serif", Georgia, serif;
-    --body: "Plus Jakarta Sans", sans-serif;
-    --display-weight: 600;
-    --h1-weight: 700;
-    --h1-scale: 0.78;
-    --h1-track: -0.04em;
-    --h2-track: -0.04em;
-  }
-  &[data-font="space"] {
-    --display: "Space Grotesk", sans-serif;
-    --serif: "Space Grotesk", sans-serif;
-    --body: "Space Grotesk", sans-serif;
-    --display-weight: 700;
-    --h1-weight: 700;
-    --h1-scale: 1;
-    --h1-track: -0.05em;
-    --h2-track: -0.04em;
-    --accent-style: normal;
-    --accent-weight: 300;
-  }
-  &[data-font="syne"] {
-    --display: "Syne", sans-serif;
-    --serif: "Fraunces", Georgia, serif;
-    --body: "Outfit", sans-serif;
-    --display-weight: 700;
-    --h1-weight: 800;
-    --h1-scale: 0.74;
-    --h1-track: -0.03em;
-    --h2-track: -0.025em;
   }
 
   /* ---------- The page's shared tokens, from the palette ---------- */
@@ -290,12 +110,14 @@
     --lime: var(--hot);
     --shine: var(--hot);
     --shadow: 0 18px 50px color-mix(in srgb, var(--page-ink) 8%, transparent);
+    /* The big italic numbers: teal on the light page, mint on night. */
+    --num: var(--accent);
   }
   &[data-theme="dark"] {
     --paper: color-mix(in srgb, var(--dark-base) 75%, black);
     --surface: color-mix(in srgb, var(--dark-base) 92%, white);
-    --ink: #f6f3ff;
-    --muted: color-mix(in srgb, #f6f3ff 70%, var(--dark-base));
+    --ink: var(--on-night);
+    --muted: color-mix(in srgb, var(--on-night) 80%, var(--dark-base));
     --green: var(--tint);
     --green-hover: color-mix(in srgb, var(--tint) 75%, white);
     --mint: color-mix(in srgb, var(--dark-base) 75%, var(--tint));
@@ -306,13 +128,14 @@
     --peach: color-mix(in srgb, var(--dark-base) 85%, var(--hot));
     --tint-bg: color-mix(in srgb, var(--dark-base) 80%, var(--tint));
     --shadow: 0 18px 50px #0006;
+    --num: var(--hot);
   }
   @media (prefers-color-scheme: dark) {
     &:not([data-theme="light"]) {
       --paper: color-mix(in srgb, var(--dark-base) 75%, black);
       --surface: color-mix(in srgb, var(--dark-base) 92%, white);
-      --ink: #f6f3ff;
-      --muted: color-mix(in srgb, #f6f3ff 70%, var(--dark-base));
+      --ink: var(--on-night);
+      --muted: color-mix(in srgb, var(--on-night) 80%, var(--dark-base));
       --green: var(--tint);
       --green-hover: color-mix(in srgb, var(--tint) 75%, white);
       --mint: color-mix(in srgb, var(--dark-base) 75%, var(--tint));
@@ -323,6 +146,7 @@
       --peach: color-mix(in srgb, var(--dark-base) 85%, var(--hot));
       --tint-bg: color-mix(in srgb, var(--dark-base) 80%, var(--tint));
       --shadow: 0 18px 50px #0006;
+    --num: var(--hot);
     }
   }
   body {
@@ -458,7 +282,7 @@
     font-style: var(--accent-style);
     font-size: 3.4rem;
     line-height: 1;
-    color: var(--hot);
+    color: var(--num);
   }
   .nv-chip-check {
     display: grid;
@@ -930,7 +754,9 @@
   .nv-split small {
     padding: 3px 10px;
     border-radius: 999px;
-    background: var(--tint-bg);
+    /* The card stays light in both themes, so its chip does too. */
+    background: color-mix(in srgb, var(--tint) 35%, white);
+    color: var(--night);
     font-weight: 800;
     font-size: 0.75rem;
   }
@@ -1139,6 +965,12 @@
     height: 60px;
     border-radius: 20px;
   }
+  .nv-c-meetings .nv-num {
+    color: var(--hot);
+  }
+  .nv-c-details .nv-num {
+    color: var(--green);
+  }
   .nv-c-details {
     background: var(--peach);
   }
@@ -1286,7 +1118,7 @@
     font-style: var(--accent-style);
     font-size: 1.5rem;
     line-height: 1;
-    color: var(--hot);
+    color: var(--num);
     min-width: 1.6em;
   }
   .nv-q-text {

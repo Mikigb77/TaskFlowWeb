@@ -17,8 +17,6 @@ on:
     branches: [main]
     paths-ignore:
       - ".claude/**"
-      - ".agents/**"
-      - ".codex/**"
       - "*.md"
       - "docs/**"
       - "tests/**"

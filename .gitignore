@@ -9,7 +9,7 @@ out/
 !.env.example
 playwright-report/
 test-results/
-# The renders' own Playwright output folder, when they run beside the suite (webrun.py copies it back).
+# The renders' own Playwright output folder, when they run beside the suite (scripts/dev/webrun.py copies it back).
 test-results-renders/
 artifacts/
 .DS_Store

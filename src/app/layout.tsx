@@ -11,6 +11,7 @@ import "../styles/global.css";
 import "../styles/voice.css";
 import "../styles/legal.css";
 import "../styles/nova.css";
+import "../styles/family.css";
 
 // Manrope (public/fonts, SIL OFL 1.1) cut to Latin and Latin-1 plus the site's
 // punctuation, keeping its weight axis. next/font names the family after this

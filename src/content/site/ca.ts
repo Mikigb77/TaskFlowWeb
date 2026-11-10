@@ -38,7 +38,7 @@ export const ca: SiteCopy = {
       deleteAccount: "Suprimeix el compte",
       support: "Escriu al suport",
       operator: "Un producte de {company}",
-      trademark: "Android és una marca comercial de Google\u00a0LLC.",
+      trademark: "Android i Google Play són marques comercials de Google\u00a0LLC.",
       backToTop: "Torna a dalt",
     },
   },

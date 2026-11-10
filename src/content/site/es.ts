@@ -38,7 +38,7 @@ export const es: SiteCopy = {
       deleteAccount: "Eliminar cuenta",
       support: "Escribir a soporte",
       operator: "Un producto de {company}",
-      trademark: "Android es una marca comercial de Google\u00a0LLC.",
+      trademark: "Android y Google Play son marcas comerciales de Google\u00a0LLC.",
       backToTop: "Volver arriba",
     },
   },

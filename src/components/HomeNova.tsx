@@ -1,7 +1,16 @@
 import type { CSSProperties, ReactNode } from "react";
+import GarbarMark from "./GarbarMark";
+import HowSteps from "./HowSteps";
 import Icon from "./Icon";
+import Phone from "./Phone";
+import StoreBadge from "./StoreBadge";
 import VoiceDemo from "./VoiceDemo";
 import { copy, type SiteLanguage } from "../content/site";
+import {
+  family,
+  GARBAR_URL,
+  LUCID_SAGA_URL,
+} from "../content/site/family";
 import { nova } from "../content/site/nova";
 
 // Exploration: "Nova", a new home page. Same information as the current site, reordered:
@@ -25,69 +34,13 @@ function Line({
   );
 }
 
-// The app, redrawn in Nova's colours and type: tomorrow on the calendar, the two things
-// just said, and the one button. A design proposal, not a screenshot.
-function NovaPhone({ language }: { language: SiteLanguage }) {
-  const { hero, features, voice } = copy[language];
-  const app = nova[language].app;
-  const tabs = ["calendar", "check", "notes", "sliders"];
+// A section's label, as on garbar.tech and Lucid Saga: a ringed number and a few words.
+function Kicker({ n, children }: { n?: number; children: ReactNode }) {
   return (
-    <div className="nv-device" role="img" aria-label={hero.imageAlt}>
-      <span className="nv-device-camera" aria-hidden="true"></span>
-      <div className="nv-screen" aria-hidden="true">
-        <div className="nv-app-bar">
-          <span className="nv-app-brand">
-            <span className="nv-app-mark">
-              <Icon name="logo" size={14} />
-            </span>
-            <span>
-              taskflow<span className="nv-app-dot">.</span>
-            </span>
-          </span>
-          <span className="nv-app-avatar"></span>
-        </div>
-        <p className="nv-app-kicker">{app.greeting}</p>
-        <div className="nv-app-week">
-          {features.calendar.weekdays.map((day, i) => (
-            <span key={i} className={i === 4 ? "is-on" : ""}>
-              <small>{day}</small>
-              {19 + i}
-              {(i === 0 || i === 2 || i === 4) && <i></i>}
-            </span>
-          ))}
-        </div>
-        <p className="nv-app-day">{voice.tomorrow}</p>
-        <div className="nv-app-list">
-          <div className="nv-app-event">
-            <time>10:00</time>
-            <div>
-              <strong>{features.calendar.events[0].title}</strong>
-              <small>{features.calendar.events[0].detail}</small>
-            </div>
-          </div>
-          {voice.example.tasks.map((task, i) => (
-            <div key={task.title} className={`nv-app-task nv-app-task-${i}`}>
-              <span className="nv-app-check"></span>
-              <strong>{task.title}</strong>
-              <Icon name="spark" size={13} className="nv-app-new" />
-            </div>
-          ))}
-        </div>
-        <div className="nv-app-fab">
-          <span className="nv-app-fab-ring"></span>
-          <Icon name="mic" size={20} />
-          {app.addTask}
-        </div>
-        <nav className="nv-app-tabs">
-          {app.tabs.map((label, i) => (
-            <span key={label} className={i === 0 ? "is-on" : ""}>
-              <Icon name={tabs[i]} size={17} />
-              {label}
-            </span>
-          ))}
-        </nav>
-      </div>
-    </div>
+    <p className="nv-kicker" data-reveal>
+      <span>{n ? String(n).padStart(2, "0") : <GarbarMark size={14} />}</span>
+      {children}
+    </p>
   );
 }
 
@@ -100,8 +53,9 @@ function Num({ n }: { n: number }) {
 }
 
 export default function HomeNova({ language }: { language: SiteLanguage }) {
-  const { hero, features, faq, closing, voice, frame } = copy[language];
+  const { hero, features, faq, closing, voice } = copy[language];
   const n = nova[language];
+  const f = family[language];
   const chapters = [
     features.voice.title,
     features.calendar.title,
@@ -122,7 +76,7 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
           <div className="nv-hero-copy">
             <p className="nv-pill">
               <span className="nv-live" aria-hidden="true"></span>
-              {frame.comingSoon}
+              {f.eyebrow}
             </p>
             <h1 id="hero-title">
               <Line index={0}>{hero.title}</Line>
@@ -135,10 +89,9 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
               <a href="#voice" className="button nv-button-hot">
                 {hero.primary} <Icon name="arrow" />
               </a>
-              <a href="#features" className="nv-ghost">
-                {hero.secondary} <Icon name="chevron" size={16} />
-              </a>
+              <StoreBadge language={language} />
             </div>
+            <p className="nv-hero-langs">{f.languages}</p>
             <div className="nv-hero-facts">
               <p>{hero.status}</p>
               <p>{hero.free}</p>
@@ -164,59 +117,30 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
             </p>
             <div className="nv-phone-wrap">
               <span className="nv-ring" aria-hidden="true"></span>
-              <NovaPhone language={language} />
+              <Phone language={language} className="nv-phone" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. A running strip of what it does. */}
-      <div className="nv-tapes" aria-hidden="true">
-        <div className="nv-marquee nv-marquee-back">
-          <div className="nv-marquee-track">
-            {[0, 1, 2].map((copyIndex) => (
-              <span key={copyIndex}>
-                {n.steps.map((step) => (
-                  <span key={step.title} className="nv-marquee-item">
-                    {step.title}
-                    <Icon name="arrow" size={22} />
-                  </span>
-                ))}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="nv-marquee">
-          <div className="nv-marquee-track">
-            {[0, 1].map((copyIndex) => (
-              <span key={copyIndex}>
-                {chapters.map((title) => (
-                  <span key={title} className="nv-marquee-item">
-                    {title}
-                    <Icon name="asterisk" size={22} />
-                  </span>
-                ))}
-              </span>
-            ))}
-          </div>
+      {/* 2. A running strip of what it does, as garbar.tech's and Lucid Saga's. */}
+      <div className="nv-marquee nv-tape" aria-hidden="true">
+        <div className="nv-marquee-track">
+          {[0, 1].map((copyIndex) => (
+            <span key={copyIndex}>
+              {chapters.map((title) => (
+                <span key={title} className="nv-marquee-item">
+                  {title}
+                  <Icon name="asterisk" size={20} />
+                </span>
+              ))}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* 3. How it works: the north star, in four steps. */}
-      <section className="nv-how container" aria-labelledby="how-title">
-        <h2 id="how-title" data-reveal>
-          <Line>{n.howTitle}</Line>
-        </h2>
-        <ol className="nv-steps">
-          {n.steps.map((step, i) => (
-            <li key={step.title} style={order(i)} data-reveal>
-              <Num n={i + 1} />
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* 3. How it works: the four steps beside the app's own screens. */}
+      <HowSteps language={language} />
 
       {/* 4. The live demo, as before. */}
       <VoiceDemo />
@@ -227,6 +151,7 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
         className="nv-features container"
         aria-labelledby="features-title"
       >
+        <Kicker n={2}>{f.kickers.features}</Kicker>
         <h2 id="features-title" data-reveal>
           <Line>{features.title}</Line>
         </h2>
@@ -346,7 +271,12 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
       </section>
 
       {/* 6. Free and Pro, side by side. */}
-      <section className="nv-plans container" aria-labelledby="plans-title">
+      <section
+        id="plans"
+        className="nv-plans container"
+        aria-labelledby="plans-title"
+      >
+        <Kicker n={3}>{f.kickers.plans}</Kicker>
         <h2 id="plans-title" data-reveal>
           <Line>{n.plansTitle}</Line>
         </h2>
@@ -384,6 +314,7 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
         aria-labelledby="questions-title"
       >
         <div className="nv-faq-intro">
+          <Kicker n={4}>{f.kickers.questions}</Kicker>
           <h2 id="questions-title" data-reveal>
             <Line>{faq.title}</Line>
           </h2>
@@ -414,7 +345,7 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
         </div>
       </section>
 
-      {/* 8. A loud close. */}
+      {/* 8. A loud close, with the store badge, as Lucid Saga closes. */}
       <section
         id="get-taskflow"
         className="nv-closing"
@@ -422,13 +353,65 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
       >
         <div className="container nv-closing-inner">
           <h2 id="closing-title">{closing.title}</h2>
-          <div className="nv-closing-side">
-            <p>{closing.body}</p>
+          <p>{closing.body}</p>
+          <div className="nv-closing-buttons">
+            <StoreBadge language={language} className="store-badge-night" />
             <a href="#voice" className="button nv-button-night">
               {closing.button} <Icon name="arrow" />
             </a>
           </div>
         </div>
+      </section>
+
+      {/* 9. The family: TaskFlow is one of GarBar's two apps (garbar.tech's products). */}
+      <section
+        className="nv-family container"
+        aria-labelledby="family-title"
+      >
+        <div className="nv-family-intro">
+          <Kicker>{f.family.kicker}</Kicker>
+          <h2 id="family-title" data-reveal>
+            {f.family.title}{" "}
+            <em className="nv-accent">{f.family.titleAccent}</em>
+          </h2>
+          <p data-reveal>{f.family.body}</p>
+          <a
+            href={`${GARBAR_URL}/${language}/`}
+            className="nv-link"
+            data-reveal
+          >
+            {f.family.garbar} <Icon name="arrowUp" size={17} />
+          </a>
+        </div>
+        <a
+          href={`${LUCID_SAGA_URL}/${language}`}
+          className="nv-sibling"
+          data-reveal
+        >
+          <span className="nv-sibling-art" aria-hidden="true">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/garbar/lucid-saga-gate.webp" alt="" loading="lazy" />
+          </span>
+          <span className="nv-sibling-copy">
+            <small>{f.family.sibling.label}</small>
+            <span className="nv-sibling-name">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/garbar/lucid-saga-icon.png"
+                alt=""
+                width={40}
+                height={40}
+                loading="lazy"
+              />
+              {f.family.sibling.name}
+            </span>
+            <strong>{f.family.sibling.tagline}</strong>
+            <span className="nv-sibling-body">{f.family.sibling.body}</span>
+            <span className="nv-sibling-link">
+              {f.family.sibling.link} <Icon name="arrowUp" size={17} />
+            </span>
+          </span>
+        </a>
       </section>
     </div>
   );

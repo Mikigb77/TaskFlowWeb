@@ -33,10 +33,13 @@ export default function LanguageSwitch({
   label,
   className,
   as = "nav",
+  short = false,
 }: {
   label: string;
   className?: string;
   as?: "nav" | "group";
+  // The header's EN, ES, CA, as on garbar.tech and Lucid Saga; each still named in full.
+  short?: boolean;
 }) {
   const current = useSiteLanguage();
   const pathname = usePathname() ?? "/";
@@ -51,8 +54,9 @@ export default function LanguageSwitch({
       hrefLang={language}
       aria-current={language === current ? "page" : undefined}
       onClick={() => remember(language)}
+      aria-label={short ? languageNames[language] : undefined}
     >
-      {languageNames[language]}
+      {short ? language.toUpperCase() : languageNames[language]}
     </a>
   ));
   return as === "group" ? (

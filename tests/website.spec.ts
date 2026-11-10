@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/test";
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
+import type { Page } from "./support/test";
 
 // The theme control: the header's icon switch on desktop, the menu's Appearance row on phones.
 async function chooseTheme(page: Page, isMobile: boolean, theme: "light" | "dark") {
@@ -158,17 +158,27 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
   }
 });
 
-test("system appearance is followed until a choice is made", async ({
-  page,
+test("the site starts dark whatever the system says, and a light choice is kept", async ({
+  browser,
+  baseURL,
   isMobile,
 }) => {
-  await page.emulateMedia({ colorScheme: "dark" });
+  // A fresh context, without the shared fixture's stored light choice (WD39).
+  const context = await browser.newContext({
+    baseURL,
+    colorScheme: "light",
+    isMobile,
+    viewport: isMobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+  });
+  const page = await context.newPage();
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await chooseTheme(page, isMobile, "light");
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await context.close();
 });
 
 test("the marketing content and FAQ remain usable without JavaScript", async ({

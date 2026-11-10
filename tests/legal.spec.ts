@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/test";
 
 test("legal documents are readable without login or JavaScript in all three languages", async ({
   browser,

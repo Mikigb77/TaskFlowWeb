@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import type { Page } from "@playwright/test";
+import type { Page } from "./support/test";
 import {
   axeViolations,
   doubleTextSize,

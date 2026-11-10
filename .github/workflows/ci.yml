@@ -1,7 +1,7 @@
 # CI: checks every pull request into dev or main. Pull requests go into dev,
 # the default branch; a pull request from dev into main is a release, and
 # merging it deploys (deploy.yml). The Playwright suite isn't here: it takes about half an hour,
-# and the UX web loop runs it before work is reported done.
+# so run it locally (AGENTS.md, Commands) before work is reported done.
 name: CI
 
 on:

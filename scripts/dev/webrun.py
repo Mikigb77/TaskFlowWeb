@@ -13,16 +13,16 @@ type check took 71 s, a build 143 s and one Playwright spec file 175 s). Each ca
    ~/twb/_deps/<hash>, then hard-linked into each mirror, so a new mirror costs seconds;
 3. gives the mirror its own port: its package.json start script and its Playwright config say
    <port> instead of 3000, and a server left on that port is stopped first, so Playwright never
-   tests a stale build. The loop uses 3100 and up; 3000 stays free for people;
+   tests a stale build. Agents use 3100 and up; 3000 stays free for people;
 4. runs the command in the mirror, with nvm's Node when nvm is installed (else the Node on
    PATH). A command line with several commands runs whole in the mirror: on 2026-11-01 a
    suite-and-renders line ran its second half in the checkout, and deleted its renders;
-5. copies artifacts/ and test-results/ back to the checkout, where agents read them.
+5. copies artifacts/ and test-results/ back to the checkout, where they can be read.
 
 Usage, from Windows (the main checkout, then a package's worktree):
-  wsl -e python3 /mnt/c/.../TaskFlowWeb/.claude/skills/ux-web/scripts/webrun.py --src /mnt/c/.../TaskFlowWeb --name main --port 3100 -- 'npm run build'
-  wsl -e python3 /mnt/c/.../TaskFlowWeb/.claude/skills/ux-web/scripts/webrun.py --src /mnt/c/Users/mikig/.taskflow-tools/wt/<copy> --name <copy> --port 3101 -- 'npx playwright test tests/home.spec.ts --reporter=dot'
-  wsl -e python3 /mnt/c/.../TaskFlowWeb/.claude/skills/ux-web/scripts/webrun.py --remove <name>
+  wsl -e python3 /mnt/c/.../TaskFlowWeb/scripts/dev/webrun.py --src /mnt/c/.../TaskFlowWeb --name main --port 3100 -- 'npm run build'
+  wsl -e python3 /mnt/c/.../TaskFlowWeb/scripts/dev/webrun.py --src /mnt/c/Users/mikig/.taskflow-tools/wt/<copy> --name <copy> --port 3101 -- 'npx playwright test tests/home.spec.ts --reporter=dot'
+  wsl -e python3 /mnt/c/.../TaskFlowWeb/scripts/dev/webrun.py --remove <name>
 """
 import argparse
 import fcntl

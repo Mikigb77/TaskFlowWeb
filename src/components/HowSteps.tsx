@@ -8,8 +8,8 @@ import { nova } from "../content/site/nova";
 
 // The four steps, each beside the app's own screen for it, rendered from the real app
 // (../TaskFlow/App/test/ux_previews/website_previews.dart): Calendar before, listening, the two
-// things to add, and tomorrow with them. On narrow or short screens the four screens follow
-// the steps, in a row to swipe.
+// things to add, and tomorrow with them. On narrow or short screens each screen sits under
+// its own step, and the line joining the steps draws itself as the page scrolls.
 const screen = (step: number, language: SiteLanguage, theme: string) =>
   step === 3
     ? `/images/hero-calendar-${language}-${theme}.png`
@@ -53,14 +53,37 @@ export default function HowSteps({ language }: { language: SiteLanguage }) {
   const [active, setActive] = useState(0);
   const section = useRef<HTMLElement>(null);
   const rail = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLOListElement>(null);
   useEffect(() => {
     const element = section.current;
     if (!element) return;
     const media = window.matchMedia(PINNED);
     let frame = 0;
+    // Narrow or short screens: a step is reached once its number passes 60% of the way down
+    // the screen, and the line below it fills as the page scrolls on to the next number.
+    const draw = () => {
+      const items = list.current?.children;
+      if (!items) return;
+      const pen = window.innerHeight * 0.6;
+      list.current?.classList.add("is-drawing");
+      Array.from(items).forEach((item, i) => {
+        const box = item.getBoundingClientRect();
+        const number = item.firstElementChild?.getBoundingClientRect().height ?? 44;
+        const reached = pen >= box.top + number / 2;
+        if (reached) (item as HTMLElement).dataset.reached = "";
+        else delete (item as HTMLElement).dataset.reached;
+        const next = items[i + 1]?.getBoundingClientRect().top ?? box.bottom;
+        const span = next - box.top - number;
+        const fill = span > 0 ? (pen - box.top - number) / span : 0;
+        (item as HTMLElement).style.setProperty("--fill", String(Math.min(Math.max(fill, 0), 1)));
+      });
+    };
     const update = () => {
       frame = 0;
-      if (!media.matches) return;
+      if (!media.matches) {
+        draw();
+        return;
+      }
       const box = element.getBoundingClientRect();
       const travel = box.height - window.innerHeight;
       const progress = travel > 0 ? Math.min(Math.max(-box.top / travel, 0), 1) : 0;
@@ -117,7 +140,7 @@ export default function HowSteps({ language }: { language: SiteLanguage }) {
               <span key={step.title}></span>
             ))}
           </div>
-          <ol className="nv-timeline">
+          <ol className="nv-timeline" ref={list}>
             {steps.map((step, i) => (
               <li key={step.title} className={place(i).trim()}>
                 <span className="nv-timeline-n" aria-hidden="true">
@@ -126,29 +149,14 @@ export default function HowSteps({ language }: { language: SiteLanguage }) {
                 <div>
                   <h3>{step.title}</h3>
                   <p>{step.body}</p>
+                  {/* Narrow or short screens: the step's own screen, under its words. */}
+                  <div className="nv-step-shot">
+                    <Shots step={i} language={language} sizes="250px" />
+                  </div>
                 </div>
               </li>
             ))}
           </ol>
-          {/* On narrow or short screens: the four screens in a row to swipe through. */}
-          <div
-            className="nv-how-strip"
-            role="region"
-            aria-label={family[language].screensLabel}
-            tabIndex={0}
-          >
-            {steps.map((step, i) => (
-              <figure key={step.title}>
-                <div className="nv-step-shot">
-                  <Shots step={i} language={language} sizes="200px" />
-                </div>
-                <figcaption>
-                  <span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                  {step.title}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
         </div>
       </div>
     </section>

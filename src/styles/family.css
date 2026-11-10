@@ -32,8 +32,7 @@
   }
   .nv-num,
   .nv-timeline-n,
-  .nv-q-n,
-  .nv-how-strip figcaption span {
+  .nv-q-n {
     font-weight: 750;
     letter-spacing: -0.04em;
   }
@@ -270,8 +269,8 @@
     opacity: 0;
     transition: opacity 0.6s var(--ease);
     background: radial-gradient(
-      520px circle at var(--glow-x, 50%) var(--glow-y, 50%),
-      color-mix(in srgb, var(--hot) 14%, transparent),
+      600px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      color-mix(in srgb, var(--hot) 8%, transparent),
       transparent 70%
     );
   }
@@ -280,8 +279,8 @@
   }
   &[data-theme="dark"] .cursor-glow {
     background: radial-gradient(
-      560px circle at var(--glow-x, 50%) var(--glow-y, 50%),
-      color-mix(in srgb, var(--hot) 16%, transparent),
+      640px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      color-mix(in srgb, var(--hot) 9%, transparent),
       transparent 70%
     );
   }
@@ -428,7 +427,7 @@
     line-height: 1.6;
     color: var(--muted);
   }
-  .nv-how-strip {
+  .nv-step-shot {
     display: none;
   }
   .nv-how-rail {
@@ -871,7 +870,9 @@
       gap: 36px;
     }
   }
-  /* Narrow or short screens: the steps in a list, the screens in a row to swipe. */
+  /* Narrow or short screens: the steps one under another, each with its own screen, joined
+     by a line that draws itself as the page scrolls (HowSteps.tsx sets each step's --fill and
+     marks it reached). Without script, every step shows as reached. */
   @media (max-width: 800px), (max-height: 599px) {
     .nv-how-pin {
       grid-template-columns: 1fr;
@@ -883,63 +884,62 @@
     .nv-timeline li {
       grid-template-columns: 44px minmax(0, 1fr);
       gap: 4px 16px;
+      padding-bottom: 44px;
     }
-    .nv-timeline li::before {
+    .nv-timeline li::before,
+    .nv-timeline li::after {
+      content: "";
+      position: absolute;
       left: 21px;
-      top: 44px;
+      top: 52px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 2px;
+      background: var(--line);
+    }
+    .nv-timeline li::after {
+      background: linear-gradient(180deg, var(--hot), var(--tint));
+      transform: scaleY(var(--fill, 1));
+      transform-origin: top;
+    }
+    .nv-timeline li:last-child::after {
+      display: none;
     }
     .nv-timeline-n {
+      position: relative;
+      z-index: 1;
       width: 44px;
       height: 44px;
     }
-    .nv-timeline li .nv-timeline-n {
+    .nv-timeline:not(.is-drawing) .nv-timeline-n,
+    .nv-timeline li[data-reached] .nv-timeline-n {
       background: var(--hot);
       border-color: var(--hot);
       color: var(--on-hot);
-      transform: none;
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--hot) 18%, transparent);
     }
     .nv-timeline h3 {
       margin-top: 6px;
       font-size: 1.5rem;
     }
-    .nv-timeline li {
-      padding-bottom: 30px;
+    .nv-step-shot {
+      transition:
+        opacity 0.5s var(--ease),
+        transform 0.7s var(--ease);
     }
-    .nv-how-strip {
-      display: flex;
-      gap: 16px;
-      margin: 8px -16px 0;
-      padding: 10px 16px 24px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-padding-inline: 16px;
-    }
-    .nv-how-strip figure {
-      flex: none;
-      width: 200px;
-      margin: 0;
-      scroll-snap-align: start;
+    .nv-timeline.is-drawing li:not([data-reached]) .nv-step-shot {
+      opacity: 0;
+      transform: translateY(28px) scale(0.96);
     }
     .nv-step-shot {
+      display: block;
+      width: min(250px, 100%);
+      margin-top: 22px;
       border: 6px solid var(--night);
-      border-radius: 32px;
+      border-radius: 34px;
       overflow: hidden;
       background: var(--night);
       box-shadow: 0 18px 36px color-mix(in srgb, var(--night) 20%, transparent);
-    }
-    .nv-how-strip figcaption {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-top: 12px;
-      font-weight: 750;
-    }
-    .nv-how-strip figcaption span {
-      font-family: var(--serif);
-      font-style: var(--accent-style);
-      font-weight: 400;
-      font-size: 1.25rem;
-      color: var(--num);
     }
   }
   @media (max-width: 800px) {
@@ -994,7 +994,8 @@
       display: none;
     }
     .nv-how-screen,
-    .nv-timeline li {
+    .nv-timeline li,
+    .nv-step-shot {
       transition: none;
     }
   }

@@ -1,0 +1,68 @@
+# Dependabot keeps the dependencies current and patched (README.md#dependabot).
+#
+# Alerts and security updates are switched on in the repository's settings: a security update
+# opens a PR into the default branch, dev, as soon as an advisory affects a dependency and a fixed
+# version exists, and never waits. The version updates below open their PRs into dev too, like
+# every PR, once a week. A new release waits 7 days before it is offered, so a broken or hijacked
+# release is usually pulled before it reaches us.
+#
+# Updates are checked early on Monday (04:00 Madrid time), so their PRs and CI are done before
+# the weekly Dependabot pass at 06:09, which merges the green ones (README.md#dependabot).
+version: 2
+
+updates:
+  # The site's packages: package.json and package-lock.json.
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Europe/Madrid
+    cooldown:
+      default-days: 7
+    ignore:
+      # Node's types follow the Node the site runs on (26, as the Dockerfile says).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Packages that only work at the same version move together, majors included.
+      react:
+        patterns: [react, react-dom, "@types/react", "@types/react-dom"]
+      tailwind:
+        patterns: [tailwindcss, "@tailwindcss/*"]
+      # The rest: minor and patch updates in one PR, each major update in its own.
+      web:
+        update-types: [minor, patch]
+
+  # The image's Node, in both stages of the Dockerfile. CI reads it from there, so it checks the
+  # site on the new Node too. A new major Node is a PR of its own.
+  - package-ecosystem: docker
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Europe/Madrid
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+
+  # The actions the workflows use.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Europe/Madrid
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        update-types: [minor, patch]

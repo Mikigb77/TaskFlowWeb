@@ -1,7 +1,7 @@
 # CI: checks every pull request into dev or main. Pull requests go into dev,
 # the default branch; a pull request from dev into main is a release, and
 # merging it deploys (deploy.yml). The Playwright suite isn't here: it takes about half an hour,
-# and the UX web loop runs it before work is reported done.
+# so run it locally (AGENTS.md, Commands) before work is reported done.
 name: CI
 
 on:
@@ -23,9 +23,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      # The Node of the Docker image, read from its Dockerfile, so a Dependabot update of the
+      # image's Node is checked on the new one.
+      - id: node
+        name: The Docker image's Node
+        run: |
+          version=$(sed -nE 's/^FROM node:([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Dockerfile | head -n 1)
+          [ -n "$version" ] && echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Node $version"
       - uses: actions/setup-node@v7
         with:
-          node-version: 26.13.0 # the Docker image's Node
+          node-version: ${{ steps.node.outputs.version }}
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run check

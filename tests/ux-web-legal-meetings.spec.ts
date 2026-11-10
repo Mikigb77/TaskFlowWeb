@@ -6,7 +6,7 @@
 // The release notes repeat the same rules. The version is 2026-11-06, the publication day: WEB-213's and
 // WEB-109's tests in tests/ux-web-legal.spec.ts prove it, and check.py runs `npm run legal:check`.
 // Its own file so it can't collide with WP271's block at the end of ux-web-legal.spec.ts.
-import { test as plain, type Page } from "@playwright/test";
+import { test as plain, type Page } from "./support/test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {

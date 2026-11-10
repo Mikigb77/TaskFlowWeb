@@ -19,6 +19,10 @@
     --h2-track: -0.045em;
     --accent-style: normal;
     --accent-weight: 750;
+    /* The lime and the coral read as another brand beside the greens: both move into the
+       palette's mint, so every highlight stays in the GarBar-family green. */
+    --sun: #a9f5c8;
+    --pink: var(--tint);
   }
   .nv-accent {
     letter-spacing: inherit;
@@ -227,6 +231,59 @@
   }
   .nv-tape .nv-marquee-track {
     animation-duration: 44s;
+  }
+
+  /* ---------- What it does: the chapters in the site's greens ---------- */
+  .nv-c-voice {
+    background: linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--accent-2)));
+    color: #ffffff;
+  }
+  .nv-c-voice .nv-num {
+    color: #ffffff;
+  }
+  .nv-c-voice p {
+    color: color-mix(in srgb, #ffffff 90%, var(--accent));
+  }
+  .nv-c-voice .nv-split li {
+    color: var(--night);
+  }
+  .nv-c-calendar {
+    background: var(--mint);
+    color: var(--ink);
+  }
+  .nv-c-calendar .nv-num {
+    color: var(--num);
+  }
+  .nv-c-calendar p {
+    color: var(--muted);
+  }
+  .nv-pro {
+    background: linear-gradient(95deg, var(--hot), var(--tint));
+  }
+
+  /* ---------- The glow that follows the mouse ---------- */
+  .cursor-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease);
+    background: radial-gradient(
+      520px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      color-mix(in srgb, var(--hot) 14%, transparent),
+      transparent 70%
+    );
+  }
+  .cursor-glow.is-on {
+    opacity: 1;
+  }
+  &[data-theme="dark"] .cursor-glow {
+    background: radial-gradient(
+      560px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      color-mix(in srgb, var(--hot) 16%, transparent),
+      transparent 70%
+    );
   }
 
   /* ---------- 01 How it works: one phone, four steps ---------- */
@@ -942,6 +999,9 @@
     }
   }
   @media (forced-colors: active) {
+    .cursor-glow {
+      display: none;
+    }
     .nv-sibling-copy strong {
       background: none;
       -webkit-text-fill-color: currentColor;

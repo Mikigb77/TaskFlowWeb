@@ -4,7 +4,7 @@
 // language). layout.tsx and Footer.tsx hold the other session's uncommitted work, so this file
 // stays uncommitted with them. Round 2's WP38 (the 404 preloads the layout's font) is held
 // with WP22, so its tests are here too. See tests/support/ux-web.ts.
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "./support/test";
 import {
   axeViolations,
   expect,

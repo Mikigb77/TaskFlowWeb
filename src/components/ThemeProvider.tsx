@@ -33,34 +33,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       );
     setTheme(value);
   };
+  // The site starts dark (the owner's decision, 2026-11-10); light only when the visitor
+  // chooses it, and that choice is remembered.
   useEffect(() => {
-    const media = matchMedia("(prefers-color-scheme: dark)");
     const sync = () => {
       let stored;
       try {
         stored = localStorage.getItem("taskflow-theme");
       } catch {}
       chosen.current = stored === "light" || stored === "dark";
-      apply(
-        stored === "dark" || (!chosen.current && media.matches)
-          ? "dark"
-          : "light",
-      );
-    };
-    const followSystem = () => {
-      if (!chosen.current) apply(media.matches ? "dark" : "light");
+      apply(stored === "light" ? "light" : "dark");
     };
     const storageChanged = (event: StorageEvent) => {
       if (event.key === "taskflow-theme" || event.key === null) sync();
     };
     sync();
     setReady(true);
-    media.addEventListener("change", followSystem);
     window.addEventListener("storage", storageChanged);
-    return () => {
-      media.removeEventListener("change", followSystem);
-      window.removeEventListener("storage", storageChanged);
-    };
+    return () => window.removeEventListener("storage", storageChanged);
   }, []);
   const choose = (value: Theme) => {
     chosen.current = true;

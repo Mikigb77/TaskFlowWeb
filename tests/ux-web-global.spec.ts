@@ -9,7 +9,7 @@
 // round 2's WP40 (the phone header stays one row at 200% text).
 // See tests/support/ux-web.ts.
 import AxeBuilder from "@axe-core/playwright";
-import { test as plain, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import { test as plain, type APIRequestContext, type Locator, type Page } from "./support/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {

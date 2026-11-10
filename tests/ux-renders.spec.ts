@@ -30,7 +30,7 @@ import {
   webkit,
   devices,
   type Page,
-} from "@playwright/test";
+} from "./support/test";
 import { existsSync, mkdirSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
 import path from "node:path";

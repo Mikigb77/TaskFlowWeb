@@ -38,7 +38,7 @@ export const en: SiteCopy = {
       deleteAccount: "Delete account",
       support: "Email support",
       operator: "A product by {company}",
-      trademark: "Android is a trademark of Google\u00a0LLC.",
+      trademark: "Android and Google Play are trademarks of Google\u00a0LLC.",
       backToTop: "Back to top",
     },
   },

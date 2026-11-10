@@ -262,6 +262,9 @@ export const FRAME = {
   voice: TRY_VOICE,
   features: WHAT_IT_DOES,
   questions: FAQ_TITLE,
+  // The GarBar-family header and footer (2026-11-10): How it works and Plans.
+  how: { en: "How it works", es: "Cómo funciona", ca: "Com funciona" } as Copy,
+  plans: { en: "Plans", es: "Planes", ca: "Plans" } as Copy,
   comingSoon: {
     en: "Coming soon to Android",
     es: "Próximamente en Android",
@@ -367,9 +370,9 @@ export const FOOTER = {
   support: { en: "Email support", es: "Escribir a soporte", ca: "Escriu al suport" } as Copy,
   operator: { en: "A product by ", es: "Un producto de ", ca: "Un producte de " } as Copy,
   trademark: {
-    en: "Android is a trademark of Google\u00a0LLC.",
-    es: "Android es una marca comercial de Google\u00a0LLC.",
-    ca: "Android és una marca comercial de Google\u00a0LLC.",
+    en: "Android and Google Play are trademarks of Google\u00a0LLC.",
+    es: "Android y Google Play son marcas comerciales de Google\u00a0LLC.",
+    ca: "Android i Google Play són marques comercials de Google\u00a0LLC.",
   } as Copy,
   backToTop: { en: "Back to top", es: "Volver arriba", ca: "Torna a dalt" } as Copy,
 };

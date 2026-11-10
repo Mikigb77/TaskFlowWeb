@@ -1789,8 +1789,10 @@ for (const theme of THEMES) {
       for (const language of LANGUAGES) {
         const where = `${homeUrl(language)} on ${testInfo.project.name} in ${theme}`;
         await page.goto(homeUrl(language));
+        await hydrated(page);
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
         const item = await openAnswer(page, WP269_ACCOUNT_INDEX);
+        await expect(item.locator("p"), where).toBeVisible();
         const answer = (await item.locator("p").innerText()).trim();
         const semicolon = answer.indexOf(";");
         expect(semicolon, `${where}: a semicolon`).toBeGreaterThan(0);

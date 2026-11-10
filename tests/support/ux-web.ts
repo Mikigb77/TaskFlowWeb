@@ -68,12 +68,23 @@ export async function axeViolations(page: Page) {
 }
 
 // Waits until the fonts and every displayed image have loaded, so positions are final.
+// Images below the fold load lazily, when scrolled near; they're asked for now instead.
 export async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  await loadLazyImages(page);
   await page.waitForFunction(() =>
     Array.from(document.images)
       .filter((image) => image.checkVisibility())
       .every((image) => image.complete && image.naturalWidth > 0),
+  );
+}
+
+// Turns every lazy image eager, so a check that doesn't scroll can wait for all of them.
+export async function loadLazyImages(page: Page) {
+  await page.evaluate(() =>
+    document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((image) => {
+      image.loading = "eager";
+    }),
   );
 }
 

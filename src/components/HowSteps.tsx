@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SiteLanguage } from "../content/site";
 import { family } from "../content/site/family";
 import { nova } from "../content/site/nova";
 
 // The four steps, each beside the app's own screen for it, rendered from the real app
 // (../TaskFlow/App/test/ux_previews/website_previews.dart): Calendar before, listening, the two
-// things to add, and tomorrow with them. On wide screens one phone stays in view and shows the
-// step being read; on narrow ones the four screens follow the steps, in a row to swipe.
+// things to add, and tomorrow with them. On narrow or short screens the four screens follow
+// the steps, in a row to swipe.
 const screen = (step: number, language: SiteLanguage, theme: string) =>
   step === 3
     ? `/images/hero-calendar-${language}-${theme}.png`
@@ -42,86 +42,113 @@ function Shots({
   );
 }
 
+// On wide, tall screens the section pins in place: the page stops scrolling past it, and
+// the next stretch of scroll rolls the steps, one at a time, with the phone's screen beside
+// them. Each step gets its own stretch (--how-step in family.css), so none flashes by.
+const PINNED = "(min-width: 801px) and (min-height: 600px)";
+
 export default function HowSteps({ language }: { language: SiteLanguage }) {
   const { steps, howTitle } = nova[language];
   const kicker = family[language].kickers.how;
   const [active, setActive] = useState(0);
-  const items = useRef<(HTMLLIElement | null)[]>([]);
+  const section = useRef<HTMLElement>(null);
+  const rail = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!("IntersectionObserver" in window)) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting)
-            setActive(Number((entry.target as HTMLElement).dataset.step));
-        }
-      },
-      { rootMargin: "-45% 0px -45% 0px" },
-    );
-    items.current.forEach((item) => item && observer.observe(item));
-    return () => observer.disconnect();
-  }, []);
+    const element = section.current;
+    if (!element) return;
+    const media = window.matchMedia(PINNED);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (!media.matches) return;
+      const box = element.getBoundingClientRect();
+      const travel = box.height - window.innerHeight;
+      const progress = travel > 0 ? Math.min(Math.max(-box.top / travel, 0), 1) : 0;
+      const position = progress * steps.length;
+      setActive(Math.min(steps.length - 1, Math.floor(position)));
+      rail.current?.querySelectorAll<HTMLElement>("span").forEach((segment, i) => {
+        segment.style.setProperty("--fill", String(Math.min(Math.max(position - i, 0), 1)));
+      });
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    media.addEventListener("change", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      media.removeEventListener("change", schedule);
+    };
+  }, [steps.length]);
+  const place = (i: number) => (i === active ? " is-on" : i < active ? " is-past" : "");
   return (
-    <section id="how" className="nv-how container" aria-labelledby="how-title">
-      <div className="nv-how-stage" aria-hidden="true">
-        <div className="nv-how-phone">
-          <span className="nv-how-camera"></span>
-          {steps.map((step, i) => (
-            <div
-              key={step.title}
-              className={`nv-how-screen${i === active ? " is-on" : ""}`}
-            >
-              <Shots step={i} language={language} sizes="320px" />
-            </div>
-          ))}
+    <section
+      id="how"
+      ref={section}
+      className="nv-how"
+      aria-labelledby="how-title"
+      style={{ "--how-steps": steps.length } as CSSProperties}
+    >
+      <div className="nv-how-pin container">
+        <div className="nv-how-stage" aria-hidden="true">
+          <div className="nv-how-phone">
+            <span className="nv-how-camera"></span>
+            {steps.map((step, i) => (
+              <div key={step.title} className={`nv-how-screen${place(i)}`}>
+                <Shots step={i} language={language} sizes="320px" />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="nv-how-copy">
-        <p className="nv-kicker" data-reveal>
-          <span>01</span>
-          {kicker}
-        </p>
-        <h2 id="how-title" data-reveal>
-          {howTitle}
-        </h2>
-        <ol className="nv-timeline">
-          {steps.map((step, i) => (
-            <li
-              key={step.title}
-              ref={(item) => {
-                items.current[i] = item;
-              }}
-              data-step={i}
-              className={i === active ? "is-on" : ""}
-            >
-              <span className="nv-timeline-n" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        {/* On narrow screens: the four screens in a row to swipe through. */}
-        <div
-          className="nv-how-strip"
-          role="region"
-          aria-label={family[language].screensLabel}
-          tabIndex={0}
-        >
-          {steps.map((step, i) => (
-            <figure key={step.title}>
-              <div className="nv-step-shot">
-                <Shots step={i} language={language} sizes="200px" />
-              </div>
-              <figcaption>
-                <span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                {step.title}
-              </figcaption>
-            </figure>
-          ))}
+        <div className="nv-how-copy">
+          <p className="nv-kicker" data-reveal>
+            <span>01</span>
+            {kicker}
+          </p>
+          <h2 id="how-title" data-reveal>
+            {howTitle}
+          </h2>
+          <div className="nv-how-rail" ref={rail} aria-hidden="true">
+            {steps.map((step) => (
+              <span key={step.title}></span>
+            ))}
+          </div>
+          <ol className="nv-timeline">
+            {steps.map((step, i) => (
+              <li key={step.title} className={place(i).trim()}>
+                <span className="nv-timeline-n" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {/* On narrow or short screens: the four screens in a row to swipe through. */}
+          <div
+            className="nv-how-strip"
+            role="region"
+            aria-label={family[language].screensLabel}
+            tabIndex={0}
+          >
+            {steps.map((step, i) => (
+              <figure key={step.title}>
+                <div className="nv-step-shot">
+                  <Shots step={i} language={language} sizes="200px" />
+                </div>
+                <figcaption>
+                  <span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                  {step.title}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </div>
     </section>

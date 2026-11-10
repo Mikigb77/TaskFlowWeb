@@ -6,6 +6,7 @@ import LanguageSwitch from "./LanguageSwitch";
 import { AppearanceChoice, ThemeToggle } from "./ThemeProvider";
 import { useSiteLanguage } from "./useSiteLanguage";
 import { copy, homePath } from "../content/site";
+import { family } from "../content/site/family";
 
 // The part of CloseWatcher the menu uses, declared here since TypeScript's DOM types may lack it.
 type CloseWatcherLike = { onclose: (() => void) | null; destroy(): void };
@@ -13,10 +14,14 @@ type CloseWatcherLike = { onclose: (() => void) | null; destroy(): void };
 export default function Header() {
   const language = useSiteLanguage();
   const { frame } = copy[language];
+  const { nav } = family[language];
   const home = homePath(language);
+  // GarBar's product pages share one header: the app, its sections, the languages and one call
+  // to action (lucidsaga.garbar.tech, garbar.tech).
   const links = [
-    [frame.voice, `${home}#voice`],
+    [nav.how, `${home}#how`],
     [frame.features, `${home}#features`],
+    [nav.plans, `${home}#plans`],
     [frame.questions, `${home}#questions`],
   ];
   const menu = useRef<HTMLDetailsElement>(null);
@@ -94,8 +99,16 @@ export default function Header() {
           ))}
         </nav>
         <div className="header-actions">
-          <LanguageSwitch className="header-languages" label={frame.language} />
+          <LanguageSwitch
+            className="header-languages"
+            label={frame.language}
+            short
+          />
           <ThemeToggle />
+          <a href={`${home}#voice`} className="header-cta">
+            <span className="header-cta-dot" aria-hidden="true"></span>
+            {nav.cta}
+          </a>
           <details className="header-menu" ref={menu}>
             <summary>
               <Icon name="menu" size={20} className="menu-icon" />
@@ -108,7 +121,7 @@ export default function Header() {
                 label={frame.language}
               />
               <nav aria-label={frame.navigation}>
-                {links.map(([label, href]) => (
+                {[[frame.voice, `${home}#voice`], ...links].map(([label, href]) => (
                   <a key={href} href={href} onClick={closeMenu}>
                     {label} <Icon name="arrow" size={18} />
                   </a>

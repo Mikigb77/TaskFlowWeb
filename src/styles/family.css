@@ -606,7 +606,7 @@
     align-items: center;
     gap: 8px;
     margin-top: 0;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--on-night-3);
   }
   .footer-garbar {
@@ -648,10 +648,10 @@
   .footer-top .footer-columns nav a {
     justify-content: flex-start;
     gap: 6px;
-    min-height: 40px;
+    min-height: 44px;
     padding-block: 0;
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 650;
     color: var(--on-night);
   }
   .footer-top .footer-columns nav a svg {

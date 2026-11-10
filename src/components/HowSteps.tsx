@@ -105,7 +105,12 @@ export default function HowSteps({ language }: { language: SiteLanguage }) {
           ))}
         </ol>
         {/* On narrow screens: the four screens in a row to swipe through. */}
-        <div className="nv-how-strip">
+        <div
+          className="nv-how-strip"
+          role="region"
+          aria-label={family[language].screensLabel}
+          tabIndex={0}
+        >
           {steps.map((step, i) => (
             <figure key={step.title}>
               <div className="nv-step-shot">

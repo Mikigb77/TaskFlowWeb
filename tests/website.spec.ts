@@ -123,11 +123,19 @@ test("light and dark layouts pass accessibility checks and fit narrow screens", 
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    // The hero's phone is drawn in HTML, named as one image.
-    await expect(page.locator(".nv-hero [role=img]")).toBeVisible();
+    // The hero's phone shows the app's own Calendar, rendered from the app.
+    await expect(
+      page.locator(".nv-hero .phone-screen img").filter({ visible: true }),
+    ).toBeVisible();
+    // The images below the fold load lazily; ask for them now, then wait for every one shown.
+    await page.evaluate(() =>
+      document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((image) => {
+        image.loading = "eager";
+      }),
+    );
     await page.waitForFunction(() =>
       Array.from(document.images)
-        .filter((image) => getComputedStyle(image).display !== "none")
+        .filter((image) => image.checkVisibility())
         .every((image) => image.complete && image.naturalWidth > 0),
     );
     await page.locator("#hero-title").click();

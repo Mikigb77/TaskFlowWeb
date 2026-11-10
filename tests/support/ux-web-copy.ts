@@ -262,6 +262,9 @@ export const FRAME = {
   voice: TRY_VOICE,
   features: WHAT_IT_DOES,
   questions: FAQ_TITLE,
+  // The GarBar-family header and footer (2026-11-10): How it works and Plans.
+  how: { en: "How it works", es: "Cómo funciona", ca: "Com funciona" } as Copy,
+  plans: { en: "Plans", es: "Planes", ca: "Plans" } as Copy,
   comingSoon: {
     en: "Coming soon to Android",
     es: "Próximamente en Android",

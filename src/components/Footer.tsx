@@ -52,6 +52,7 @@ export default function Footer() {
           <div className="footer-columns">
             <nav aria-label={footer.navigation}>
               <p className="footer-heading">{f.footer.product}</p>
+              <a href={`${home}#voice`}>{frame.voice}</a>
               <a href={`${home}#how`}>{f.nav.how}</a>
               <a href={`${home}#features`}>{frame.features}</a>
               <a href={`${home}#plans`}>{f.nav.plans}</a>

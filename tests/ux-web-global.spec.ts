@@ -245,8 +245,12 @@ const FRAME_PAGES: { url: string; language: Language }[] = [
   { url: "/es/privacy/", language: "es" },
   { url: "/ca/delete-account/", language: "ca" },
 ];
-const NAV = ["voice", "features", "questions"] as const;
-const ANCHORS = { voice: "#voice", features: "#features", questions: "#questions" };
+// The header's sections, as on GarBar's other product sites; Try it with your voice leads the
+// phone menu and is the header's one call to action on wider screens.
+const NAV = ["how", "features", "plans", "questions"] as const;
+const MENU = ["voice", ...NAV] as const;
+const FOOTER_SITE = ["voice", ...NAV] as const;
+const ANCHORS = { voice: "#voice", how: "#how", features: "#features", plans: "#plans", questions: "#questions" };
 // What a Spanish or Catalan page's header must not say.
 const ENGLISH_FRAME = [
   "Open navigation",
@@ -385,7 +389,7 @@ test("WEB-307, WEB-3: on a phone the header says Menu in a 48 px button, and the
       `${url}: the menu's rows`,
     ).toEqual([
       ...LANGUAGES.map((code) => LANGUAGE_NAMES[code]),
-      ...NAV.map((key) => FRAME[key][language]),
+      ...MENU.map((key) => FRAME[key][language]),
       FRAME.comingSoon[language],
       FRAME.light[language],
       FRAME.dark[language],
@@ -559,8 +563,8 @@ test("WEB-307: in Catalan at 801, 1024 and 1100 px nothing scrolls sideways, and
           right: Math.max(...boxes.map((box) => box.right)),
         };
       });
-      // Brand, three links, three languages and the theme switch.
-      expect(layout.count, where).toBe(8);
+      // Brand, four links, three languages and the theme switch.
+      expect(layout.count, where).toBe(9);
       expect(layout.lowestTop, `${where}: one row`).toBeLessThan(layout.highestBottom);
       expect(layout.wrapped, `${where}: wrapped labels`).toEqual([]);
       expect(layout.right, `${where}: inside the window`).toBeLessThanOrEqual(width);
@@ -904,7 +908,7 @@ test("WEB-703: on /ca/ every footer nav link is at least 44 × 44 px", async ({ 
     .locator("footer")
     .getByRole("navigation", { name: FOOTER.navigation.ca, exact: true })
     .getByRole("link");
-  await expect(links).toHaveText([FRAME.voice.ca, FRAME.features.ca, FRAME.questions.ca]);
+  await expect(links).toHaveText(FOOTER_SITE.map((key) => FRAME[key].ca));
   for (const box of await boxesOf(links)) {
     expect(box.width, `“${box.name}” width`).toBeGreaterThanOrEqual(44);
     expect(box.height, `“${box.name}” height`).toBeGreaterThanOrEqual(44);
@@ -1990,12 +1994,17 @@ for (const theme of THEMES) {
             };
           }),
         );
-        expect(looks.map((look) => look.name), where).toEqual(LANGUAGES.map((code) => LANGUAGE_NAMES[code]));
+        // The desktop header shows EN, ES, CA (each named in full); the phone menu the names.
+        expect(looks.map((look) => look.name), where).toEqual(
+          LANGUAGES.map((code) => (isMobile ? LANGUAGE_NAMES[code] : code.toUpperCase())),
+        );
         for (const look of looks) {
           if (look.current) expect({ outline: look.outline, width: look.width }, `${where}: ${look.name}`).toEqual({ outline: "solid", width: "2px" });
           else expect(look.outline, `${where}: ${look.name}`).toBe("none");
         }
-        expect(looks.filter((look) => look.current).map((look) => look.name), where).toEqual([LANGUAGE_NAMES[language]]);
+        expect(looks.filter((look) => look.current).map((look) => look.name), where).toEqual([
+          isMobile ? LANGUAGE_NAMES[language] : language.toUpperCase(),
+        ]);
         // Reached by the keyboard, the current language shows the focus ring, not the marker.
         const current = switcher.getByRole("link", { name: LANGUAGE_NAMES[language], exact: true });
         for (let step = 0; step < 40 && !(await current.evaluate((link) => link === document.activeElement)); step++)

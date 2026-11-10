@@ -225,7 +225,9 @@ test("WEB-304: the footer's links keep the page's language, with its labels and 
       await expect(
         footer.getByRole("navigation", { name: FOOTER.navigation[language], exact: true }).getByRole("link"),
         url,
-      ).toHaveText([FRAME.voice[language], FRAME.features[language], FRAME.questions[language]]);
+      ).toHaveText(
+        (["voice", "how", "features", "plans", "questions"] as const).map((key) => FRAME[key][language]),
+      );
       const legal = footer.getByRole("navigation", { name: FOOTER.legal[language], exact: true });
       for (const { page: name, name: label } of FOOTER.links)
         await expect(legal.getByRole("link", { name: label[language], exact: true }), url).toHaveAttribute(
@@ -236,11 +238,13 @@ test("WEB-304: the footer's links keep the page's language, with its labels and 
         legal.getByRole("link", { name: FOOTER.support[language], exact: true }),
         url,
       ).toHaveAttribute("href", "mailto:taskflow.support@garbar.tech");
-      // Every link but the email and the switch's other languages stays in this language.
+      // Every link on this site but the email and the switch's other languages stays in this
+      // language. The GarBar family's sites (garbar.tech, Lucid Saga) have their own paths.
       const hrefs = await footer.locator("a[href]").evaluateAll(
         (anchors, language) =>
           anchors
             .filter((a) => !a.getAttribute("href")!.startsWith("mailto:"))
+            .filter((a) => new URL(a.getAttribute("href")!, location.href).origin === location.origin)
             .filter((a) => !a.hasAttribute("hreflang") || a.getAttribute("hreflang") === language)
             .map((a) => new URL(a.getAttribute("href")!, location.href).pathname),
         language,
@@ -602,7 +606,8 @@ test("WEB-1609: at 320 px ‘Google LLC.’ stays on one line in the footer, in 
     const result = await trademark.evaluate((line) => {
       const node = Array.from(line.childNodes).find((child) => child.textContent?.includes("Google"))!;
       const text = node.textContent ?? "";
-      const start = text.indexOf("Google");
+      // The last ‘Google’: the line names Google Play first.
+      const start = text.lastIndexOf("Google");
       const range = document.createRange();
       range.setStart(node, start);
       range.setEnd(node, text.length);
@@ -712,7 +717,7 @@ for (const theme of THEMES) {
             .getByRole("navigation", { name: FOOTER.legal[language], exact: true })
             .getByRole("link")
             .evaluateAll(style);
-          expect(site, `${where}: the footer's site links`).toHaveLength(3);
+          expect(site, `${where}: the footer's site links`).toHaveLength(5);
           expect(legal, `${where}: the legal links`).toHaveLength(5);
           for (const link of site) {
             expect(link.size, `${where}: “${link.name}” font size`).toBe(16);

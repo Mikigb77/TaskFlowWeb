@@ -231,13 +231,16 @@
 
   /* ---------- 01 How it works: one phone, four steps ---------- */
   .nv-how {
+    padding-block: 0;
+  }
+  .nv-how-pin {
     display: grid;
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: 64px;
     align-items: start;
     padding-block: 130px 100px;
   }
-  .nv-how > * {
+  .nv-how-pin > * {
     min-width: 0;
   }
   .nv-how h2 {
@@ -370,6 +373,92 @@
   }
   .nv-how-strip {
     display: none;
+  }
+  .nv-how-rail {
+    display: none;
+  }
+
+  /* Wide, tall screens: the section pins and its steps roll with the scroll. The section is
+     one screen tall plus one stretch per step, so each step stays for most of a screen of
+     scrolling while the page itself holds still. */
+  @media (min-width: 801px) and (min-height: 600px) {
+    .nv-how {
+      --how-step: 85svh;
+      height: calc(100svh + var(--how-steps, 4) * var(--how-step));
+    }
+    .nv-how-pin {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      align-items: center;
+      padding-block: 96px 32px;
+    }
+    .nv-how-stage {
+      position: relative;
+      top: auto;
+    }
+    .nv-how-phone {
+      width: min(310px, calc((100svh - 170px) * 0.462));
+    }
+    .nv-how-screen {
+      transform: translateY(7%);
+      transition:
+        opacity 0.6s var(--ease),
+        transform 0.8s var(--ease);
+    }
+    .nv-how-screen.is-past {
+      transform: translateY(-7%);
+    }
+    .nv-how-screen.is-on {
+      transform: none;
+    }
+    .nv-how-rail {
+      display: flex;
+      gap: 8px;
+      max-width: 360px;
+      margin-top: 36px;
+    }
+    .nv-how-rail span {
+      position: relative;
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      overflow: hidden;
+    }
+    .nv-how-rail span::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--hot);
+      transform: scaleX(var(--fill, 0));
+      transform-origin: left;
+    }
+    .nv-timeline {
+      display: grid;
+      margin-top: 30px;
+    }
+    .nv-timeline li {
+      grid-area: 1 / 1;
+      padding-bottom: 0;
+      opacity: 0;
+      transform: translateY(32px);
+      pointer-events: none;
+      transition:
+        opacity 0.5s var(--ease),
+        transform 0.7s var(--ease);
+    }
+    .nv-timeline li.is-past {
+      transform: translateY(-32px);
+    }
+    .nv-timeline li.is-on {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .nv-timeline li::before {
+      display: none;
+    }
   }
 
   /* ---------- 02–04: the label above each title ---------- */
@@ -714,19 +803,20 @@
 
   /* ---------- Narrower screens ---------- */
   @media (max-width: 1100px) {
-    .nv-how {
+    .nv-how-pin {
       gap: 40px;
     }
     .nv-how-phone {
-      width: 270px;
+      width: min(270px, calc((100svh - 170px) * 0.462));
     }
     .nv-family {
       grid-template-columns: 1fr;
       gap: 36px;
     }
   }
-  @media (max-width: 800px) {
-    .nv-how {
+  /* Narrow or short screens: the steps in a list, the screens in a row to swipe. */
+  @media (max-width: 800px), (max-height: 599px) {
+    .nv-how-pin {
       grid-template-columns: 1fr;
       padding-block: 96px 60px;
     }
@@ -794,6 +884,8 @@
       font-size: 1.25rem;
       color: var(--num);
     }
+  }
+  @media (max-width: 800px) {
     .nv-sibling {
       grid-template-columns: 1fr;
     }
@@ -844,7 +936,8 @@
       animation: none;
       display: none;
     }
-    .nv-how-screen {
+    .nv-how-screen,
+    .nv-timeline li {
       transition: none;
     }
   }

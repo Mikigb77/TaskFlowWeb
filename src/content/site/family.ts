@@ -18,7 +18,6 @@ export type FamilyCopy = {
   // What each How it works screen shows, in the step's order.
   screens: string[];
   // The phones' row of the four screens, scrolled sideways.
-  screensLabel: string;
   family: {
     kicker: string;
     title: string;
@@ -61,7 +60,6 @@ export const family: Record<SiteLanguage, FamilyCopy> = {
       plans: "Plans",
       questions: "Questions",
     },
-    screensLabel: "The four steps in the app",
     screens: [
       "TaskFlow’s calendar, with the Add a task button at the bottom.",
       "TaskFlow listening to “Tomorrow, call the dentist and buy bread.”",
@@ -105,7 +103,6 @@ export const family: Record<SiteLanguage, FamilyCopy> = {
       plans: "Planes",
       questions: "Preguntas",
     },
-    screensLabel: "Los cuatro pasos en la app",
     screens: [
       "El calendario de TaskFlow, con el botón Añadir tarea abajo.",
       "TaskFlow escuchando «Mañana, llamar al dentista y comprar pan.»",
@@ -149,7 +146,6 @@ export const family: Record<SiteLanguage, FamilyCopy> = {
       plans: "Plans",
       questions: "Preguntes",
     },
-    screensLabel: "Els quatre passos a l’app",
     screens: [
       "El calendari de TaskFlow, amb el botó Afegeix una tasca a baix.",
       "TaskFlow escoltant «Demà, trucar al dentista i comprar pa.»",

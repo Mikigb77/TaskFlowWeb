@@ -91,6 +91,34 @@ One-time setup, done in the browser:
 
 The scripts below still work for a manual deploy, and for first-time setup of new cloud resources.
 
+## Dependabot
+
+Dependabot watches the site's npm packages, the image's Node (both stages of the `Dockerfile`) and the workflows' actions. It is free, and stays free if the repository goes private.
+
+- **Alerts** list each known vulnerability under the repository's Security tab.
+- **Security updates** open a PR into `dev`, the default branch, as soon as an advisory affects a package and a fixed version exists. They never wait.
+- **Version updates** ([`.github/dependabot.yml`](.github/dependabot.yml)) open PRs into `dev` once a week. React and its types move together, as do Tailwind's packages; the other minor and patch updates share one PR per ecosystem, and each major update gets its own. A release waits 7 days before it is offered, so a broken or hijacked release is usually pulled first. A new major Node (and its `@types/node`) is a PR of its own.
+
+Alerts and security updates are switched on in the repository's settings, not in the file (since 2026-11-10; `gh api repos/Mikigb77/TaskFlowWeb/automated-security-fixes` shows whether they still are). CI reads its Node from the `Dockerfile`, so an update of the image's Node is checked on the new Node, and a unit test (`tests/repo.unit.ts`) fails if any Dependabot entry doesn't open its PRs into `dev`.
+
+Dependabot checks early on Monday (04:00 Madrid time), and a scheduled Claude pass at 06:09 works through its PRs, security updates first (Miki, 2026-11-10):
+
+- A green patch or minor update is squash-merged into `dev`.
+- A major update needs a look at its release notes. It is merged if CI is green and nothing affects us; if it changes behavior, cost or licence, it waits for Miki.
+- If CI fails, a small, clear fix goes on the Dependabot branch. Otherwise the PR is closed with the reason, and a version that can't work yet gets an ignore, with the reason, in the file.
+- A merged security fix to code that ships (the site's packages or its Node) is deployed at once, by a pull request from `dev` into `main`; Deploy runs one deploy at a time. Anything else ships with the next deploy.
+- The pass reads the repository's open alerts and notes any that are new or changed.
+
+### The weekly report
+
+By 07:55 Madrid time the pass files one GitHub issue in each repository that has something to report, labelled `dependabot-report` and assigned to Miki, so one search lists every open report: [label:dependabot-report assignee:Mikigb77](https://github.com/issues?q=is%3Aopen+is%3Aissue+label%3Adependabot-report+assignee%3AMikigb77). A week with no Dependabot PR to handle, no new or changed alert and nothing merged, closed or deployed files nothing. The title (`[high] Dependabot report, YYYY-MM-DD`) and an `urgency:` label say how soon it needs Miki:
+
+- **high**, act today: something that ships is exposed or broken. An alert on a dependency that ships is still open after the pass, a deploy or rollback failed, or `dev` or `main` is red because of an update.
+- **medium**, decide this week: something only Miki can decide is waiting, such as a major update that changes behavior, cost or licence, or a red update with no clear fix.
+- **low**, for the record: updates were merged, closed or deployed, and nothing needs Miki.
+
+The report's first line says what Miki needs to do, or "Nothing for you to do." Then it lists what needs Miki, what merged, closed (with the reason), deployed or is still pending, and any new alert, with a link for each. An alert already reported and unchanged isn't repeated, and the report holds no secrets, IP addresses or users' data. Work still running at 07:55 is finished afterwards and added as a comment, with the urgency changed if it changed. The next week's report closes a low one; a high or medium report stays open until what it asks for is done.
+
 ## Deploy the preview to Google Cloud Run
 
 Run the deployment script from PowerShell **7.2+**, with Git, `tar` and the Google Cloud CLI installed. Docker does not need to run locally. Google builds the Linux container using `Dockerfile` and `cloudbuild.yaml`, then Cloud Run serves the standalone Next.js app as a non-root user.

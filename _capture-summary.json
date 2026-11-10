@@ -1,0 +1,206 @@
+{
+  "garbar": {
+    "url": "https://garbar.tech/en/",
+    "files": [],
+    "desktopHidden": {
+      "n": 4,
+      "samples": [
+        "DIV.output-head",
+        "UL.",
+        "LI.",
+        "LI."
+      ]
+    },
+    "desktopFullReducedMotion": true,
+    "assetUrls": [
+      "https://garbar.tech/images/well-at-dusk.webp",
+      "https://garbar.tech/images/taskflow-en.png",
+      "https://garbar.tech/images/lucid-saga-gate.webp",
+      "https://garbar.tech/images/lucid-saga-icon.png",
+      "https://garbar.tech/images/worlds/outer-disciple.webp",
+      "https://garbar.tech/images/worlds/drowned-capital.webp",
+      "https://garbar.tech/images/worlds/last-lantern.webp",
+      "https://garbar.tech/images/worlds/dead-god-courier.webp",
+      "https://garbar.tech/images/worlds/hollowmere.webp",
+      "https://garbar.tech/images/worlds/night-shift.webp",
+      "https://garbar.tech/images/worlds/seven-day-villainess.webp",
+      "https://garbar.tech/images/worlds/war-frame.webp",
+      "https://garbar.tech/images/worlds/naples-vendetta.webp",
+      "https://garbar.tech/images/worlds/old-net.webp",
+      "https://garbar.tech/favicon.svg",
+      "https://garbar.tech/images/apple-icon.png",
+      "https://garbar.tech/images/share.png"
+    ],
+    "logoSvgs": [
+      {
+        "where": "header",
+        "aria": null,
+        "size": "34x34",
+        "parentClass": "brand"
+      },
+      {
+        "where": "header",
+        "aria": null,
+        "size": "15x15",
+        "parentClass": "header-contact"
+      },
+      {
+        "where": "footer",
+        "aria": null,
+        "size": "34x34",
+        "parentClass": "brand"
+      },
+      {
+        "where": "footer",
+        "aria": null,
+        "size": "14x14",
+        "parentClass": ""
+      },
+      {
+        "where": "footer",
+        "aria": null,
+        "size": "14x14",
+        "parentClass": ""
+      },
+      {
+        "where": "footer",
+        "aria": null,
+        "size": "20x20",
+        "parentClass": ""
+      }
+    ],
+    "assetsSaved": [
+      {
+        "url": "https://garbar.tech/images/well-at-dusk.webp",
+        "file": "assets/images_well-at-dusk.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/taskflow-en.png",
+        "file": "assets/images_taskflow-en.png",
+        "type": "image/png"
+      },
+      {
+        "url": "https://garbar.tech/images/lucid-saga-gate.webp",
+        "file": "assets/images_lucid-saga-gate.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/lucid-saga-icon.png",
+        "file": "assets/images_lucid-saga-icon.png",
+        "type": "image/png"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/outer-disciple.webp",
+        "file": "assets/images_worlds_outer-disciple.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/drowned-capital.webp",
+        "file": "assets/images_worlds_drowned-capital.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/last-lantern.webp",
+        "file": "assets/images_worlds_last-lantern.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/dead-god-courier.webp",
+        "file": "assets/images_worlds_dead-god-courier.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/hollowmere.webp",
+        "file": "assets/images_worlds_hollowmere.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/night-shift.webp",
+        "file": "assets/images_worlds_night-shift.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/seven-day-villainess.webp",
+        "file": "assets/images_worlds_seven-day-villainess.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/war-frame.webp",
+        "file": "assets/images_worlds_war-frame.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/naples-vendetta.webp",
+        "file": "assets/images_worlds_naples-vendetta.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/images/worlds/old-net.webp",
+        "file": "assets/images_worlds_old-net.webp",
+        "type": "image/webp"
+      },
+      {
+        "url": "https://garbar.tech/favicon.svg",
+        "file": "assets/favicon.svg",
+        "type": "image/svg+xml"
+      },
+      {
+        "url": "https://garbar.tech/images/apple-icon.png",
+        "file": "assets/images_apple-icon.png",
+        "type": "image/png"
+      },
+      {
+        "url": "https://garbar.tech/images/share.png",
+        "file": "assets/images_share.png",
+        "type": "image/png"
+      },
+      {
+        "url": "https://garbar.tech/favicon.svg",
+        "file": "assets/favicon.svg",
+        "type": "image/svg+xml"
+      }
+    ],
+    "mobileHidden": {
+      "n": 1,
+      "samples": [
+        "I."
+      ]
+    },
+    "mobileFullReducedMotion": true
+  },
+  "lucidsaga": {
+    "url": "https://lucidsaga.garbar.tech/en",
+    "files": [],
+    "desktopHidden": {
+      "n": 0,
+      "samples": []
+    },
+    "desktopFullReducedMotion": false,
+    "mobileHidden": {
+      "n": 7,
+      "samples": [
+        "DIV.",
+        "DIV.",
+        "DIV.",
+        "DIV.",
+        "DIV."
+      ]
+    },
+    "mobileFullReducedMotion": true
+  },
+  "taskflow": {
+    "url": "https://taskflow.garbar.tech/?lang=en",
+    "files": [],
+    "desktopHidden": {
+      "n": 0,
+      "samples": []
+    },
+    "desktopFullReducedMotion": false,
+    "mobileHidden": {
+      "n": 0,
+      "samples": []
+    },
+    "mobileFullReducedMotion": false
+  }
+}

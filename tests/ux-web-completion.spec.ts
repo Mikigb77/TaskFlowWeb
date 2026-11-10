@@ -1,6 +1,6 @@
 // WP52: independent, observable completion acceptance. All network/AI calls are stubbed
 // by ux-web's automatic VoiceStub fixture; no backend or browser storage is modified.
-import type { Locator, Page, TestInfo } from "@playwright/test";
+import type { Locator, Page, TestInfo } from "./support/test";
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { ca } from "../src/content/site/ca";

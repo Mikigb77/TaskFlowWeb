@@ -12,7 +12,7 @@
 // Chromium's fake microphone.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import type { Locator, Page } from "@playwright/test";
+import type { Locator, Page } from "./support/test";
 import type { Project, Scenario, VoiceStub } from "./support/ux-voice";
 import {
   expireTimeouts,

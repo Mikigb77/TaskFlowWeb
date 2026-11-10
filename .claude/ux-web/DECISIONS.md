@@ -5,6 +5,11 @@ Every agent in the UX web loop reads this before reviewing or planning. Only the
 The app's decisions are in `../TaskFlow/.claude/ux-review/DECISIONS.md`. They bind the site too: the site may only say what the app does, and anything open there is open here.
 
 
+## 2026-11-10 — WD39: the site starts dark, and stays in the GarBar greens
+- The owner, on the GarBar-family site: "let it start on dark by default, because it feels very weird to have white as the background." The site now opens dark unless the visitor chooses light with the theme switch, which is remembered. It no longer follows the system's light or dark setting. Without JavaScript the CSS still follows the system.
+- "What it does" left its cyan and lime cards for the site's greens ("these colors with the blue, the yellow one, are kind of differ a lot from the whole vibe"). The lime and coral highlights across the site move into the palette's mint.
+- A soft green glow follows the mouse, for a fine pointer only and not under reduced motion.
+
 ## 2026-11-09 — WD38: the site is Nova, in Lagoon
 - The owner chose the "Nova" home page from the redesign exploration, in its green "Lagoon" palette, with Bricolage Grotesque titles and an Instrument Serif italic accent ("Okey, lets go with the green version"). The Daybook and Pop directions, and the other palettes and fonts, were dropped.
 - The app follows the same palette: `../TaskFlow/.claude/ux-review/DECISIONS.md`, 2026-11-09.

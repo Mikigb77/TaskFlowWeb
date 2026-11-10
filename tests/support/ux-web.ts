@@ -3,7 +3,7 @@
 // Every test gets the guard below automatically: /api/voice/* is answered by the renders'
 // VoiceStub, in the shapes the site's server returns, and any request to another origin
 // is blocked, so no test ever reaches the real voice API or an outside service.
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Page } from "./test";
 import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

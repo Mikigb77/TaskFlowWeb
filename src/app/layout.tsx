@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import CursorGlow from "../components/CursorGlow";
 import Motion from "../components/Motion";
 import SkipLink from "../components/SkipLink";
 import { ThemeProvider } from "../components/ThemeProvider";
@@ -53,7 +54,7 @@ export const viewport: Viewport = {
   colorScheme: "light dark",
 };
 // Before first paint: the theme, and the page's language from its path.
-const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme')}catch(e){}var dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=dark?'dark':'light';var l=location.pathname.split('/')[1];document.documentElement.lang=l==='es'||l==='ca'?l:'en';})();`;
+const themeInit = `(function(){var t;try{t=localStorage.getItem('taskflow-theme')}catch(e){}var dark=t!=='light';document.documentElement.dataset.theme=dark?'dark':'light';var l=location.pathname.split('/')[1];document.documentElement.lang=l==='es'||l==='ca'?l:'en';})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Header />
           <main id="main-content">{children}</main>
           <Footer />
+          <CursorGlow />
         </ThemeProvider>
       </body>
     </html>

@@ -6,7 +6,7 @@
 // document, readable text, plain labels, link previews), WP31 (privacy and terms say what
 // the app and the site do today) and WP32 (the delete page). Batch 5 adds WP47 (suggested
 // tasks and limits, not drafts, allowances or transcripts). See tests/support/ux-web.ts.
-import { test as plain, type Page } from "@playwright/test";
+import { test as plain, type Page } from "./support/test";
 import { readdirSync, readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import path from "node:path";

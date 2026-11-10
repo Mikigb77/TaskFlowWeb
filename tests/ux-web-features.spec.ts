@@ -4,7 +4,7 @@
 // words). See tests/support/ux-web.ts.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import type { Page } from "@playwright/test";
+import type { Page } from "./support/test";
 import {
   axeViolations,
   contrast,

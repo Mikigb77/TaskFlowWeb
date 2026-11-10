@@ -13,7 +13,7 @@
     "check": "next typegen && tsc --noEmit",
     "legal:check": "node scripts/dev/check-legal.mjs",
     "test": "playwright test",
-    "test:unit": "tsx --test tests/voice.unit.ts",
+    "test:unit": "tsx --test tests/voice.unit.ts tests/repo.unit.ts",
     "test:quota": "tsx --test tests/voice-store.integration.ts",
     "format": "prettier --write src tests *.ts *.json *.mjs"
   },

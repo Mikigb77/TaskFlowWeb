@@ -7,6 +7,41 @@
    ========================================================================== */
 
 :root[data-variant="nova"] {
+  /* ---------- Type: garbar.tech's. Manrope throughout, heavy and tight, the accent words in a
+     gradient of the same face. Manrope is also the app's font. ---------- */
+  & {
+    --display: Manrope, sans-serif;
+    --serif: Manrope, sans-serif;
+    --display-weight: 700;
+    --h1-weight: 750;
+    --h1-scale: 0.86;
+    --h1-track: -0.06em;
+    --h2-track: -0.045em;
+    --accent-style: normal;
+    --accent-weight: 750;
+  }
+  .nv-accent {
+    letter-spacing: inherit;
+    padding-right: 0.04em;
+    background-size: 200% 100%;
+    animation: nv-shimmer 8s ease-in-out infinite alternate;
+  }
+  .nv-num,
+  .nv-timeline-n,
+  .nv-q-n,
+  .nv-how-strip figcaption span {
+    font-weight: 750;
+    letter-spacing: -0.04em;
+  }
+  .nv-num {
+    font-size: 2.6rem;
+  }
+  .nv-faq-intro > p:not(.nv-kicker) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
   /* ---------- Header: EN · ES · CA in one pill, then one call to action ---------- */
   .header-languages {
     gap: 2px;
@@ -519,62 +554,162 @@
     outline-offset: 4px;
   }
 
-  /* ---------- Footer: TaskFlow, a product by GarBar ---------- */
+  /* ---------- Footer: a night band, as Lucid Saga's and garbar.tech's ---------- */
   .site-footer {
-    padding-top: 56px;
-    border-top: 1px solid var(--line);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin-top: 40px;
+    padding-top: 72px;
+    background: var(--deep);
+    color: var(--on-night);
+    border-top: 1px solid color-mix(in srgb, var(--on-night) 10%, transparent);
+    --muted: var(--on-night-3);
+    --line: color-mix(in srgb, var(--on-night) 12%, transparent);
+    --green: var(--hot);
+  }
+  .site-footer::after {
+    content: none;
+  }
+  .footer-glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(600px 380px at 8% 0%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 70%),
+      radial-gradient(520px 340px at 92% 30%, color-mix(in srgb, var(--hot) 16%, transparent), transparent 70%),
+      radial-gradient(700px 300px at 50% 100%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 70%);
+  }
+  .site-footer .brand {
+    color: var(--on-night);
   }
   .footer-top {
-    padding-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    gap: 48px;
+    padding-bottom: 44px;
   }
   .footer-about {
     display: grid;
-    gap: 12px;
-    max-width: 24rem;
+    align-content: start;
+    gap: 14px;
+    max-width: 22rem;
   }
   .footer-tagline {
-    color: var(--muted);
+    font-size: 1.0625rem;
     line-height: 1.5;
+    color: var(--on-night-2);
   }
-  .footer-operator {
+  .site-footer .footer-operator {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--muted);
+    margin-top: 0;
+    font-size: 0.9375rem;
+    color: var(--on-night-3);
   }
   .footer-garbar {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     min-height: 44px;
     font-weight: 800;
-    color: var(--ink);
+    color: var(--on-night);
   }
-  @media (hover: hover) {
-    .footer-garbar:hover {
-      color: var(--green);
-    }
+  .footer-made {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--on-night-3);
+  }
+  .footer-made span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--hot);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--hot) 18%, transparent);
   }
   .footer-columns {
-    display: flex;
-    gap: 64px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(9rem, auto));
+    gap: 56px;
   }
-  .footer-top .footer-columns nav {
+  .footer-top .footer-columns nav,
+  .site-footer .footer-columns .footer-legal {
     display: grid;
     align-content: start;
     gap: 0;
+    padding: 0;
+    border: 0;
   }
   .footer-top .footer-columns nav a {
     justify-content: flex-start;
+    gap: 6px;
+    min-height: 40px;
+    padding-block: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--on-night);
   }
-  .footer-columns h2 {
-    margin-bottom: 6px;
-    font-family: var(--body);
+  .footer-top .footer-columns nav a svg {
+    opacity: 0.6;
+  }
+  @media (hover: hover) {
+    .footer-top .footer-columns nav a:hover,
+    .footer-garbar:hover,
+    .footer-back:hover {
+      color: var(--hot);
+    }
+  }
+  .footer-heading {
+    margin-bottom: 10px;
     font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--on-night-3);
+  }
+  .site-footer .footer-bottom {
+    border-top: 1px solid var(--line);
+    color: var(--on-night-3);
+    padding-block: 18px 8px;
+  }
+  .site-footer .language-switch a {
+    color: var(--on-night-2);
+  }
+  .site-footer .language-switch a[aria-current="page"] {
+    background: color-mix(in srgb, var(--on-night) 12%, transparent);
+    color: var(--on-night);
+  }
+  @media (hover: hover) {
+    .site-footer .language-switch a:hover {
+      background: color-mix(in srgb, var(--on-night) 8%, transparent);
+      color: var(--on-night);
+    }
+  }
+  .site-footer :focus-visible {
+    outline-color: var(--hot);
+  }
+  /* The name, written large and outlined, fading into the band. */
+  .footer-wordmark {
+    margin-top: 24px;
+    height: 0.66em;
+    overflow: hidden;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(5rem, 21vw, 20rem);
+    line-height: 0.9;
+    letter-spacing: -0.07em;
+    text-align: center;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--hot) 55%, transparent);
+    mask-image: linear-gradient(#000 35%, transparent 100%);
+    user-select: none;
+    pointer-events: none;
   }
 
   /* ---------- Narrower screens ---------- */
@@ -671,8 +806,11 @@
     .nv-sibling-copy {
       padding: 4px 26px 30px;
     }
+    .footer-top {
+      flex-direction: column;
+    }
     .footer-columns {
-      gap: 40px;
+      gap: 32px;
     }
   }
   @media (max-width: 580px) {
@@ -690,12 +828,18 @@
       padding-block: 80px;
     }
     .footer-columns {
-      flex-wrap: wrap;
-      gap: 24px 48px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 24px;
+    }
+    .site-footer {
+      padding-top: 52px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .nv-accent {
+      animation: none;
+    }
     .store-badge::after {
       animation: none;
       display: none;
@@ -712,6 +856,11 @@
   }
 }
 
+@keyframes nv-shimmer {
+  to {
+    background-position: 100% 0;
+  }
+}
 @keyframes badge-glint {
   0% {
     transform: translateX(-120%);

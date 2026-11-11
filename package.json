@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@google-cloud/firestore": "^9.4.0",
-    "@google/genai": "^2.32.0",
+    "@google/genai": "^3.0.0",
     "@tailwindcss/postcss": "4.3.4",
     "next": "16.4.4",
     "react": "19.3.1",

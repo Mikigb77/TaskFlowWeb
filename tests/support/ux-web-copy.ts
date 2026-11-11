@@ -50,9 +50,9 @@ export const FEATURES = {
         ca: "El teu dia en un calendari",
       },
       body: {
-        en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like. TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
-        es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
-        ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols. TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
+        en: "See your tasks by day, week or month, beside the events from your phone’s calendars if you like, and add your tasks to your calendar too. TaskFlow can remind you of tasks with a date, more and more often as the day gets closer.",
+        es: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres, y añádelas también a tu calendario. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
+        ca: "Mira les tasques per dia, setmana o mes, al costat dels esdeveniments dels calendaris del telèfon si vols, i afegeix-les també al teu calendari. TaskFlow et pot recordar les tasques amb data, cada cop més sovint a mesura que s’acosta el dia.",
       },
     },
     {

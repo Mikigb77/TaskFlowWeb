@@ -59,7 +59,7 @@ export const es: SiteCopy = {
     title: "Qué hace TaskFlow",
     calendar: {
       title: "Tu día en un calendario",
-      body: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
+      body: "Mira tus tareas por día, semana o mes, junto a los eventos de los calendarios del teléfono si quieres, y añádelas también a tu calendario. TaskFlow puede recordarte las tareas con fecha, cada vez más a menudo según se acerca el día.",
       header: "Esta semana",
       weekdays: ["L", "M", "X", "J", "V", "S", "D"],
       events: [

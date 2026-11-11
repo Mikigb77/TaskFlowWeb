@@ -285,115 +285,56 @@
     );
   }
 
-  /* ---------- 01 How it works: one phone, four steps ---------- */
+  /* ---------- 01 How it works: the steps down the page, each with its own screen ----------
+     The line joining the numbers draws itself as the page scrolls: HowSteps.tsx sets each
+     step's --fill and marks it reached, which lights its number and slides its screen in.
+     Without script every step shows as reached. Phones: each screen under its words. */
   .nv-how {
-    padding-block: 0;
-  }
-  .nv-how-pin {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: 64px;
-    align-items: start;
-    padding-block: 130px 100px;
-  }
-  .nv-how-pin > * {
-    min-width: 0;
+    padding-block: 96px 60px;
   }
   .nv-how h2 {
     max-width: 13ch;
   }
-  .nv-how-stage {
-    position: sticky;
-    top: 110px;
-    display: grid;
-    place-items: center;
-    padding-block: 20px;
-  }
-  .nv-how-stage::before {
-    content: "";
-    position: absolute;
-    width: 440px;
-    height: 440px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      color-mix(in srgb, var(--hot) 30%, transparent),
-      transparent 68%
-    );
-    filter: blur(20px);
-  }
-  .nv-how-phone {
-    position: relative;
-    width: 310px;
-    aspect-ratio: 780 / 1688;
-    border: 8px solid var(--night);
-    border-radius: 46px;
-    background: var(--night);
-    box-shadow:
-      0 40px 80px color-mix(in srgb, var(--night) 28%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
-    overflow: hidden;
-  }
-  .nv-how-camera {
-    position: absolute;
-    z-index: 3;
-    top: 9px;
-    left: calc(50% - 4px);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--deep);
-  }
-  .nv-how-screen {
-    position: absolute;
-    inset: 0;
-    border-radius: 38px;
-    overflow: hidden;
-    opacity: 0;
-    transform: scale(1.02);
-    transition:
-      opacity 0.5s var(--ease),
-      transform 0.6s var(--ease);
-  }
-  .nv-how-screen.is-on {
-    opacity: 1;
-    transform: none;
-  }
-  .nv-how-screen img,
-  .nv-step-shot img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
   .nv-timeline {
+    --n: 44px;
     list-style: none;
-    margin: 44px 0 0;
+    margin: 40px 0 0;
     padding: 0;
   }
   .nv-timeline li {
     position: relative;
     display: grid;
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 4px 22px;
-    padding-bottom: 46px;
+    grid-template-columns: var(--n) minmax(0, 1fr);
+    gap: 4px 16px;
+    padding-bottom: 44px;
   }
-  .nv-timeline li::before {
+  .nv-timeline li::before,
+  .nv-timeline li::after {
     content: "";
     position: absolute;
-    left: 25px;
-    top: 52px;
-    bottom: 4px;
-    width: 1px;
+    left: calc(var(--n) / 2 - 1px);
+    top: calc(var(--n) + 8px);
+    bottom: 8px;
+    width: 2px;
+    border-radius: 2px;
     background: var(--line);
   }
-  .nv-timeline li:last-child::before {
+  .nv-timeline li::after {
+    background: linear-gradient(180deg, var(--hot), var(--tint));
+    transform: scaleY(var(--fill, 1));
+    transform-origin: top;
+  }
+  .nv-timeline li:last-child::before,
+  .nv-timeline li:last-child::after {
     display: none;
   }
   .nv-timeline-n {
+    position: relative;
+    z-index: 1;
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
+    width: var(--n);
+    height: var(--n);
     border-radius: 50%;
     border: 1px solid var(--line);
     background: var(--surface);
@@ -405,20 +346,20 @@
       background 0.4s var(--ease),
       color 0.4s,
       border-color 0.4s,
-      transform 0.4s var(--ease);
+      box-shadow 0.4s;
   }
-  .nv-timeline li.is-on .nv-timeline-n {
+  .nv-timeline:not(.is-drawing) .nv-timeline-n,
+  .nv-timeline li[data-reached] .nv-timeline-n {
     background: var(--hot);
     border-color: var(--hot);
     color: var(--on-hot);
-    transform: scale(1.06);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--hot) 18%, transparent);
   }
   .nv-timeline h3 {
-    margin-top: 10px;
-    font-size: 1.75rem;
+    margin-top: 6px;
+    font-size: 1.5rem;
     line-height: 1.15;
     letter-spacing: -0.03em;
-    transition: color 0.4s;
   }
   .nv-timeline p {
     margin-top: 8px;
@@ -428,92 +369,75 @@
     color: var(--muted);
   }
   .nv-step-shot {
-    display: none;
+    grid-column: 2;
+    width: min(250px, 100%);
+    margin-top: 18px;
+    border: 6px solid var(--night);
+    border-radius: 34px;
+    overflow: hidden;
+    background: var(--night);
+    box-shadow: 0 18px 36px color-mix(in srgb, var(--night) 20%, transparent);
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.7s var(--ease);
   }
-  .nv-how-rail {
-    display: none;
+  .nv-step-shot img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .nv-timeline.is-drawing li:not([data-reached]) .nv-step-shot {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
   }
 
-  /* Wide, tall screens: the section pins and its steps roll with the scroll. The section is
-     one screen tall plus one stretch per step, so each step stays for most of a screen of
-     scrolling while the page itself holds still. */
-  @media (min-width: 801px) and (min-height: 600px) {
+  /* Wider screens: each step in a row, its words beside its screen, and the screen sized so
+     all of it fits in the window below the header. The rows are as tall as the screens, so the
+     line runs from the middle of one row's number to the middle of the next. */
+  @media (min-width: 861px) and (min-height: 600px) {
     .nv-how {
-      --how-step: 85svh;
-      height: calc(100svh + var(--how-steps, 4) * var(--how-step));
-    }
-    .nv-how-pin {
-      position: sticky;
-      top: 0;
-      height: 100svh;
-      align-items: center;
-      padding-block: 96px 32px;
-    }
-    .nv-how-stage {
-      position: relative;
-      top: auto;
-    }
-    .nv-how-phone {
-      width: min(310px, calc((100svh - 170px) * 0.462));
-    }
-    .nv-how-screen {
-      transform: translateY(7%);
-      transition:
-        opacity 0.6s var(--ease),
-        transform 0.8s var(--ease);
-    }
-    .nv-how-screen.is-past {
-      transform: translateY(-7%);
-    }
-    .nv-how-screen.is-on {
-      transform: none;
-    }
-    .nv-how-rail {
-      display: flex;
-      gap: 8px;
-      max-width: 360px;
-      margin-top: 36px;
-    }
-    .nv-how-rail span {
-      position: relative;
-      flex: 1;
-      height: 4px;
-      border-radius: 999px;
-      background: var(--line);
-      overflow: hidden;
-    }
-    .nv-how-rail span::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--hot);
-      transform: scaleX(var(--fill, 0));
-      transform-origin: left;
+      padding-block: 130px 100px;
     }
     .nv-timeline {
+      --n: 52px;
+      --shot: min(300px, calc((100svh - 190px) * 0.45));
+      --row-gap: 12svh;
       display: grid;
-      margin-top: 30px;
+      gap: var(--row-gap);
+      max-width: 1080px;
+      margin-top: 64px;
     }
     .nv-timeline li {
-      grid-area: 1 / 1;
+      grid-template-columns: var(--n) minmax(0, 1fr) var(--shot);
+      align-items: center;
+      gap: 0 32px;
       padding-bottom: 0;
-      opacity: 0;
-      transform: translateY(32px);
-      pointer-events: none;
-      transition:
-        opacity 0.5s var(--ease),
-        transform 0.7s var(--ease);
     }
-    .nv-timeline li.is-past {
-      transform: translateY(-32px);
+    .nv-timeline li::before,
+    .nv-timeline li::after {
+      top: calc(50% + var(--n) / 2 + 8px);
+      bottom: auto;
+      height: calc(100% + var(--row-gap) - var(--n) - 16px);
     }
-    .nv-timeline li.is-on {
-      opacity: 1;
-      transform: none;
-      pointer-events: auto;
+    .nv-timeline h3 {
+      margin-top: 0;
+      font-size: 2rem;
     }
-    .nv-timeline li::before {
-      display: none;
+    .nv-timeline p {
+      font-size: 1.125rem;
+    }
+    .nv-step-shot {
+      grid-column: 3;
+      width: var(--shot);
+      margin-top: 0;
+      border-width: 7px;
+      border-radius: 40px;
+      box-shadow:
+        0 40px 80px color-mix(in srgb, var(--night) 24%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
+    }
+    .nv-timeline.is-drawing li:not([data-reached]) .nv-step-shot {
+      transform: translateY(48px) scale(0.96);
     }
   }
 
@@ -859,87 +783,9 @@
 
   /* ---------- Narrower screens ---------- */
   @media (max-width: 1100px) {
-    .nv-how-pin {
-      gap: 40px;
-    }
-    .nv-how-phone {
-      width: min(270px, calc((100svh - 170px) * 0.462));
-    }
     .nv-family {
       grid-template-columns: 1fr;
       gap: 36px;
-    }
-  }
-  /* Narrow or short screens: the steps one under another, each with its own screen, joined
-     by a line that draws itself as the page scrolls (HowSteps.tsx sets each step's --fill and
-     marks it reached). Without script, every step shows as reached. */
-  @media (max-width: 800px), (max-height: 599px) {
-    .nv-how-pin {
-      grid-template-columns: 1fr;
-      padding-block: 96px 60px;
-    }
-    .nv-how-stage {
-      display: none;
-    }
-    .nv-timeline li {
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 4px 16px;
-      padding-bottom: 44px;
-    }
-    .nv-timeline li::before,
-    .nv-timeline li::after {
-      content: "";
-      position: absolute;
-      left: 21px;
-      top: 52px;
-      bottom: 8px;
-      width: 2px;
-      border-radius: 2px;
-      background: var(--line);
-    }
-    .nv-timeline li::after {
-      background: linear-gradient(180deg, var(--hot), var(--tint));
-      transform: scaleY(var(--fill, 1));
-      transform-origin: top;
-    }
-    .nv-timeline li:last-child::after {
-      display: none;
-    }
-    .nv-timeline-n {
-      position: relative;
-      z-index: 1;
-      width: 44px;
-      height: 44px;
-    }
-    .nv-timeline:not(.is-drawing) .nv-timeline-n,
-    .nv-timeline li[data-reached] .nv-timeline-n {
-      background: var(--hot);
-      border-color: var(--hot);
-      color: var(--on-hot);
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--hot) 18%, transparent);
-    }
-    .nv-timeline h3 {
-      margin-top: 6px;
-      font-size: 1.5rem;
-    }
-    .nv-step-shot {
-      transition:
-        opacity 0.5s var(--ease),
-        transform 0.7s var(--ease);
-    }
-    .nv-timeline.is-drawing li:not([data-reached]) .nv-step-shot {
-      opacity: 0;
-      transform: translateY(28px) scale(0.96);
-    }
-    .nv-step-shot {
-      display: block;
-      width: min(250px, 100%);
-      margin-top: 22px;
-      border: 6px solid var(--night);
-      border-radius: 34px;
-      overflow: hidden;
-      background: var(--night);
-      box-shadow: 0 18px 36px color-mix(in srgb, var(--night) 20%, transparent);
     }
   }
   @media (max-width: 800px) {
@@ -993,8 +839,7 @@
       animation: none;
       display: none;
     }
-    .nv-how-screen,
-    .nv-timeline li,
+    .nv-timeline-n,
     .nv-step-shot {
       transition: none;
     }

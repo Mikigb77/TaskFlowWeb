@@ -391,53 +391,109 @@
     transform: translateY(28px) scale(0.96);
   }
 
-  /* Wider screens: each step in a row, its words beside its screen, and the screen sized so
-     all of it fits in the window below the header. The rows are as tall as the screens, so the
-     line runs from the middle of one row's number to the middle of the next. */
+  .nv-how-stage {
+    display: none;
+  }
+
+  /* Wider screens: the steps on the right, spaced out down the page, and one phone on the left
+     that stays in view while they scroll by. Sized so all of it fits below the header, it
+     shows the screen of the step the line has reached. */
   @media (min-width: 861px) and (min-height: 600px) {
     .nv-how {
       padding-block: 130px 100px;
     }
+    .nv-how-grid {
+      display: grid;
+      grid-template-columns: auto minmax(0, 560px);
+      justify-content: center;
+      column-gap: clamp(56px, 8vw, 128px);
+    }
+    .nv-how-stage {
+      position: sticky;
+      top: 110px;
+      align-self: start;
+      display: grid;
+      place-items: center;
+    }
+    .nv-how-stage::before {
+      content: "";
+      position: absolute;
+      width: 440px;
+      height: 440px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--hot) 26%, transparent),
+        transparent 68%
+      );
+      filter: blur(20px);
+    }
+    .nv-how-phone {
+      position: relative;
+      width: min(310px, calc((100svh - 150px) * 0.462));
+      aspect-ratio: 780 / 1688;
+      border: 8px solid var(--night);
+      border-radius: 46px;
+      background: var(--night);
+      box-shadow:
+        0 40px 80px color-mix(in srgb, var(--night) 28%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+      overflow: hidden;
+    }
+    .nv-how-camera {
+      position: absolute;
+      z-index: 3;
+      top: 9px;
+      left: calc(50% - 4px);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--deep);
+    }
+    .nv-how-screen {
+      position: absolute;
+      inset: 0;
+      border-radius: 38px;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(7%);
+      transition:
+        opacity 0.6s var(--ease),
+        transform 0.8s var(--ease);
+    }
+    .nv-how-screen.is-past {
+      transform: translateY(-7%);
+    }
+    .nv-how-screen.is-on {
+      opacity: 1;
+      transform: none;
+    }
+    .nv-how-screen img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
     .nv-timeline {
       --n: 52px;
-      --shot: min(300px, calc((100svh - 190px) * 0.45));
-      --row-gap: 12svh;
-      display: grid;
-      gap: var(--row-gap);
-      max-width: 1080px;
-      margin-top: 64px;
+      margin-top: 56px;
     }
     .nv-timeline li {
-      grid-template-columns: var(--n) minmax(0, 1fr) var(--shot);
-      align-items: center;
-      gap: 0 32px;
-      padding-bottom: 0;
+      gap: 4px 24px;
+      padding-bottom: 42svh;
     }
-    .nv-timeline li::before,
-    .nv-timeline li::after {
-      top: calc(50% + var(--n) / 2 + 8px);
-      bottom: auto;
-      height: calc(100% + var(--row-gap) - var(--n) - 16px);
+    /* Room after the last step, so the phone stays with it a while before the section ends. */
+    .nv-timeline li:last-child {
+      padding-bottom: calc(65svh - 140px);
     }
     .nv-timeline h3 {
-      margin-top: 0;
+      margin-top: 8px;
       font-size: 2rem;
     }
     .nv-timeline p {
       font-size: 1.125rem;
     }
     .nv-step-shot {
-      grid-column: 3;
-      width: var(--shot);
-      margin-top: 0;
-      border-width: 7px;
-      border-radius: 40px;
-      box-shadow:
-        0 40px 80px color-mix(in srgb, var(--night) 24%, transparent),
-        0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
-    }
-    .nv-timeline.is-drawing li:not([data-reached]) .nv-step-shot {
-      transform: translateY(48px) scale(0.96);
+      display: none;
     }
   }
 
@@ -840,6 +896,7 @@
       display: none;
     }
     .nv-timeline-n,
+    .nv-how-screen,
     .nv-step-shot {
       transition: none;
     }

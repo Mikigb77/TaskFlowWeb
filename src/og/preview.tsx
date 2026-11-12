@@ -53,7 +53,9 @@ export async function linkPreview(language: SiteLanguage) {
               width: 68,
               height: 68,
               borderRadius: 18,
-              background: "#0a7a63",
+              // The site's mark: the Lagoon gradient, as in the header and the favicon.
+              backgroundImage:
+                "linear-gradient(135deg, #0a7a63, #1fb5a6 55%, #3ef0b0)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -63,7 +65,7 @@ export async function linkPreview(language: SiteLanguage) {
               height="44"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#f3f8f4"
+              stroke="#ffffff"
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"

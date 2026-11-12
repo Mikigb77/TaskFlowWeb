@@ -390,14 +390,14 @@ export default function HomeNova({ language }: { language: SiteLanguage }) {
         >
           <span className="nv-sibling-art" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/garbar/lucid-saga-gate.webp" alt="" loading="lazy" />
+            <img src="/images/garbar/lucid-saga-gate-2026-11.webp" alt="" loading="lazy" />
           </span>
           <span className="nv-sibling-copy">
             <small>{f.family.sibling.label}</small>
             <span className="nv-sibling-name">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/garbar/lucid-saga-icon.png"
+                src="/images/garbar/lucid-saga-icon-2026-11.png"
                 alt=""
                 width={40}
                 height={40}
